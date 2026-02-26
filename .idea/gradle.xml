@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
+  <component name="GradleSettings">
+    <option name="linkedExternalProjectsSettings">
+      <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/../LingoLens" name="LingoLens">
+                <projects>
+                  <project path="$PROJECT_DIR$/../LingoLens" />
+                  <project path="$PROJECT_DIR$/../LingoLens/app" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/analytics" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/data" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/di" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/domain" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/resources" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/ui" />
+                  <project path="$PROJECT_DIR$/../LingoLens/core/utils" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/dialog" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/lingospell" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/ocr" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/phrase" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/quiz" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/quote" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/settings" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/stackcard" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/translation" />
+                  <project path="$PROJECT_DIR$/../LingoLens/features/wordcraftai" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
+        <option name="testRunner" value="CHOOSE_PER_TEST" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="gradleJvm" value="21" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$/../LingoLens" />
+            <option value="$PROJECT_DIR$/../LingoLens/app" />
+            <option value="$PROJECT_DIR$/../LingoLens/core" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/analytics" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/data" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/di" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/domain" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/resources" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/ui" />
+            <option value="$PROJECT_DIR$/../LingoLens/core/utils" />
+            <option value="$PROJECT_DIR$/../LingoLens/features" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/dialog" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/lingospell" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/ocr" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/phrase" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/quiz" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/quote" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/settings" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/stackcard" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/translation" />
+            <option value="$PROJECT_DIR$/../LingoLens/features/wordcraftai" />
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+          </set>
+        </option>
+      </GradleProjectSettings>
+    </option>
+  </component>
+</project>

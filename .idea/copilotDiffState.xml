@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/core/ui/src/main/java/com/venom/ui/components/dialogs/WebViewInit.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/core/ui/src/main/java/com/venom/ui/components/dialogs/WebViewInit.kt" />
+              <option name="updatedContent" value="package com.venom.ui.components.dialogs&#10;&#10;import android.util.Log&#10;import android.webkit.WebView&#10;&#10;/**&#10; * Process-wide helper to probe WebView provider initialization.&#10; * Call ensureInitialized(context) from the main thread to try a single initialization.&#10; */&#10;object WebViewInit {&#10;    @Volatile&#10;    var attempted: Boolean = false&#10;        private set&#10;&#10;    @Volatile&#10;    var success: Boolean = false&#10;        private set&#10;&#10;    /**&#10;     * Attempts to create and immediately destroy a WebView to force provider init.&#10;     * Must be called on the main thread.&#10;     * Returns true if provider initialization succeeded.&#10;     */&#10;    fun ensureInitialized(context: android.content.Context): Boolean {&#10;        synchronized(this) {&#10;            if (attempted) return success&#10;            attempted = true&#10;            try {&#10;                val w = WebView(context)&#10;                // destroy immediately to avoid leaking resources&#10;                w.destroy()&#10;                success = true&#10;            } catch (t: Throwable) {&#10;                Log.e(&quot;WebViewInit&quot;, &quot;WebView provider initialization failed&quot;, t)&#10;                success = false&#10;            }&#10;            return success&#10;        }&#10;    }&#10;}&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
