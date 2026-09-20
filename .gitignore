@@ -13,3 +13,12 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Editor backups
+*~
+
+# Google Services (API keys — local only)
+google-services.json
+
+# Kotlin tooling cache
+.kotlin/
