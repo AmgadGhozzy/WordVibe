@@ -7,8 +7,6 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-/.idea/studiobot.xml
-/.idea/AndroidProjectSystem.xml
 .DS_Store
 /build
 /captures
@@ -33,3 +31,7 @@ google-services.json
 /docs/
 CONTEXT.md
 AGENTS.md
+
+# Local-only project folders — never committed
+/.idea/
+/WordVibe/
