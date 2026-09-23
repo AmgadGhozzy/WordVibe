@@ -22,3 +22,12 @@ google-services.json
 
 # Kotlin tooling cache
 .kotlin/
+
+# Playwright MCP tool artifacts (snapshots, logs)
+/.playwright-mcp/
+
+# Local agent working files (tracker, specs, domain notes) — never committed
+/.scratch/
+/docs/
+CONTEXT.md
+AGENTS.md
