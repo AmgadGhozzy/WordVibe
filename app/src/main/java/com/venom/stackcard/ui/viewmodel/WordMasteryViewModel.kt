@@ -875,7 +875,13 @@ class WordMasteryViewModel @Inject constructor(
         mode: String,
         baseSessionStats: SessionStats
     ) {
-        val fallbackWords = MockWordData.mockWordList.shuffled().take(15)
+        // Demo-gate: mock words ship in DEBUG only. Release builds with no seeded
+        // content surface an error instead of teaching fake vocabulary.
+        val fallbackWords = if (com.venom.wordvibe.BuildConfig.DEBUG) {
+            MockWordData.mockWordList.shuffled().take(15)
+        } else {
+            emptyList()
+        }
         val defaultPinnedLanguage = fallbackWords.firstOrNull()?.let {
             getLanguageOptions(it).find { lang -> lang.langName == "Spanish" }
         }
@@ -887,7 +893,11 @@ class WordMasteryViewModel @Inject constructor(
                 pinnedLanguage = defaultPinnedLanguage,
                 isLoading = false,
                 flipRotation = 0f,
-                error = null,
+                error = if (fallbackWords.isEmpty()) {
+                    error.message ?: "No words available"
+                } else {
+                    null
+                },
                 initialCardCount = fallbackWords.size,
                 sessionStats = baseSessionStats.copy(totalCards = fallbackWords.size)
             )

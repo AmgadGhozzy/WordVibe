@@ -3,127 +3,59 @@ package com.venom.wordvibe
 import android.app.Application
 import android.os.StrictMode
 import android.util.Log
-import com.venom.domain.provider.AppConfigProvider
-import com.venom.analytics.AnalyticsManager
-import com.venom.analytics.CrashlyticsManager
-import com.venom.di.NetworkEntryPoint
-import com.venom.ui.theme.Alexandria
-import com.venom.ui.theme.Cairo
-import com.venom.ui.theme.Caveat
-import com.venom.ui.theme.JosefinSans
-import com.venom.ui.theme.PlaypenSans
-import com.venom.ui.theme.Quicksand
-import com.venom.ui.theme.Roboto
-import dagger.hilt.android.EntryPointAccessors
+import com.venom.data.corpus.CorpusSeeder
+import com.venom.data.corpus.CorpusSeederEntryPoint
+import com.venom.data.corpus.DataStoreSeedFlag
+import dagger.hilt.EntryPoints
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @HiltAndroidApp
 class Application : Application() {
-    
-    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    @Inject
-    lateinit var analyticsManager: AnalyticsManager
-    @Inject
-    lateinit var crashlyticsManager: CrashlyticsManager
-    @Inject
-    lateinit var appConfigProvider: AppConfigProvider
 
     override fun onCreate() {
         super.onCreate()
-        
-        // Initialize analytics and crashlytics FIRST
-        initializeAnalytics()
-        
-        // Preload custom fonts (background, to prevent StrictMode violations)
-        preloadFonts()
-        
-        // Pre-warm network clients (background, non-blocking)
-        preWarmNetworkClients()
 
-        // Enable StrictMode in debug builds only
         if (BuildConfig.DEBUG) {
             enableStrictMode()
         }
+        seedCorpusOnce()
     }
 
-    private fun initializeAnalytics() {
-        try {
-            val enableAnalytics = appConfigProvider.isAnalyticsEnabled
-            val enableCrashlytics = appConfigProvider.isCrashlyticsEnabled
-            
-            analyticsManager.initialize(enableAnalytics)
-            crashlyticsManager.initialize(enableCrashlytics)
-            
-            if (enableCrashlytics) {
-                crashlyticsManager.setCustomKey("app_version", BuildConfig.VERSION_NAME)
-                crashlyticsManager.setCustomKey("build_type", BuildConfig.BUILD_TYPE)
-            }
-            
-            if (enableAnalytics) {
-                analyticsManager.logEvent("app_open")
-            }
-            
-            Log.d(TAG, "Analytics ($enableAnalytics) and Crashlytics ($enableCrashlytics) initialized")
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize analytics", e)
-        }
-    }
-
-    private fun preloadFonts() {
-        applicationScope.launch(Dispatchers.IO) {
+    /**
+     * First-launch pilot corpus seed: idempotent, offline, fire-and-forget.
+     * Failures only log — a failed seed must never crash launch.
+     */
+    private fun seedCorpusOnce() {
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {
-                val fonts = listOf(
-                    Cairo,
-                    Alexandria,
-                    Caveat,
-                    Roboto,
-                    Quicksand,
-                    JosefinSans,
-                    PlaypenSans
-                )
-                Log.d(TAG, "Custom fonts preloaded successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to preload fonts", e)
-                crashlyticsManager.logNonFatalException(e, "Font preloading failed")
-            }
-        }
-    }
-
-    private fun preWarmNetworkClients() {
-        applicationScope.launch(Dispatchers.IO) {
-            try {
-                val entryPoint = EntryPointAccessors.fromApplication(
+                val entry = EntryPoints.get(
                     this@Application,
-                    NetworkEntryPoint::class.java
+                    CorpusSeederEntryPoint::class.java
                 )
-
-                entryPoint.getRegularClient().connectionPool
-                entryPoint.getAiClient().connectionPool
-
-                Log.d(TAG, "Network clients initialized")
+                val json = assets.open("words_pilot.json").bufferedReader().use { it.readText() }
+                val inserted = CorpusSeeder(
+                    entry.wordRepository(),
+                    DataStoreSeedFlag(entry.dataStore())
+                ).seedIfNeeded(json)
+                Log.d(TAG, "Corpus seed complete, inserted=$inserted")
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to initialize network clients", e)
-                crashlyticsManager.logNonFatalException(e, "Network client initialization failed")
+                Log.w(TAG, "Corpus seed failed: ${e.message}")
             }
         }
     }
 
     private fun enableStrictMode() {
         Log.d(TAG, "StrictMode Enabled")
-
         StrictMode.setThreadPolicy(
             StrictMode.ThreadPolicy.Builder()
                 .detectAll()
                 .penaltyLog()
                 .build()
         )
-
         StrictMode.setVmPolicy(
             StrictMode.VmPolicy.Builder()
                 .detectLeakedSqlLiteObjects()
@@ -132,8 +64,8 @@ class Application : Application() {
                 .build()
         )
     }
-    
+
     companion object {
-        private const val TAG = "LingoLensApp"
+        private const val TAG = "WordVibeApp"
     }
 }
