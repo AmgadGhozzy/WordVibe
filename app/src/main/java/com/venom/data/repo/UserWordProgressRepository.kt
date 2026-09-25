@@ -120,6 +120,30 @@ class UserWordProgressRepository @Inject constructor(
         return ResolvedAttempt(word, persistEvent = existing == null)
     }
 
+    /** Applies the SRS projection + activity for one production outcome. */
+    private suspend fun applyProductionOutcome(
+        userId: String,
+        word: WordMasterEntity,
+        wordId: Int,
+        isCorrect: Boolean
+    ) {
+        val before = getOrCreateProgress(userId, wordId)
+        val updated = if (isCorrect) {
+            srsEngine.onProductionSuccess(before, word.rank ?: 0, word.frequency ?: 1)
+        } else {
+            srsEngine.onProductionFail(before)
+        }
+        progressDao.upsert(updated.toEntity())
+
+        if (isCorrect) {
+            if (updated.knownState == KnownState.MASTERED &&
+                before.knownState != KnownState.MASTERED
+            ) {
+                activityRepository.recordWordMastered(userId, wordId)
+            }
+            activityRepository.recordPracticeSuccess(userId, wordId)
+        }
+    }
     /** Applies the SRS projection + activity for one recall outcome (no event row here). */
     private suspend fun applyRecallOutcome(
         userId: String,
@@ -168,7 +192,11 @@ class UserWordProgressRepository @Inject constructor(
                         quizAttemptDao.markApplied(key)
                         return@withTransaction
                     }
-                    applyRecallOutcome(userId, word, attempt.wordId, attempt.isCorrect)
+                    if (attempt.questionType == "PRODUCTION") {
+                        applyProductionOutcome(userId, word, attempt.wordId, attempt.isCorrect)
+                    } else {
+                        applyRecallOutcome(userId, word, attempt.wordId, attempt.isCorrect)
+                    }
                     quizAttemptDao.markApplied(key)
                 }
             }
@@ -188,6 +216,40 @@ class UserWordProgressRepository @Inject constructor(
         sessionId: String? = null
     ) = recordRecall(userId, wordId, idempotencyKey, sessionId, isCorrect = false)
 
+    /**
+     * Shared persist step for all four signals: resolves loudly, dedupes by key, inserts
+     * the durable event row. Returns the word, or null when nothing should be recorded.
+     */
+    private suspend fun persistEventOrNull(
+        userId: String,
+        wordId: Int,
+        signal: String,
+        questionType: String,
+        isCorrect: Boolean,
+        idempotencyKey: String?,
+        sessionId: String?
+    ): WordMasterEntity? {
+        val resolved = resolveWordForAttempt(wordId, signal, idempotencyKey) ?: return null
+        if (resolved.persistEvent) {
+            quizAttemptDao.insert(
+                QuizAttemptEntity(
+                    userId = userId,
+                    wordId = wordId,
+                    dateKey = today(),
+                    questionType = questionType,
+                    source = "FLASHCARD",
+                    isCorrect = isCorrect,
+                    selectedAnswer = "",
+                    correctAnswer = resolved.word.wordEn ?: "",
+                    idempotencyKey = idempotencyKey,
+                    sessionId = sessionId,
+                    projectionApplied = false
+                )
+            )
+        }
+        return resolved.word
+    }
+
     private suspend fun recordRecall(
         userId: String,
         wordId: Int,
@@ -196,67 +258,55 @@ class UserWordProgressRepository @Inject constructor(
         isCorrect: Boolean
     ) = withContext(Dispatchers.IO) {
         transactions.withTransaction {
-            val resolved = resolveWordForAttempt(
-                wordId,
+            val word = persistEventOrNull(
+                userId, wordId,
                 if (isCorrect) "recall success" else "recall failure",
-                idempotencyKey
+                "RECALL", isCorrect, idempotencyKey, sessionId
             ) ?: return@withTransaction
 
-            if (resolved.persistEvent) {
-                quizAttemptDao.insert(
-                    QuizAttemptEntity(
-                        userId = userId,
-                        wordId = wordId,
-                        dateKey = today(),
-                        questionType = "RECALL",
-                        source = "FLASHCARD",
-                        isCorrect = isCorrect,
-                        selectedAnswer = "",
-                        correctAnswer = resolved.word.wordEn ?: "",
-                        idempotencyKey = idempotencyKey,
-                        sessionId = sessionId,
-                        projectionApplied = false
-                    )
-                )
-            }
-
-            applyRecallOutcome(userId, resolved.word, wordId, isCorrect)
+            applyRecallOutcome(userId, word, wordId, isCorrect)
             if (idempotencyKey != null) quizAttemptDao.markApplied(idempotencyKey)
         }
     }
 
-    suspend fun recordProductionSuccess(userId: String, wordId: Int) =
-        withContext(Dispatchers.IO) {
-            transactions.withTransaction {
-                val word = wordMasterDao.getWordById(wordId) ?: return@withTransaction
+    suspend fun recordProductionSuccess(
+        userId: String,
+        wordId: Int,
+        idempotencyKey: String? = null,
+        sessionId: String? = null
+    ) = withContext(Dispatchers.IO) {
+        transactions.withTransaction {
+            val word = persistEventOrNull(
+                userId, wordId, "production success",
+                "PRODUCTION", true, idempotencyKey, sessionId
+            ) ?: return@withTransaction
 
-                quizAttemptDao.insert(
-                    QuizAttemptEntity(
-                        userId = userId,
-                        wordId = wordId,
-                        dateKey = today(),
-                        questionType = "PRODUCTION",
-                        source = "FLASHCARD",
-                        isCorrect = true,
-                        selectedAnswer = "",
-                        correctAnswer = word.wordEn ?: ""
-                    )
-                )
-
-                val before = getOrCreateProgress(userId, wordId)
-                val updated =
-                    srsEngine.onProductionSuccess(before, word.rank ?: 0, word.frequency ?: 1)
-                progressDao.upsert(updated.toEntity())
-
-                if (updated.knownState == KnownState.MASTERED &&
-                    before.knownState != KnownState.MASTERED
-                ) {
-                    activityRepository.recordWordMastered(userId, wordId)
-                }
-
-                activityRepository.recordPracticeSuccess(userId, wordId)
-            }
+            applyProductionOutcome(userId, word, wordId, isCorrect = true)
+            if (idempotencyKey != null) quizAttemptDao.markApplied(idempotencyKey)
         }
+    }
+
+    /**
+     * Production failure (spelling, writing): persisted as a keyed event and moves stored
+     * state the failing direction. No XP and no activity counter by design — failures are
+     * visible to the scheduler, not rewarded.
+     */
+    suspend fun recordProductionFail(
+        userId: String,
+        wordId: Int,
+        idempotencyKey: String? = null,
+        sessionId: String? = null
+    ) = withContext(Dispatchers.IO) {
+        transactions.withTransaction {
+            val word = persistEventOrNull(
+                userId, wordId, "production failure",
+                "PRODUCTION", false, idempotencyKey, sessionId
+            ) ?: return@withTransaction
+
+            applyProductionOutcome(userId, word, wordId, isCorrect = false)
+            if (idempotencyKey != null) quizAttemptDao.markApplied(idempotencyKey)
+        }
+    }
 
     /**
      * Viewing counts activity and XP but never fabricates a progress row: viewed words

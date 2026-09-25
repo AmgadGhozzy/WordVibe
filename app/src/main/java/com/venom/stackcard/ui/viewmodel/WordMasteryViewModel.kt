@@ -411,14 +411,14 @@ class WordMasteryViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             val userId = identityRepository.getCurrentUserId()
             if (result.isCorrect) {
-                progressRepository.recordRecallSuccess(
+                progressRepository.recordProductionSuccess(
                     userId,
                     result.wordId,
                     tapKey(result.wordId, "GOOD"),
                     sessionId()
                 )
             } else {
-                progressRepository.recordRecallFail(
+                progressRepository.recordProductionFail(
                     userId,
                     result.wordId,
                     tapKey(result.wordId, "AGAIN"),

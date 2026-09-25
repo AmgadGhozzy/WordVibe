@@ -20,6 +20,7 @@ import com.venom.domain.srs.SrsEngine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -65,6 +66,10 @@ class GhostProgressContractTest {
     private class FakeProgressDao : UserWordProgressDao {
         val upserts = mutableListOf<UserWordProgressEntity>()
         private val store = mutableMapOf<Pair<String, Int>, UserWordProgressEntity>()
+
+        fun seed(row: UserWordProgressEntity) {
+            store[row.userId to row.wordId] = row
+        }
 
         override suspend fun getProgress(userId: String, wordId: Int): UserWordProgressEntity? =
             store[userId to wordId]
@@ -372,8 +377,7 @@ class GhostProgressContractTest {
     }
 
     @Test
-    fun `applied events are never reprojected`() = runTest {
-        val progressDao = FakeProgressDao()
+    fun `applied events are never reprojected`() = runTest {        val progressDao = FakeProgressDao()
         val wordMasterDao = FakeWordMasterDao()
         wordMasterDao.known[7] = WordMasterEntity(id = 7)
         val quizDao = FakeQuizAttemptDao()
@@ -396,6 +400,140 @@ class GhostProgressContractTest {
         assertTrue(
             progressDao.upserts.none { it.wordId == 7 },
             "an applied event must produce zero projection writes on replay"
+        )
+    }
+
+    @Test
+    fun `production failure for unknown word creates no progress row`() = runTest {
+        val progressDao = FakeProgressDao()
+        val repo = repository(progressDao)
+
+        repo.recordProductionFail("u1", 999_999, "session:9:PROD_FAIL:1", "s1")
+
+        assertTrue(
+            progressDao.upserts.none { it.wordId == 999_999 },
+            "a production failure outside the store must not fabricate progress"
+        )
+    }
+
+    @Test
+    fun `production failure moves state the failing direction and dedupes`() = runTest {
+        val progressDao = FakeProgressDao()
+        val wordMasterDao = FakeWordMasterDao()
+        wordMasterDao.known[7] = WordMasterEntity(id = 7)
+        val quizDao = FakeQuizAttemptDao()
+        val repo = repository(progressDao, wordMasterDao, quizDao)
+        val key = "session:7:PROD_FAIL:1"
+
+        repo.recordProductionFail("u1", 7, key, "s1")
+        val first = progressDao.upserts.filter { it.wordId == 7 }
+        repo.recordProductionFail("u1", 7, key, "s1")
+
+        assertTrue(
+            first.isNotEmpty() && first.last().lapsesCount == 1 &&
+                first.last().totalAttempts == 1 &&
+                first.last().difficulty == 6 &&
+                first.last().nextReview != null,
+            "production failure must lapse, count, harden, and schedule"
+        )
+        assertTrue(
+            quizDao.inserts.count { it.idempotencyKey == key } == 1 &&
+                progressDao.upserts.count { it.wordId == 7 } == first.size,
+            "re-applied production failure must add no further writes"
+        )
+    }
+
+    @Test
+    fun `production failure demotes mastered word to known`() = runTest {        val progressDao = FakeProgressDao()
+        val wordMasterDao = FakeWordMasterDao()
+        wordMasterDao.known[7] = WordMasterEntity(id = 7)
+        val repo = repository(progressDao, wordMasterDao)
+        progressDao.seed(
+            UserWordProgressEntity(
+                userId = "u1",
+                wordId = 7,
+                productionSuccess = 3,
+                recallSuccess = 3,
+                totalAttempts = 6,
+                knownState = "MASTERED",
+                difficulty = 3,
+                stability = 3.0f
+            )
+        )
+
+        repo.recordProductionFail("u1", 7, "session:7:PROD_FAIL:1", "s1")
+
+        assertEquals(
+            "KNOWN",
+            progressDao.upserts.last { it.wordId == 7 }.knownState,
+            "any real failure demotes mastery while preserving history"
+        )
+    }
+
+    @Test
+    fun `production success for unknown word creates no progress row`() = runTest {
+        val progressDao = FakeProgressDao()
+        val repo = repository(progressDao)
+
+        repo.recordProductionSuccess("u1", 999_999, "session:9:PROD:1", "s1")
+
+        assertTrue(
+            progressDao.upserts.none { it.wordId == 999_999 },
+            "a production success outside the store must not fabricate progress"
+        )
+    }
+
+    @Test
+    fun `production success promotes production and dedupes`() = runTest {
+        val progressDao = FakeProgressDao()
+        val wordMasterDao = FakeWordMasterDao()
+        wordMasterDao.known[7] = WordMasterEntity(id = 7)
+        val quizDao = FakeQuizAttemptDao()
+        val repo = repository(progressDao, wordMasterDao, quizDao)
+        val key = "session:7:PROD:1"
+
+        repo.recordProductionSuccess("u1", 7, key, "s1")
+        val first = progressDao.upserts.filter { it.wordId == 7 }
+        repo.recordProductionSuccess("u1", 7, key, "s1")
+
+        assertTrue(
+            first.isNotEmpty() && first.last().productionSuccess == 1 &&
+                first.last().recallSuccess == 0,
+            "production success must promote production counters, never recall"
+        )
+        assertTrue(
+            quizDao.inserts.count { it.idempotencyKey == key } == 1 &&
+                progressDao.upserts.count { it.wordId == 7 } == first.size,
+            "re-applied production success must add no further writes"
+        )
+    }
+
+    @Test
+    fun `replayed production event projects through production path`() = runTest {
+        val progressDao = FakeProgressDao()
+        val wordMasterDao = FakeWordMasterDao()
+        wordMasterDao.known[7] = WordMasterEntity(id = 7)
+        val quizDao = FakeQuizAttemptDao()
+        quizDao.inserts += QuizAttemptEntity(
+            userId = "u1",
+            wordId = 7,
+            dateKey = "2026-09-24",
+            questionType = "PRODUCTION",
+            source = "FLASHCARD",
+            isCorrect = false,
+            selectedAnswer = "",
+            correctAnswer = "",
+            idempotencyKey = "session:7:PROD_FAIL:1",
+            projectionApplied = false
+        )
+        val repo = repository(progressDao, wordMasterDao, quizDao)
+
+        repo.replayUnappliedEvents("u1")
+
+        val last = progressDao.upserts.last { it.wordId == 7 }
+        assertTrue(
+            last.lapsesCount == 1 && last.recallSuccess == 0,
+            "replayed production failure must lapse without touching recall counters"
         )
     }
 }
