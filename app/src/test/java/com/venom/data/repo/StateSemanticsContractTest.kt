@@ -161,6 +161,9 @@ class StateSemanticsContractTest {
         override suspend fun getActiveDays(userId: String): List<String> = emptyList()
         override suspend fun getTotalActiveDays(userId: String): Int = 0
         override suspend fun getTotalXp(userId: String): Int? = 0
+        override suspend fun getTotalWordsViewed(userId: String): Int = 0
+        override suspend fun getTotalSessionCount(userId: String): Int = 0
+        override suspend fun getTotalTimeMs(userId: String): Long = 0L
         override suspend fun incrementWordsViewed(userId: String, dateKey: String, now: Long) {}
         override suspend fun incrementRecallSuccess(
             userId: String,

@@ -6,11 +6,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- * Ticket 01 golden contracts (RED): streak continuity.
- *
- * Frozen contract: an unprotected gap resets the streak to zero, and a freeze is
- * consumed only for a bridgeable (exactly one missed day) gap. These tests assert
- * externally observable streak behavior, never implementation internals.
+ * Tickets 01/05 streak contracts: continuity breaks to zero on unprotected gaps, and a
+ * freeze bridges exactly one missed day. Unbroken chains count fully.
  */
 class StreakEngineContractTest {
 
@@ -53,8 +50,41 @@ class StreakEngineContractTest {
         // Most recent activity is 3 days ago: no single freeze can bridge this.
         val activeDays = listOf(day(-3))
 
-        val consume = StreakEngine.shouldConsumeFreeze(activeDays, today, yesterday)
+        val consume = StreakEngine.shouldConsumeFreeze(activeDays, today, yesterday, ::previousDay)
 
         assertEquals(false, consume, "a freeze must only bridge exactly one missed day")
+    }
+
+    @Test
+    fun `freeze is consumed for exactly one missed day`() {
+        val today = day(0)
+        val yesterday = day(-1)
+        val activeDays = listOf(day(-2))
+
+        val consume = StreakEngine.shouldConsumeFreeze(activeDays, today, yesterday, ::previousDay)
+
+        assertEquals(true, consume, "a single missed day is bridgeable")
+    }
+
+    @Test
+    fun `unbroken chains count fully`() {
+        val today = day(0)
+        val yesterday = day(-1)
+
+        assertEquals(
+            3,
+            StreakEngine.calculateStreak(
+                listOf(today, yesterday, day(-2)), today, yesterday, ::previousDay
+            )
+        )
+        assertEquals(
+            1,
+            StreakEngine.calculateStreak(listOf(today), today, yesterday, ::previousDay),
+            "first day ever starts at one"
+        )
+        assertEquals(
+            0,
+            StreakEngine.calculateStreak(emptyList(), today, yesterday, ::previousDay)
+        )
     }
 }

@@ -1,0 +1,356 @@
+package com.venom.data.repo
+
+import android.util.Log
+import com.venom.analytics.CrashlyticsManager
+import com.venom.data.local.dao.UserActivityDao
+import com.venom.data.local.dao.UserProfileDao
+import com.venom.data.local.dao.UserWordProgressDao
+import com.venom.data.local.dao.XpEventDao
+import com.venom.data.local.entity.UserActivityEntity
+import com.venom.data.local.entity.UserProfileEntity
+import com.venom.data.local.entity.XpEventEntity
+import com.venom.domain.model.DashboardData
+import com.venom.domain.model.StreakEngine
+import com.venom.domain.model.UserLevel
+import com.venom.domain.model.XpResult
+import com.venom.domain.provider.AppConfigProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import javax.inject.Inject
+import javax.inject.Singleton
+
+@Singleton
+class UserActivityRepository @Inject constructor(
+    private val activityDao: UserActivityDao,
+    private val profileDao: UserProfileDao,
+    private val xpEventDao: XpEventDao,
+    private val progressDao: UserWordProgressDao,
+    private val crashlytics: CrashlyticsManager,
+    private val appConfigProvider: AppConfigProvider
+) {
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+
+    companion object {
+        private const val TAG = "UserActivityRepo"
+    }
+
+    fun today(): String = dateFormat.format(Date())
+
+    private fun yesterday(): String {
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        return dateFormat.format(cal.time)
+    }
+
+    private fun previousDay(dateKey: String): String {
+        return try {
+            val date = dateFormat.parse(dateKey) ?: return dateKey
+            val cal = Calendar.getInstance()
+            cal.time = date
+            cal.add(Calendar.DAY_OF_YEAR, -1)
+            dateFormat.format(cal.time)
+        } catch (_: Exception) {
+            dateKey
+        }
+    }
+
+    suspend fun getOrCreateProfile(userId: String): UserProfileEntity =
+        withContext(Dispatchers.IO) {
+            profileDao.getProfile(userId) ?: UserProfileEntity(
+                userId = userId,
+                createdAt = System.currentTimeMillis()
+            ).also { profileDao.upsert(it) }
+        }
+
+    suspend fun ensureTodayExists(userId: String) {
+        val todayKey = today()
+        if (activityDao.getActivityForDate(userId, todayKey) == null) {
+            val profile = getOrCreateProfile(userId)
+            activityDao.upsert(
+                UserActivityEntity(
+                    userId = userId,
+                    dateKey = todayKey,
+                    dailyGoalTarget = profile.dailyGoalXp
+                )
+            )
+            updateStreakOnNewDay(userId)
+        }
+    }
+
+    private suspend fun awardXp(
+        userId: String,
+        baseXp: Int,
+        source: String,
+        wordId: Int? = null
+    ): XpResult = withContext(Dispatchers.IO) {
+        val todayKey = today()
+        val now = System.currentTimeMillis()
+        val profile = getOrCreateProfile(userId)
+
+        val multiplier = (1f + (profile.currentStreak * appConfigProvider.xpStreakMultiplierStep))
+            .coerceIn(1f, appConfigProvider.xpStreakMultiplierMax)
+        val totalXp = (baseXp * multiplier).toInt()
+
+        xpEventDao.insert(
+            XpEventEntity(
+                userId = userId,
+                dateKey = todayKey,
+                source = source,
+                baseXp = baseXp,
+                streakMultiplier = multiplier,
+                amount = totalXp,
+                wordId = wordId
+            )
+        )
+
+        activityDao.addXp(userId, todayKey, totalXp, now)
+        profileDao.addXpAtomic(userId, totalXp, now)
+
+        val newTotalXp = profile.totalXp + totalXp
+        val oldLevel = UserLevel.fromXp(profile.totalXp)
+        val newLevel = UserLevel.fromXp(newTotalXp)
+        val leveledUp = newLevel.ordinal > oldLevel.ordinal
+
+        val todayActivity = activityDao.getActivityForDate(userId, todayKey)
+        val dailyGoalJustMet = todayActivity != null &&
+                !todayActivity.dailyGoalMet &&
+                todayActivity.totalXpEarned >= todayActivity.dailyGoalTarget
+
+        if (dailyGoalJustMet) {
+            val bonus = appConfigProvider.xpDailyGoalBonus
+            activityDao.markDailyGoalMet(userId, todayKey, bonus, now)
+            xpEventDao.insert(
+                XpEventEntity(
+                    userId = userId,
+                    dateKey = todayKey,
+                    source = "daily_goal_bonus",
+                    baseXp = bonus,
+                    streakMultiplier = 1f,
+                    amount = bonus
+                )
+            )
+            profileDao.addXpAtomic(userId, bonus, now)
+        }
+
+        XpResult(
+            baseXp = baseXp,
+            streakMultiplier = multiplier,
+            totalXp = totalXp,
+            newTotalXp = newTotalXp,
+            newLevel = newLevel,
+            leveledUp = leveledUp,
+            dailyGoalJustMet = dailyGoalJustMet
+        )
+    }
+
+    suspend fun recordWordView(userId: String, wordId: Int? = null): XpResult =
+        withContext(Dispatchers.IO) {
+            ensureTodayExists(userId)
+            activityDao.incrementWordsViewed(userId, today(), System.currentTimeMillis())
+            awardXp(userId, appConfigProvider.xpWordView, "word_view", wordId)
+        }
+
+    suspend fun recordNewWord(userId: String) = withContext(Dispatchers.IO) {
+        getOrCreateProfile(userId)
+    }
+
+    suspend fun recordRecallSuccess(userId: String, wordId: Int? = null): XpResult =
+        withContext(Dispatchers.IO) {
+            ensureTodayExists(userId)
+            activityDao.incrementRecallSuccess(userId, today(), 0, System.currentTimeMillis())
+            awardXp(userId, appConfigProvider.xpRecallSuccess, "recall_success", wordId)
+        }
+
+    suspend fun recordRecallFail(userId: String) = withContext(Dispatchers.IO) {
+        ensureTodayExists(userId)
+        activityDao.incrementRecallFail(userId, today(), System.currentTimeMillis())
+    }
+
+    suspend fun recordPracticeSuccess(userId: String, wordId: Int? = null): XpResult =
+        withContext(Dispatchers.IO) {
+            ensureTodayExists(userId)
+            activityDao.incrementPracticeSuccess(userId, today(), 0, System.currentTimeMillis())
+            awardXp(userId, appConfigProvider.xpPracticeSuccess, "practice_success", wordId)
+        }
+
+    suspend fun recordWordMastered(userId: String, wordId: Int? = null): XpResult =
+        withContext(Dispatchers.IO) {
+            ensureTodayExists(userId)
+            activityDao.incrementMastered(userId, today(), 0, System.currentTimeMillis())
+            awardXp(userId, appConfigProvider.xpWordMastered, "word_mastered", wordId)
+        }
+
+    suspend fun recordSessionComplete(userId: String, durationMs: Long) =
+        withContext(Dispatchers.IO) {
+            ensureTodayExists(userId)
+            val now = System.currentTimeMillis()
+            activityDao.incrementSessionCount(userId, today(), now)
+            activityDao.addSessionTime(userId, today(), durationMs, now)
+        }
+
+    suspend fun addSessionTime(userId: String, durationMs: Long) =
+        withContext(Dispatchers.IO) {
+            ensureTodayExists(userId)
+            activityDao.addSessionTime(userId, today(), durationMs, System.currentTimeMillis())
+        }
+
+    private suspend fun updateStreakOnNewDay(userId: String) {
+        val activeDays = activityDao.getActiveDays(userId)
+        val todayKey = today()
+        val yesterdayKey = yesterday()
+        val now = System.currentTimeMillis()
+
+        val profile = getOrCreateProfile(userId)
+
+        // A freeze bridges exactly one missed day. The missed day is synthesized into the
+        // counted chain only — never written as activity, XP, or history (continuity-only).
+        // priorDays excludes today (just created above): the gap check sees real history.
+        val priorDays = activeDays.filter { it != todayKey }
+        val bridged = StreakEngine.shouldConsumeFreeze(
+            priorDays, todayKey, yesterdayKey, ::previousDay
+        ) && profile.streakFreezes > 0
+        if (bridged) {
+            profileDao.consumeStreakFreeze(userId, now)
+        }
+
+        val updatedDays = when {
+            bridged -> listOf(todayKey, yesterdayKey) + priorDays
+            activeDays.firstOrNull() != todayKey -> listOf(todayKey) + activeDays
+            else -> activeDays
+        }
+
+        val streak = StreakEngine.calculateStreak(
+            updatedDays, todayKey, yesterdayKey, ::previousDay
+        )
+
+        profileDao.updateStreak(userId, streak, todayKey, now)
+
+        // Milestones reward real continuity only: a bridged count must never mint
+        // milestone XP for a day with no study behind it.
+        if (!bridged) {
+            StreakEngine.checkMilestone(streak)?.let { milestone ->
+                xpEventDao.insert(
+                    XpEventEntity(
+                        userId = userId,
+                        dateKey = todayKey,
+                        source = "streak_milestone_${milestone.days}",
+                        baseXp = milestone.bonusXp,
+                        streakMultiplier = 1f,
+                        amount = milestone.bonusXp
+                    )
+                )
+                activityDao.addXp(userId, todayKey, milestone.bonusXp, now)
+                profileDao.addXpAtomic(userId, milestone.bonusXp, now)
+            }
+        }
+
+        if (profile.lastActiveDate != todayKey) {
+            val bonus = appConfigProvider.xpFirstSessionBonus
+            xpEventDao.insert(
+                XpEventEntity(
+                    userId = userId,
+                    dateKey = todayKey,
+                    source = "first_session_bonus",
+                    baseXp = bonus,
+                    streakMultiplier = 1f,
+                    amount = bonus
+                )
+            )
+            activityDao.addXp(userId, todayKey, bonus, now)
+            profileDao.addXpAtomic(userId, bonus, now)
+        }
+    }
+
+    internal suspend fun getCurrentStreak(userId: String): Int = withContext(Dispatchers.IO) {
+        try {
+            val activeDays = activityDao.getActiveDays(userId)
+            StreakEngine.calculateStreak(activeDays, today(), yesterday(), ::previousDay)
+        } catch (e: Exception) {
+            Log.e(TAG, "Streak calc error: ${e.message}")
+            0
+        }
+    }
+
+    suspend fun getDashboardData(userId: String): DashboardData = withContext(Dispatchers.IO) {
+        val profile = getOrCreateProfile(userId)
+        val todayKey = today()
+        val now = System.currentTimeMillis()
+
+        val todayXp = xpEventDao.getTodayXp(userId, todayKey)
+
+        val totalXp = profile.totalXp
+        val level = UserLevel.fromXp(totalXp)
+        val levelProgress = UserLevel.levelProgress(totalXp)
+        val xpToNextLevel = UserLevel.xpToNextLevel(totalXp)
+
+        val todayActivity = activityDao.getActivityForDate(userId, todayKey)
+        val totalActiveDays = activityDao.getTotalActiveDays(userId)
+
+        val totalWordsViewed = activityDao.getTotalWordsViewed(userId)
+        val totalSessionCount = activityDao.getTotalSessionCount(userId)
+        val totalTimeMs = activityDao.getTotalTimeMs(userId)
+
+        val totalWordsMastered = progressDao.getMasteredCount(userId)
+        val totalWordsLearning = progressDao.getLearningCount(userId)
+        val totalWordsNeedsReview = progressDao.getNeedsReviewCount(userId, now)
+        val totalWordsLearned = totalWordsMastered + totalWordsLearning
+
+        DashboardData(
+            totalXp = totalXp,
+            todayXp = todayXp,
+            level = level,
+            levelProgress = levelProgress,
+            xpToNextLevel = xpToNextLevel,
+            currentStreak = profile.currentStreak,
+            bestStreak = profile.bestStreak,
+            totalWordsViewed = totalWordsViewed,
+            totalWordsLearned = totalWordsLearned,
+            totalWordsMastered = totalWordsMastered,
+            totalWordsLearning = totalWordsLearning,
+            totalWordsNeedsReview = totalWordsNeedsReview,
+            totalSessionCount = totalSessionCount,
+            totalTimeMs = totalTimeMs,
+            totalDaysActive = totalActiveDays,
+            dailyGoalTarget = profile.dailyGoalXp,
+            dailyGoalProgress = todayXp,
+            dailyGoalMet = todayActivity?.dailyGoalMet ?: false,
+            streakFreezes = profile.streakFreezes
+        )
+    }
+
+    suspend fun getTodayActivity(userId: String): UserActivityEntity? =
+        withContext(Dispatchers.IO) {
+            activityDao.getActivityForDate(userId, today())
+        }
+
+    suspend fun getRecentActivity(userId: String, days: Int = 7): List<UserActivityEntity> =
+        withContext(Dispatchers.IO) {
+            activityDao.getRecentActivities(userId, days)
+        }
+
+    suspend fun updateDailyGoal(userId: String, goalXp: Int) =
+        withContext(Dispatchers.IO) {
+            profileDao.updateDailyGoal(userId, goalXp, System.currentTimeMillis())
+        }
+
+    suspend fun migrateLocalData(fromUserId: String, toUserId: String) =
+        withContext(Dispatchers.IO) {
+            try {
+                // If target user already has data, just delete the anonymous records
+                val existingProfile = profileDao.getProfile(toUserId)
+                if (existingProfile != null) {
+                    profileDao.deleteByUserId(fromUserId)
+                    activityDao.deleteByUserId(fromUserId)
+                } else {
+                    activityDao.migrateUserId(fromUserId, toUserId)
+                    profileDao.migrateUserId(fromUserId, toUserId)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Migration failed: ${e.message}", e)
+            }
+        }
+}
