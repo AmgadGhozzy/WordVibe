@@ -39,11 +39,40 @@ class UserWordProgressRepository @Inject constructor(
 
     suspend fun getOrCreateProgress(userId: String, wordId: Int): UserWordProgress =
         withContext(Dispatchers.IO) {
-            progressDao.getProgress(userId, wordId)?.toDomain()
+            readProgress(userId, wordId)?.toDomain()
                 ?: UserWordProgress(userId = userId, wordId = wordId).also {
                     progressDao.upsert(it.toEntity())
                     activityRepository.recordNewWord(userId)
                 }
+        }
+
+    private suspend fun readProgress(
+        userId: String,
+        wordId: Int
+    ): UserWordProgressEntity? = progressDao.getProgress(userId, wordId)
+
+    /**
+     * Read-only progress for display and prefetch: never fabricates a row. Unknown words
+     * read as transient NEW. Only real interactions (views, taps) create progress.
+     */
+    suspend fun getDisplayProgress(userId: String, wordId: Int): UserWordProgress =
+        withContext(Dispatchers.IO) {
+            readProgress(userId, wordId)?.toDomain()
+                ?: UserWordProgress(userId = userId, wordId = wordId)
+        }
+
+    /**
+     * New words by the single DB-backed definition: word rows with no progress row for
+     * this user, rank-ordered. Never assembled from ID lists in callers.
+     */
+    suspend fun getNewWordsForUser(
+        userId: String,
+        limit: Int = 15
+    ): List<com.venom.domain.model.WordMaster> =
+        withContext(Dispatchers.IO) {
+            wordMasterDao.getNewWordsForUser(userId, limit).map {
+                WordMasterEntityMapper.toDomain(it)
+            }
         }
 
     suspend fun getWordsDueForReview(
@@ -229,8 +258,12 @@ class UserWordProgressRepository @Inject constructor(
             }
         }
 
+    /**
+     * Viewing counts activity and XP but never fabricates a progress row: viewed words
+     * stay new until a real tap, so they can neither re-enter as new nor vanish into
+     * never-due limbo.
+     */
     suspend fun recordView(userId: String, wordId: Int) = withContext(Dispatchers.IO) {
-        ensureProgressExists(userId, wordId)
         activityRepository.recordWordView(userId, wordId)
     }
 

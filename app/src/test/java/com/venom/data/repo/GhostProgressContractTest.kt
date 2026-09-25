@@ -44,9 +44,11 @@ class GhostProgressContractTest {
         override suspend fun getWordsByUnit(unitId: String): List<WordMasterEntity> = emptyList()
         override suspend fun getUnitsByLevel(level: String): List<String> = emptyList()
         override suspend fun getWordCount(): Int = 0
-        override suspend fun getNewWords(seenIds: List<Int>, limit: Int): List<WordMasterEntity> =
-            emptyList()
         override suspend fun getRandomWords(limit: Int): List<WordMasterEntity> = emptyList()
+        override suspend fun getNewWordsForUser(
+            userId: String,
+            limit: Int
+        ): List<WordMasterEntity> = emptyList()
         override suspend fun getRandomUnseenWordsForUser(
             userId: String,
             limit: Int

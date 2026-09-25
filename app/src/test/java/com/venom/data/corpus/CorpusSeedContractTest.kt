@@ -32,8 +32,6 @@ class CorpusSeedContractTest {
             inserted += words
             count += words.size
         }
-        override suspend fun getNewWords(seenIds: List<Int>, limit: Int): List<WordMaster> =
-            emptyList()
         override suspend fun getRandomWords(limit: Int): List<WordMaster> = emptyList()
     }
 

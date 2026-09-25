@@ -265,7 +265,7 @@ class WordMasteryViewModel @Inject constructor(
                                 operation.sessionId
                             )
 
-                            val progress = progressRepository.getOrCreateProgress(
+                            val progress = progressRepository.getDisplayProgress(
                                 operation.userId,
                                 operation.wordId
                             )
@@ -664,7 +664,7 @@ class WordMasteryViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val userId = identityRepository.getCurrentUserId()
-                val progress = progressRepository.getOrCreateProgress(userId, wordId)
+                val progress = progressRepository.getDisplayProgress(userId, wordId)
                 val wordProgress = progress.toCurrentWordProgress()
                 wordProgressCache[wordId] = wordProgress
 
@@ -767,8 +767,7 @@ class WordMasteryViewModel @Inject constructor(
             val newNeeded = reviewLimit - reviewWords.size
 
             val newWords = if (newNeeded > 0) {
-                val seenIds = reviewWords.map { it.id }
-                wordMasterRepository.getNewWords(seenIds, newNeeded)
+                progressRepository.getNewWordsForUser(userId, newNeeded)
             } else {
                 emptyList()
             }
@@ -829,7 +828,7 @@ class WordMasteryViewModel @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val userId = identityRepository.getCurrentUserId()
-                val progress = progressRepository.getOrCreateProgress(userId, wordId)
+                val progress = progressRepository.getDisplayProgress(userId, wordId)
                 progress.toCurrentWordProgress()
             } catch (_: Exception) {
                 CurrentWordProgress()
