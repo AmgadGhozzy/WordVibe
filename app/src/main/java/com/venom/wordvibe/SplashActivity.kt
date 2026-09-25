@@ -24,30 +24,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.venom.data.model.SplashPreferences
-import com.venom.data.repo.SettingsRepository
-import com.venom.resources.R
-import com.venom.ui.components.common.adp
-import com.venom.ui.theme.LingoLensTheme
+import com.venom.designsystem.theme.SynapseTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 @SuppressLint("CustomSplashScreen")
 @AndroidEntryPoint
 class SplashActivity : ComponentActivity() {
 
-    @Inject
-    lateinit var settingsRepository: SettingsRepository
-
     private var keepSplashOpened = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Android 12+ Use system splash screen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             installSplashScreen().setKeepOnScreenCondition { keepSplashOpened }
         }
@@ -56,18 +46,12 @@ class SplashActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         lifecycleScope.launch {
-            val prefs = settingsRepository.settings.first().splashPrefs
-            val duration = prefs.splashAnimationDuration.toLong()
-
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                // Android 12+ Just wait to handles UI
-                delay(duration)
                 navigate()
             } else {
-                // Android < 12 Show custom splash
                 setContent {
-                    LingoLensTheme {
-                        SimpleSplashScreen(prefs) { navigate() }
+                    SynapseTheme {
+                        SimpleSplashScreen { navigate() }
                     }
                 }
             }
@@ -75,10 +59,8 @@ class SplashActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun SimpleSplashScreen(prefs: SplashPreferences, onFinish: () -> Unit) {
-
+    private fun SimpleSplashScreen(onFinish: () -> Unit) {
         LaunchedEffect(Unit) {
-            delay(prefs.splashAnimationDuration.toLong())
             onFinish()
         }
 
@@ -93,16 +75,16 @@ class SplashActivity : ComponentActivity() {
                     Image(
                         painter = painterResource(R.drawable.ic_launcher),
                         contentDescription = null,
-                        modifier = Modifier.size(160.adp)
+                        modifier = Modifier.size(160.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(24.adp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "LingoLens",
+                        text = "WordVibe",
                         style = MaterialTheme.typography.headlineLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(prefs.splashTextColor)
+                        color = Color.Black
                     )
                 }
             }
@@ -112,18 +94,9 @@ class SplashActivity : ComponentActivity() {
     private fun navigate() {
         keepSplashOpened = false
 
-        lifecycleScope.launch {
-            val isFirstLaunch = settingsRepository.isFirstLaunch()
-
-            if (isFirstLaunch) {
-                settingsRepository.markFirstLaunchComplete()
-            }
-
-            startActivity(Intent(this@SplashActivity, MainActivity::class.java).apply {
-                putExtra("show_onboarding", isFirstLaunch)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            })
-            finish()
-        }
+        startActivity(Intent(this@SplashActivity, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
+        finish()
     }
 }

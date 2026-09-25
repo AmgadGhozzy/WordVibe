@@ -1,3 +1,138 @@
 <resources>
     <string name="app_name">WordVibe</string>
+
+    <!-- Navigation -->
+    <string name="synapse_nav_home">الرئيسية</string>
+    <string name="synapse_nav_library">المكتبة</string>
+    <string name="synapse_nav_marketplace">المتجر</string>
+    <string name="synapse_nav_stats">الإحصائيات</string>
+    <string name="synapse_nav_flashcards">البطاقات</string>
+    <string name="synapse_nav_spelling">الإملاء</string>
+
+    <!-- Screen titles -->
+    <string name="synapse_screen_dashboard">WordVibe</string>
+    <string name="synapse_screen_library">المكتبة</string>
+    <string name="synapse_screen_stats">الإحصائيات</string>
+    <string name="synapse_screen_quiz">اختبار</string>
+    <string name="synapse_screen_profile">الملف الشخصي</string>
+    <string name="synapse_screen_onboarding">مرحباً</string>
+    <string name="synapse_screen_stackcard">البطاقات</string>
+    <string name="synapse_screen_lingospell">الإملاء</string>
+
+    <!-- Screen subtitles -->
+    <string name="synapse_subtitle_library">مجموعتك التعليمية</string>
+    <string name="synapse_subtitle_stats">تقدمك</string>
+    <string name="synapse_subtitle_quiz">اختبر معرفتك</string>
+    <string name="synapse_subtitle_profile">الحساب</string>
+    <string name="synapse_subtitle_onboarding">لنبدأ</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">تعلّم بالإيقاع الصحيح</string>
+    <string name="onboarding_tagline">كلمات جديدة كل يوم، ومراجعة ذكية تظهر في وقتها، ونظرة أوضح لمفرداتك.</string>
+    <string name="onboarding_point_1">بطاقات ذكية تراجعك في الوقت المناسب</string>
+    <string name="onboarding_point_2">تدريب إملائي مبني على كلماتك</string>
+    <string name="onboarding_point_3">إحصائيات تعكس تقدمك بوضوح</string>
+    <string name="onboarding_cta">ابـدأ الآن</string>
+
+    <!-- Home -->
+    <string name="home_brand_name">WordVibe</string>
+    <string name="home_tagline">اتقن الإنجليزية ببطاقات ذكية ومراجعة على إيقاعك</string>
+    <string name="home_start_learning">ابدأ التعلم</string>
+    <string name="home_tap_to_view_details">اضغط لعرض التفاصيل</string>
+
+    <!-- Placement choice -->
+    <string name="placement_welcome">أهلاً بك 🎓</string>
+    <string name="placement_intro">كيف تريد أن تبدأ رحلتك التعليمية؟</string>
+    <string name="placement_cta_test">اجرِ اختبار تحديد المستوى</string>
+    <string name="placement_cta_test_hint">أجب عن 6 أسئلة سريعة لتحديد مستواك</string>
+    <string name="placement_cta_beginner">ابدأ من البداية</string>
+    <string name="placement_cta_beginner_hint">ابدأ من المستوى المبتدئ (A1)</string>
+
+    <!-- Theme -->
+    <string name="profile_dark_mode">داكن</string>
+    <string name="profile_light_mode">فاتح</string>
+    <string name="profile_follow_system">حسب النظام</string>
+
+    <!-- Levels -->
+    <string name="desc_advanced">مفردات احترافية وأكاديمية</string>
+    <string name="desc_beginner">أكثر الكلمات استخداماً في الحياة اليومية</string>
+    <string name="desc_elementary">مفردات أساسية للتواصل اليومي</string>
+    <string name="desc_intermediate">مفردات موسّعة لمحادثة طليقة</string>
+    <string name="desc_mastery">مفردات مستوى الخبرة</string>
+    <string name="desc_upper_intermediate">مهارات تواصل متقدمة</string>
+    <string name="level_advanced">متقدم</string>
+    <string name="level_beginner">مبتدئ</string>
+    <string name="level_elementary">أساسي</string>
+    <string name="level_intermediate">متوسط</string>
+    <string name="level_mastery">إتقان</string>
+    <string name="level_upper_intermediate">فوق المتوسط</string>
+
+    <!-- Misc -->
+    <string name="profile_photo_description">صورة الملف الشخصي</string>
+    <string name="go_pro_label">الترقية</string>
+    <string name="go_pro_label_premium">المميز</string>
+    <!-- Close / Actions -->
+    <string name="action_close">إغلاق</string>
+    <string name="card_swiper_stack">مصفوفة بطاقات لتعلم الكلمات.</string>
+    <string name="correct_symbol">✓</string>
+    <string name="dark_mode">داكن</string>
+    <string name="follow_system">حسب النظام</string>
+    <string name="hearts_description">القلوب</string>
+    <string name="incorrect_symbol">✗</string>
+    <string name="light_mode">فاتح</string>
+    <string name="next_button">التالي</string>
+    <string name="score">نتيجتك</string>
+    <string name="session_complete">انتهت الجلسة!</string>
+    <string name="session_complete_message">راجعت كل الكلمات في هذه الجلسة.\nجاهز لبدء جلسة جديدة؟</string>
+    <string name="timer_description">المؤقت</string>
+
+    <!-- Translation Providers -->
+    <string name="provider_chatgpt">ChatGPT</string>
+    <string name="provider_chatgpt_description">ترجمات بالذكاء الاصطناعي مع فهم السياق</string>
+    <string name="provider_deepseek">DeepSeek</string>
+    <string name="provider_deepseek_description">ترجمات بالذكاء الاصطناعي مع فهم السياق</string>
+    <string name="provider_gemini">Gemini</string>
+    <string name="provider_gemini_description">ترجمات بالذكاء الاصطناعي مع فهم السياق</string>
+    <string name="provider_google">ترجمة جوجل</string>
+    <string name="provider_google_description">خدمة ترجمة سريعة وموثوقة</string>
+    <string name="provider_groq">Groq</string>
+    <string name="provider_groq_description">ترجمات بالذكاء الاصطناعي مع فهم السياق</string>
+    <string name="provider_huggingface">HuggingFace</string>
+    <string name="provider_huggingface_description">ترجمات بالذكاء الاصطناعي مع فهم السياق</string>
+    <string name="provider_offline">بدون إنترنت</string>
+    <string name="provider_offline_description">ترجمة بدون إنترنت</string>
+
+    <!-- Mastery -->
+    <string name="mastery_bookmark_add">أضف إلى المحفوظات</string>
+    <string name="mastery_bookmark_remove">أزل من المحفوظات</string>
+    <string name="mastery_category">الفئة</string>
+    <string name="mastery_collocations">المتلازمات</string>
+    <string name="mastery_contextual_examples">أمثلة</string>
+    <string name="mastery_difficulty">الصعوبة</string>
+    <string name="mastery_flip">اقلب البطاقة</string>
+    <string name="mastery_frequency">الانتشار</string>
+    <string name="mastery_info">معلومات إضافية</string>
+    <string name="mastery_insights">رؤى</string>
+    <string name="mastery_meaning">المعنى</string>
+    <string name="mastery_next_review">المراجعة القادمة</string>
+    <string name="mastery_oxford_badge">مفردات أوكسفورد الأساسية</string>
+    <string name="mastery_oxford_core">أوكسفورد الأساسية</string>
+    <string name="mastery_oxford_description">هذه الكلمة جزء من مفردات أوكسفورد 3000™ الأساسية، الضرورية لمتعلمي الإنجليزية.</string>
+    <string name="mastery_pin">ثبّت اللغة</string>
+    <string name="mastery_pin_language_hint">اضغط على لغة لتثبيتها على وجه البطاقة. اضغط مجدداً لإلغاء التثبيت.</string>
+    <string name="mastery_power">القوة</string>
+    <string name="mastery_power_tip_message">إتقان هذه الكلمة يمنحك أساساً قوياً لإنجليزية طليقة.</string>
+    <string name="mastery_practice">تمرّن</string>
+    <string name="mastery_register">المستوى اللغوي</string>
+    <string name="mastery_related_concepts">مفاهيم ذات صلة</string>
+    <string name="mastery_repetitions">التكرارات</string>
+    <string name="mastery_speak">انطق</string>
+    <string name="mastery_synonyms">مرادفات</string>
+    <string name="mastery_tap_to_flip">اضغط للقلب</string>
+    <string name="mastery_teachers_tip">نصيحة المعلم</string>
+    <string name="mastery_unpin">ألغِ تثبيت اللغة</string>
+    <string name="mastery_word_family">عائلة الكلمة</string>
+    <string name="mastery_your_progress">تقدمك</string>
+    <string name="mastery_antonyms">أضداد</string>
+    <string name="percent_mark">%</string>
 </resources>

@@ -10,6 +10,7 @@ import com.venom.analytics.AnalyticsManager
 import com.venom.analytics.CrashlyticsManager
 import com.venom.analytics.StubAnalyticsManager
 import com.venom.analytics.StubCrashlyticsManager
+import com.venom.data.local.OnboardingStore
 import com.venom.data.local.RoomTransactionRunner
 import com.venom.data.local.TransactionRunner
 import com.venom.data.local.WordVibeDatabase
@@ -87,6 +88,11 @@ object AppModule {
             context.preferencesDataStoreFile("wordvibe_settings")
         }
     }
+
+    @Provides
+    @Singleton
+    fun provideOnboardingStore(dataStore: DataStore<Preferences>): OnboardingStore =
+        OnboardingStore(dataStore)
 
     @Provides
     @Singleton
