@@ -25,6 +25,16 @@ class SrsEngine(
         private const val LAPSE_PENALTY = 1.5f
         private const val RECALL_FAIL_STABILITY_DELTA = -2.0f
         private const val PRODUCTION_FAIL_STABILITY_DELTA = -1.0f
+
+        /**
+         * Frozen scheduling tiers (04d): stability bands map to base intervals in hours.
+         * The primitive consumes frozen quality only; exact tiers change by freeze reopen.
+         */
+        private const val TIER_FRESH_HOURS = 4 // stability < 1
+        private const val TIER_DAY_HOURS = 24 // stability < 2
+        private const val TIER_SHORT_HOURS = 72 // stability < 4
+        private const val TIER_WEEK_HOURS = 168 // stability < 6
+        private const val TIER_LONG_HOURS = 336 // stability >= 6
     }
     
     /**
@@ -53,11 +63,11 @@ class SrsEngine(
     fun calculateNextReview(stability: Float, difficultyScore: Int): Long {
         val now = clock()
         val baseIntervalHours = when {
-            stability < 1f -> 4       // 4 hours
-            stability < 2f -> 24      // 1 day
-            stability < 4f -> 72      // 3 days
-            stability < 6f -> 168     // 1 week
-            else -> 336               // 2 weeks
+            stability < 1f -> TIER_FRESH_HOURS // 4 hours
+            stability < 2f -> TIER_DAY_HOURS // 1 day
+            stability < 4f -> TIER_SHORT_HOURS // 3 days
+            stability < 6f -> TIER_WEEK_HOURS // 1 week
+            else -> TIER_LONG_HOURS // 2 weeks
         }
         
         val difficultyFactor = 1.0f - (difficultyScore.coerceIn(1, 10) / 20f)
