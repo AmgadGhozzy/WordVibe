@@ -39,6 +39,26 @@
     <string name="home_tagline">اتقن الإنجليزية ببطاقات ذكية ومراجعة على إيقاعك</string>
     <string name="home_start_learning">ابدأ التعلم</string>
     <string name="home_tap_to_view_details">اضغط لعرض التفاصيل</string>
+    <string name="stat_words">الكلمات</string>
+    <string name="stat_words_learned">الكلمات المتعلمة</string>
+    <string name="stat_streak">السلسلة</string>
+    <string name="stat_xp">XP</string>
+    <string name="stat_mastered">المُتقنة</string>
+    <string name="stat_level">المستوى</string>
+    <string name="stat_learning">تتعلّم</string>
+    <string name="stat_review">للمراجعة</string>
+    <string name="stat_sessions">الجلسات</string>
+    <string name="stat_session_n">الجلسة رقم %1$d</string>
+    <string name="stat_total_xp">إجمالي XP</string>
+    <string name="stat_days">الأيام</string>
+    <string name="stat_days_active">أيام النشاط</string>
+    <string name="stat_level_progress">تقدم المستوى</string>
+    <string name="stat_xp_progress">%1$d / %2$d XP</string>
+    <string name="stat_total_xp_value">%1$d XP</string>
+    <string name="stat_today_xp">+%1$d اليوم</string>
+    <string name="stat_xp_to_next">%1$d XP للوصول إلى المستوى التالي</string>
+    <string name="stat_daily_goal">الهدف اليومي</string>
+    <string name="stat_daily_goal_met">الهدف اليومي تحقق! ✓</string>
 
     <!-- Placement choice -->
     <string name="placement_welcome">أهلاً بك 🎓</string>
