@@ -2,13 +2,15 @@ package com.venom.data.local.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.venom.data.local.entity.QuizAttemptEntity
 
 @Dao
 interface QuizAttemptDao {
 
-    @Insert
+    /** Duplicate idempotency keys are a database-level no-op, never an error. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(attempt: QuizAttemptEntity)
 
     @Insert
@@ -29,6 +31,18 @@ interface QuizAttemptDao {
     /** Lookup by dedupe key for exactly-once session commits. */
     @Query("SELECT * FROM quiz_attempts WHERE idempotencyKey = :key LIMIT 1")
     suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity?
+
+    /** Durable events whose projection was never applied (crash recovery). */
+    @Query("""
+        SELECT * FROM quiz_attempts
+        WHERE projectionApplied = 0 AND idempotencyKey IS NOT NULL AND userId = :userId
+        ORDER BY createdAt ASC
+        LIMIT :limit
+    """)
+    suspend fun getUnapplied(userId: String, limit: Int = 100): List<QuizAttemptEntity>
+
+    @Query("UPDATE quiz_attempts SET projectionApplied = 1 WHERE idempotencyKey = :key")
+    suspend fun markApplied(key: String)
 
     /** Un-synced attempts for background push. */
     @Query("SELECT * FROM quiz_attempts WHERE synced = 0 ORDER BY createdAt ASC LIMIT :limit")

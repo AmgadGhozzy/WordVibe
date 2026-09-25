@@ -13,7 +13,8 @@ import androidx.room.PrimaryKey
     indices = [
         Index(value = ["userId", "wordId"]),
         Index(value = ["userId", "dateKey"]),
-        Index(value = ["synced"])
+        Index(value = ["synced"]),
+        Index(value = ["idempotencyKey"], unique = true)
     ]
 )
 data class QuizAttemptEntity(
@@ -33,8 +34,13 @@ data class QuizAttemptEntity(
     val synced: Boolean = false,
     /**
      * Dedupe key for exactly-once session commits: session + word + outcome + tap ordinal.
-     * Null for rows written before keys existed; nulls never match a real key.
+     * Null for rows written before keys existed; nulls never match a real key and are
+     * skipped by replay. DB-enforced UNIQUE (multiple nulls allowed by SQLite).
      */
     val idempotencyKey: String? = null,
+    /** Owning session id (tapKey session part), for session-scoped queries and debugging. */
+    val sessionId: String? = null,
+    /** True once the projection (progress/SRS/XP) has been applied for this event. */
+    val projectionApplied: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

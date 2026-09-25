@@ -135,8 +135,8 @@ sealed class WordMasteryEvent {
 }
 
 private sealed class DbOperation {
-    data class RecordRecallFail(val userId: String, val wordId: Int, val idempotencyKey: String) : DbOperation()
-    data class RecordRecallSuccess(val userId: String, val wordId: Int, val idempotencyKey: String) : DbOperation()
+    data class RecordRecallFail(val userId: String, val wordId: Int, val idempotencyKey: String, val sessionId: String) : DbOperation()
+    data class RecordRecallSuccess(val userId: String, val wordId: Int, val idempotencyKey: String, val sessionId: String) : DbOperation()
     data class RecordView(val userId: String, val wordId: Int) : DbOperation()
     data class ToggleBookmark(val userId: String, val wordId: Int, val bookmarked: Boolean) :
         DbOperation()
@@ -252,7 +252,8 @@ class WordMasteryViewModel @Inject constructor(
                             progressRepository.recordRecallFail(
                                 operation.userId,
                                 operation.wordId,
-                                operation.idempotencyKey
+                                operation.idempotencyKey,
+                                operation.sessionId
                             )
                         }
 
@@ -260,7 +261,8 @@ class WordMasteryViewModel @Inject constructor(
                             progressRepository.recordRecallSuccess(
                                 operation.userId,
                                 operation.wordId,
-                                operation.idempotencyKey
+                                operation.idempotencyKey,
+                                operation.sessionId
                             )
 
                             val progress = progressRepository.getOrCreateProgress(
@@ -412,13 +414,15 @@ class WordMasteryViewModel @Inject constructor(
                 progressRepository.recordRecallSuccess(
                     userId,
                     result.wordId,
-                    tapKey(result.wordId, "GOOD")
+                    tapKey(result.wordId, "GOOD"),
+                    sessionId()
                 )
             } else {
                 progressRepository.recordRecallFail(
                     userId,
                     result.wordId,
-                    tapKey(result.wordId, "AGAIN")
+                    tapKey(result.wordId, "AGAIN"),
+                    sessionId()
                 )
             }
             // Refresh word progress cache
@@ -451,6 +455,8 @@ class WordMasteryViewModel @Inject constructor(
         return "${sessionStartTime.get()}:$wordId:$outcome:$ordinal"
     }
 
+    private fun sessionId(): String = sessionStartTime.get().toString()
+
     private fun handleSwipeCard(word: WordMaster, isRemembered: Boolean) {
         if (isRemembered) {
             analyticsManager.logFlashcardSwipe(wordId = word.wordEn, direction = "right", screenName = "FlashcardScreen")
@@ -468,11 +474,15 @@ class WordMasteryViewModel @Inject constructor(
                 val userId = identityRepository.getCurrentUserId()
                 if (finalResult == "GOOD") {
                     dbOperationChannel.send(
-                        DbOperation.RecordRecallSuccess(userId, word.id, tapKey(word.id, "GOOD"))
+                        DbOperation.RecordRecallSuccess(
+                            userId, word.id, tapKey(word.id, "GOOD"), sessionId()
+                        )
                     )
                 } else {
                     dbOperationChannel.send(
-                        DbOperation.RecordRecallFail(userId, word.id, tapKey(word.id, "AGAIN"))
+                        DbOperation.RecordRecallFail(
+                            userId, word.id, tapKey(word.id, "AGAIN"), sessionId()
+                        )
                     )
                 }
             }
@@ -515,7 +525,9 @@ class WordMasteryViewModel @Inject constructor(
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 val userId = identityRepository.getCurrentUserId()
                 dbOperationChannel.send(
-                    DbOperation.RecordRecallFail(userId, word.id, tapKey(word.id, "AGAIN"))
+                    DbOperation.RecordRecallFail(
+                        userId, word.id, tapKey(word.id, "AGAIN"), sessionId()
+                    )
                 )
             }
 
@@ -715,6 +727,8 @@ class WordMasteryViewModel @Inject constructor(
 
         try {
             val userId = identityRepository.getCurrentUserId()
+            // Reconcile crashed sessions first: project any durable event that never applied.
+            progressRepository.replayUnappliedEvents(userId)
             val sessionStats = loadSessionStats(userId)
 
             val words = if (isGenerative) {

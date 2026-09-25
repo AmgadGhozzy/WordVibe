@@ -10,6 +10,8 @@ import com.venom.analytics.AnalyticsManager
 import com.venom.analytics.CrashlyticsManager
 import com.venom.analytics.StubAnalyticsManager
 import com.venom.analytics.StubCrashlyticsManager
+import com.venom.data.local.RoomTransactionRunner
+import com.venom.data.local.TransactionRunner
 import com.venom.data.local.WordVibeDatabase
 import com.venom.data.local.dao.QuizAttemptDao
 import com.venom.data.local.dao.UsageDailyDao
@@ -102,4 +104,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideAnalyticsManager(impl: StubAnalyticsManager): AnalyticsManager = impl
+
+    @Provides
+    @Singleton
+    fun provideTransactionRunner(impl: RoomTransactionRunner): TransactionRunner = impl
 }

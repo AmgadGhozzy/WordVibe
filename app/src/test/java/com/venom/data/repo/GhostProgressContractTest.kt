@@ -1,6 +1,7 @@
 package com.venom.data.repo
 
 import com.venom.analytics.CrashlyticsManager
+import com.venom.data.local.TransactionRunner
 import com.venom.data.local.dao.QuizAttemptDao
 import com.venom.data.local.dao.UserActivityDao
 import com.venom.data.local.dao.UserProfileDao
@@ -114,13 +115,28 @@ class GhostProgressContractTest {
     private class FakeQuizAttemptDao : QuizAttemptDao {
         val inserts = mutableListOf<QuizAttemptEntity>()
         override suspend fun insert(attempt: QuizAttemptEntity) {
+            // Mirrors the DB-enforced UNIQUE(idempotencyKey): duplicates explode here too.
+            if (attempt.idempotencyKey != null &&
+                inserts.any { it.idempotencyKey == attempt.idempotencyKey }
+            ) {
+                throw IllegalStateException("UNIQUE constraint failed: quiz_attempts.idempotencyKey")
+            }
             inserts += attempt
         }
         override suspend fun insertAll(attempts: List<QuizAttemptEntity>) {
-            inserts += attempts
+            attempts.forEach { insert(it) }
         }
         override suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity? =
             inserts.firstOrNull { it.idempotencyKey == key }
+        override suspend fun getUnapplied(userId: String, limit: Int): List<QuizAttemptEntity> =
+            inserts.filter {
+                !it.projectionApplied && it.idempotencyKey != null && it.userId == userId
+            }.take(limit)
+        override suspend fun markApplied(key: String) {
+            inserts.replaceAll {
+                if (it.idempotencyKey == key) it.copy(projectionApplied = true) else it
+            }
+        }
         override suspend fun getAttemptCountForWord(userId: String, wordId: Int): Int = 0
         override suspend fun getSuccessCountForWord(userId: String, wordId: Int): Int = 0
         override suspend fun getAttemptsForDate(
@@ -246,6 +262,10 @@ class GhostProgressContractTest {
         override suspend fun sendUnsentReports() {}
     }
 
+    private class FakeTransactions : TransactionRunner {
+        override suspend fun <T> withTransaction(block: suspend () -> T): T = block()
+    }
+
     private fun repository(
         progressDao: FakeProgressDao,
         wordMasterDao: FakeWordMasterDao = FakeWordMasterDao(),
@@ -266,7 +286,8 @@ class GhostProgressContractTest {
             quizAttemptDao = quizDao,
             srsEngine = SrsEngine(),
             activityRepository = activityRepository,
-            crashlytics = crashlytics
+            crashlytics = crashlytics,
+            transactions = FakeTransactions()
         )
     }
 
@@ -307,6 +328,72 @@ class GhostProgressContractTest {
         assertTrue(
             progressDao.upserts.count { it.wordId == 7 } == upsertsAfterFirst,
             "the re-applied key must add no further progress writes"
+        )
+    }
+
+    @Test
+    fun `crashed event replays its projection exactly once`() = runTest {
+        val progressDao = FakeProgressDao()
+        val wordMasterDao = FakeWordMasterDao()
+        wordMasterDao.known[7] = WordMasterEntity(id = 7)
+        val quizDao = FakeQuizAttemptDao()
+        // Event persisted, process died before projection: applied=false.
+        quizDao.inserts += QuizAttemptEntity(
+            userId = "u1",
+            wordId = 7,
+            dateKey = "2026-09-24",
+            questionType = "RECALL",
+            source = "FLASHCARD",
+            isCorrect = false,
+            selectedAnswer = "",
+            correctAnswer = "",
+            idempotencyKey = "session:7:AGAIN:1",
+            projectionApplied = false
+        )
+        val repo = repository(progressDao, wordMasterDao, quizDao)
+
+        repo.replayUnappliedEvents("u1")
+        val projected = progressDao.upserts.filter { it.wordId == 7 }
+        val last = projected.last()
+
+        assertTrue(
+            last.lapsesCount == 1 && last.totalAttempts == 1,
+            "replay must apply the projection (lapses=1, attempts=1)"
+        )
+        val writesAfterFirst = projected.size
+        repo.replayUnappliedEvents("u1")
+
+        assertTrue(
+            progressDao.upserts.count { it.wordId == 7 } == writesAfterFirst,
+            "re-running replay must add no further projection writes"
+        )
+    }
+
+    @Test
+    fun `applied events are never reprojected`() = runTest {
+        val progressDao = FakeProgressDao()
+        val wordMasterDao = FakeWordMasterDao()
+        wordMasterDao.known[7] = WordMasterEntity(id = 7)
+        val quizDao = FakeQuizAttemptDao()
+        quizDao.inserts += QuizAttemptEntity(
+            userId = "u1",
+            wordId = 7,
+            dateKey = "2026-09-24",
+            questionType = "RECALL",
+            source = "FLASHCARD",
+            isCorrect = true,
+            selectedAnswer = "",
+            correctAnswer = "",
+            idempotencyKey = "session:7:GOOD:1",
+            projectionApplied = true
+        )
+        val repo = repository(progressDao, wordMasterDao, quizDao)
+
+        repo.replayUnappliedEvents("u1")
+
+        assertTrue(
+            progressDao.upserts.none { it.wordId == 7 },
+            "an applied event must produce zero projection writes on replay"
         )
     }
 }
