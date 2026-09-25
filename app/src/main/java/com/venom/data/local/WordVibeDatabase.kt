@@ -31,7 +31,7 @@ import com.venom.data.local.entity.XpEventEntity
         UsageDailyEntity::class
     ],
     version = 1,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class WordVibeDatabase : RoomDatabase() {
     abstract fun userIdentityDao(): UserIdentityDao

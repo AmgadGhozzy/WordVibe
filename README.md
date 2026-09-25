@@ -12,8 +12,8 @@ English vocabulary trainer (`com.venom.wordvibe`, minSdk 24, SDK 37): flashcards
 
 ## Stack
 
-Kotlin · Jetpack Compose · Hilt + KSP · Kotlin Serialization · Firebase (Crashlytics, FCM) · Supabase-ready via `local.properties` (keys stay local, never committed). `RECORD_AUDIO` for pronunciation input.
+Kotlin · Jetpack Compose · Hilt + KSP · Kotlin Serialization · Firebase (Crashlytics, FCM). `RECORD_AUDIO` for pronunciation input.
 
 ## Build
 
-Open in Android Studio. Copy required keys into `local.properties` (ignored by git); `app/google-services.json` stays local via `app/.gitignore`.
+Open in Android Studio. `local.properties` is optional (clean checkouts configure without it). `app/google-services.json` is required — fetch it from the Firebase console for `com.venom.wordvibe`; it stays local via `app/.gitignore`. Shared libraries resolve from the vendored `libs/m2repo` (no `~/.m2` or network account needed). Room schemas export to `app/schemas/` on every build.

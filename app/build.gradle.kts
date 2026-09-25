@@ -14,8 +14,12 @@ plugins {
 }
 
 val localProperties = Properties()
+// local.properties is optional: clean checkouts without local keys must still configure.
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
+}
 val versionProperties = Properties()
-localProperties.load(FileInputStream(rootProject.file("local.properties")))
 
 android {
     namespace = "com.venom.wordvibe"
@@ -67,6 +71,9 @@ android {
         compose = true
         buildConfig = true
     }
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
     packaging {
         resources {
             excludes += setOf(
@@ -89,12 +96,11 @@ dependencies {
     // Baseline Profile
     //baselineProfile(project(":baselineprofile"))
 
-    // Firebase
+    // Firebase (messaging wired; analytics/crashlytics via plugins, no direct calls yet)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.config.ktx)
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.core.splashscreen)
@@ -104,11 +110,6 @@ dependencies {
     api(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     api(libs.hilt.navigation.compose)
-
-    // WorkManager (EntitlementSyncWorker)
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.hilt.work)
-    ksp(libs.hilt.work.compiler)
 
     // Room
     api(libs.androidx.room.runtime)
@@ -121,26 +122,6 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.json)
 
-    // Networking
-    api(libs.okhttp)
-
-    // Supabase
-    implementation(libs.supabase.client)
-    implementation(libs.supabase.postgrest)
-    implementation(libs.supabase.auth)
-    implementation(libs.supabase.functions)
-
-    implementation(libs.ktor.client.okhttp)
-
-
-    // Credential Manager (Google Sign-In)
-    implementation(libs.androidx.credentials)
-    implementation(libs.androidx.credentials.play.services.auth)
-    implementation(libs.googleid)
-
-    // Google Play Billing
-    implementation(libs.billing.ktx)
-
     // Android Jetpack
     api(libs.androidx.core.ktx)
     api(libs.androidx.lifecycle.runtime.ktx)
@@ -148,8 +129,6 @@ dependencies {
     api(libs.androidx.lifecycle.runtime.compose)
     api(libs.androidx.lifecycle.viewmodel.compose)
     api(libs.androidx.lifecycle.viewmodel.ktx)
-    api(libs.androidx.fragment.ktx)
-    implementation(libs.androidx.media3.exoplayer)
 
     // Compose
     api(libs.compose.ui)
@@ -158,24 +137,15 @@ dependencies {
     api(libs.compose.material3)
     api(libs.compose.animation)
     implementation(libs.compose.material.icons.extended)
-    implementation("io.coil-kt.coil3:coil-compose:3.4.0")
-    implementation("io.coil-kt.coil3:coil-network-okhttp:3.4.0")
-
-    implementation(libs.androidx.compose.ui.text.google.fonts)
-
-    // Vico Charts
-    api(libs.vico.compose.m3)
 
     // Kotlin
     api(libs.kotlin.stdlib)
 
-    // Shared Synapse libraries (published to mavenLocal)
+    // Shared Synapse libraries (vendored in libs/m2repo; no mavenLocal needed)
     implementation("com.venom:design-system:1.0.0")
-    implementation("com.venom:srs:1.0.0")
 
 
     // Testing
-    testImplementation("io.mockk:mockk:1.13.7")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")

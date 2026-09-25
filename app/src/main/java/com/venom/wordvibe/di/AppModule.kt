@@ -39,6 +39,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    /**
+     * Migration policy (frozen, pre-production): no migrations ship for existing users
+     * because there are none — version 1 with exported schema in `schemas/` is the
+     * baseline. Any future version bump requires an explicit Migration plus schema review;
+     * destructive fallback stays OFF so accidental upgrades crash loudly in dev instead of
+     * silently wiping learning data.
+     */
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): WordVibeDatabase {
@@ -46,7 +53,7 @@ object AppModule {
             context,
             WordVibeDatabase::class.java,
             "wordvibe.db"
-        ).fallbackToDestructiveMigration(false).build()
+        ).build()
     }
 
     @Provides
