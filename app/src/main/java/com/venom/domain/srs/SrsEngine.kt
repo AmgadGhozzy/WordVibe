@@ -7,12 +7,24 @@ import com.venom.domain.model.UserWordProgress
  * Spaced Repetition System engine.
  * Calculates stability and schedules reviews based on learning science.
  */
-class SrsEngine {
+class SrsEngine(
+    private val clock: () -> Long = System::currentTimeMillis
+) {
     
     companion object {
         private const val MASTERY_PRODUCTION_THRESHOLD = 3
         private const val MASTERY_RECALL_THRESHOLD = 3
         private const val MASTERY_STABILITY_THRESHOLD = 2.0f
+
+        /**
+         * Frozen quality magnitudes (04c): recall failure is the stronger negative.
+         * Exact values live with their golden tests; change only by reopening the freeze.
+         */
+        private const val RECALL_SUCCESS_WEIGHT = 1.2f
+        private const val PRODUCTION_SUCCESS_WEIGHT = 2.0f
+        private const val LAPSE_PENALTY = 1.5f
+        private const val RECALL_FAIL_STABILITY_DELTA = -2.0f
+        private const val PRODUCTION_FAIL_STABILITY_DELTA = -1.0f
     }
     
     /**
@@ -29,9 +41,9 @@ class SrsEngine {
                    frequency.coerceIn(1, 6) / 6f * 0.2f
         
         return (base +
-            productionSuccess * 2.0f +
-            recallSuccess * 1.2f -
-            lapsesCount * 1.5f)
+            productionSuccess * PRODUCTION_SUCCESS_WEIGHT +
+            recallSuccess * RECALL_SUCCESS_WEIGHT -
+            lapsesCount * LAPSE_PENALTY)
             .coerceAtLeast(0f)
     }
     
@@ -39,7 +51,7 @@ class SrsEngine {
      * Calculate next review time in milliseconds.
      */
     fun calculateNextReview(stability: Float, difficultyScore: Int): Long {
-        val now = System.currentTimeMillis()
+        val now = clock()
         val baseIntervalHours = when {
             stability < 1f -> 4       // 4 hours
             stability < 2f -> 24      // 1 day
@@ -83,7 +95,7 @@ class SrsEngine {
         val newStability = calculateStability(
             rank, frequency, progress.productionSuccess, newRecallSuccess, progress.lapsesCount
         )
-        val now = System.currentTimeMillis()
+        val now = clock()
         
         val updated = progress.copy(
             recallSuccess = newRecallSuccess,
@@ -98,37 +110,23 @@ class SrsEngine {
     /**
      * Process a failed recall event.
      */
-    fun onRecallFail(progress: UserWordProgress): UserWordProgress {
-        val newLapses = progress.lapsesCount + 1
-        val newTotalAttempts = progress.totalAttempts + 1
-        val reducedStability = (progress.stability - 1.5f).coerceAtLeast(0f)
-        // Increase difficulty on failure (max 10)
-        val newDifficulty = (progress.difficulty + 1).coerceAtMost(10)
-        val now = System.currentTimeMillis()
-        
-        val updated = progress.copy(
-            totalAttempts = newTotalAttempts,
-            lapsesCount = newLapses,
-            stability = reducedStability,
-            difficulty = newDifficulty,
-            lastReview = now,
-            nextReview = calculateNextReview(reducedStability, newDifficulty),
-            knownState = if (progress.knownState == KnownState.MASTERED) KnownState.KNOWN else progress.knownState
-        )
-        return updated
-    }
-    
+    fun onRecallFail(progress: UserWordProgress): UserWordProgress =
+        onFail(progress, RECALL_FAIL_STABILITY_DELTA)
+
     /**
      * Process a failed production event (spelling, writing).
      * Mirrors recall failure; exact quality magnitudes freeze with their tests in 04c.
      */
-    fun onProductionFail(progress: UserWordProgress): UserWordProgress {
+    fun onProductionFail(progress: UserWordProgress): UserWordProgress =
+        onFail(progress, PRODUCTION_FAIL_STABILITY_DELTA)
+
+    private fun onFail(progress: UserWordProgress, stabilityDelta: Float): UserWordProgress {
         val newLapses = progress.lapsesCount + 1
         val newTotalAttempts = progress.totalAttempts + 1
-        val reducedStability = (progress.stability - 1.5f).coerceAtLeast(0f)
+        val reducedStability = (progress.stability + stabilityDelta).coerceAtLeast(0f)
         // Increase difficulty on failure (max 10)
         val newDifficulty = (progress.difficulty + 1).coerceAtMost(10)
-        val now = System.currentTimeMillis()
+        val now = clock()
 
         val updated = progress.copy(
             totalAttempts = newTotalAttempts,
@@ -154,7 +152,7 @@ class SrsEngine {
         )
         // Decrease difficulty on success (min 1)
         val newDifficulty = (progress.difficulty - 1).coerceAtLeast(1)
-        val now = System.currentTimeMillis()
+        val now = clock()
         
         val updated = progress.copy(
             productionSuccess = newProductionSuccess,
