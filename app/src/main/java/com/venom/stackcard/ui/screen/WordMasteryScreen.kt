@@ -184,7 +184,10 @@ private fun MasteryContent(
         }
 
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                // Keep the session ActionBar clear of the floating bottom bar.
+                .padding(bottom = 104.adp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CardsProgressIndicator(

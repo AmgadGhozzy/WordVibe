@@ -196,17 +196,25 @@ fun SpellingGameScreen(
 
                 if (state.mode == SpellingGameMode.TYPING) {
                     // ADR-0008 counted path: free-typed input, no help.
-                    androidx.compose.material3.OutlinedTextField(
-                        value = state.typedInput,
-                        onValueChange = viewModel::onTypedInputChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.adp),
-                        singleLine = true,
-                        enabled = !state.isInputBlocked,
-                        textStyle = MaterialTheme.typography.titleLarge,
-                        label = { Text(stringResource(R.string.spelling_typed_label)) },
-                    )
+                    androidx.compose.runtime.CompositionLocalProvider(
+                        androidx.compose.ui.platform.LocalLayoutDirection provides
+                            androidx.compose.ui.unit.LayoutDirection.Ltr
+                    ) {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = state.typedInput,
+                            onValueChange = viewModel::onTypedInputChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.adp),
+                            singleLine = true,
+                            enabled = !state.isInputBlocked,
+                            textStyle = MaterialTheme.typography.titleLarge,
+                            label = { Text(stringResource(R.string.spelling_typed_label)) },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Ascii
+                            ),
+                        )
+                    }
                     Spacer(Modifier.height(12.adp))
                     androidx.compose.material3.Button(
                         onClick = viewModel::onSubmitTyped,
