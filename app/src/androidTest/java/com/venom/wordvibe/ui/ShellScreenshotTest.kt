@@ -20,6 +20,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.experimental.categories.Category
 import java.io.File
 import java.io.FileOutputStream
 
@@ -30,6 +31,8 @@ import java.io.FileOutputStream
  */
 @RunWith(AndroidJUnit4::class)
 class ShellScreenshotTest {
+
+    private val apiLevel = android.os.Build.VERSION.SDK_INT
 
     @get:Rule
     val compose = createComposeRule()
@@ -81,6 +84,10 @@ class ShellScreenshotTest {
 
     @Test
     fun captureAllTabSurfacesLightAndDark() {
+        org.junit.Assume.assumeTrue(
+            "captureToImage needs PixelCopy (API 26+); API 24 evidence comes from adb screencap",
+            apiLevel >= 26
+        )
         val dashboard = DashboardData(
             currentStreak = 4,
             bestStreak = 9,

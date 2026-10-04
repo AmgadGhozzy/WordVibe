@@ -71,7 +71,8 @@ class SpellingQueueViewModel @Inject constructor(
                 _state.value = QueueUiState(isLoading = false, items = items)
             } catch (e: CancellationException) {
                 throw e
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                android.util.Log.e("SpellingQueue", "queue load failed", e)
                 _state.value = QueueUiState(isLoading = false)
             }
         }

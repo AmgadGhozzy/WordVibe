@@ -34,7 +34,9 @@ val IELTS_TOPICS = setOf(
 
 private val DATE_RE = Regex("""\d{4}-\d{2}-\d{2}""")
 private val LEMMA_RE = Regex("""^[A-Za-z'\-]+$""")
-private val ARABIC_SCRIPT = Regex("""\p{IsArabic}""")
+// \p{IsArabic} (script property) needs API 26+; the Arabic BLOCK works on all
+// supported APIs and covers every Arabic letter the corpus can contain.
+private val ARABIC_SCRIPT = Regex("""\p{InArabic}""")
 
 class CorpusValidationException(violations: List<String>) :
     IllegalStateException("corpus rejected:\n" + violations.joinToString("\n"))
