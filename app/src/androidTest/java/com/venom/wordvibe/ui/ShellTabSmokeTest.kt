@@ -1,9 +1,7 @@
 package com.venom.wordvibe.ui
 
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.venom.domain.model.CefrLevel
@@ -14,21 +12,17 @@ import com.venom.domain.model.WordMaster
 import com.venom.wordvibe.ui.screen.HomeContent
 import com.venom.wordvibe.ui.screen.ProgressContent
 import com.venom.wordvibe.ui.screen.SpellingQueueContent
-import com.venom.wordvibe.ui.designsystem.WordStateChip
-import com.venom.wordvibe.ui.designsystem.WordStateChipStyle
 import com.venom.wordvibe.ui.designsystem.WordVibeTheme
+import com.venom.wordvibe.ui.viewmodel.SpellingQueueViewModel
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.annotation.Config
 
 /**
- * Phase 1 shell smoke contracts (Robolectric, no device): each of the four tab
- * surfaces composes without crashing and shows its distinguishing Arabic content,
- * and the four surfaces are visibly different from one another.
+ * Phase 1/2 shell smoke contracts (instrumented, real device): each tab surface
+ * composes without crashing and shows its distinguishing Arabic content.
  */
 @RunWith(AndroidJUnit4::class)
-@Config(sdk = [34])
 class ShellTabSmokeTest {
 
     @get:Rule
@@ -66,7 +60,7 @@ class ShellTabSmokeTest {
     )
 
     @Test
-    fun `home tab composes with greeting session card and attention rail`() {
+    fun homeTabComposesWithSessionCardAndAttentionRail() {
         compose.setContent {
             WordVibeTheme {
                 HomeContent(
@@ -87,7 +81,7 @@ class ShellTabSmokeTest {
     }
 
     @Test
-    fun `progress tab composes with states and streak`() {
+    fun progressTabComposesWithFourStatesAndScheduling() {
         compose.setContent {
             WordVibeTheme {
                 ProgressContent(
@@ -115,33 +109,33 @@ class ShellTabSmokeTest {
     }
 
     @Test
-    fun `write tab composes due and weak sections`() {
+    fun writeTabComposesQueue() {
         compose.setContent {
             WordVibeTheme {
                 SpellingQueueContent(
                     isLoading = false,
-                    dueWords = listOf(word(1, "substantial")),
-                    weakWords = listOf(word(2, "inevitable")),
+                    items = listOf(
+                        SpellingQueueViewModel.QueueItem(word(1, "substantial"), isDue = true, productionWeak = true),
+                        SpellingQueueViewModel.QueueItem(word(2, "inevitable"), isDue = false, productionWeak = false),
+                    ),
                     selectedWord = null,
                     onPick = {},
                     onDismissEditor = {},
                 )
             }
         }
-        compose.onNodeWithText("مستحقة الآن").assertIsDisplayed()
-        compose.onNodeWithText("ضعيفة في الإنتاج").assertIsDisplayed()
+        compose.onNodeWithText("طابور الكتابة — الأضعف إنتاجًا أولًا").assertIsDisplayed()
         compose.onNodeWithText("substantial").assertIsDisplayed()
         compose.onNodeWithText("inevitable").assertIsDisplayed()
     }
 
     @Test
-    fun `write tab shows the Arabic empty state when the queue is empty`() {
+    fun writeTabShowsTheArabicEmptyStateWhenTheQueueIsEmpty() {
         compose.setContent {
             WordVibeTheme {
                 SpellingQueueContent(
                     isLoading = false,
-                    dueWords = emptyList(),
-                    weakWords = emptyList(),
+                    items = emptyList(),
                     selectedWord = null,
                     onPick = {},
                     onDismissEditor = {},
