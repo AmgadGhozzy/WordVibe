@@ -224,6 +224,26 @@ class SpellingProductionContractTest {
     }
 
     @Test
+    fun `exit after an attempt records the failure once`() {
+        runBlocking {
+            val vm = viewModel()
+            typeAndSubmit(vm, "xxxxxx") // one full error
+            scheduler.advanceTimeBy(com.venom.domain.model.DefaultConfig.Spelling.AUTO_ADVANCE_MS + 10)
+            scheduler.advanceUntilIdle()
+
+            vm.onCloseClick()
+            harness.await(scheduler) {
+                harness.progressDao.rows["u1" to 7]?.lapsesCount == 1
+            }
+            assertEquals(
+                1,
+                productionEvents().count { !it.isCorrect },
+                "exiting after one mistake records exactly one failure"
+            )
+        }
+    }
+
+    @Test
     fun `hints alone can never reach mastery`() {
         runBlocking {
             val vm = viewModel()

@@ -12,7 +12,9 @@ enum class ProductionGrade { CORRECT, NEAR_MISS, INCORRECT }
  *
  * Normalization: case-insensitive, whitespace collapsed and trimmed.
  * Exact match (expected or any variant) -> CORRECT.
- * Levenshtein distance exactly 1 -> NEAR_MISS ("قريب جدًا" + retry, unrecorded).
+ * Levenshtein distance exactly 1 with a long-enough typed word (>= 5 chars,
+ * PM closure decision: for short words one edit is a different word — act/art)
+ * -> NEAR_MISS ("قريب جدًا" + retry, unrecorded, never credited, never punished).
  * Anything else -> INCORRECT.
  */
 object ProductionGrader {
@@ -22,9 +24,11 @@ object ProductionGrader {
         if (typed.isEmpty()) return ProductionGrade.INCORRECT
         if (typed == normalize(expected)) return ProductionGrade.CORRECT
         if (variants.any { typed == normalize(it) }) return ProductionGrade.CORRECT
-        return if (levenshtein(typed, normalize(expected)) == 1 ||
-            variants.any { levenshtein(typed, normalize(it)) == 1 }
-        ) {
+        val nearMissCandidate = { candidate: String ->
+            typed.length >= MIN_NEAR_MISS_LENGTH &&
+                levenshtein(typed, normalize(candidate)) == 1
+        }
+        return if (nearMissCandidate(expected) || variants.any(nearMissCandidate)) {
             ProductionGrade.NEAR_MISS
         } else {
             ProductionGrade.INCORRECT
@@ -33,6 +37,8 @@ object ProductionGrader {
 
     fun normalize(text: String): String =
         text.trim().lowercase().replace(whitespace, " ")
+
+    private const val MIN_NEAR_MISS_LENGTH = 5
 
     private val whitespace = Regex("""\s+""")
 

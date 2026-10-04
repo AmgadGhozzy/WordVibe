@@ -60,6 +60,21 @@ class ProductionGraderTest {
     }
 
     @Test
+    fun `short words one edit apart are full errors, not near misses`() {
+        // PM closure decision: act/art differ by one edit but are entirely
+        // different words — short words never get the near-miss retry.
+        assertEquals(ProductionGrade.INCORRECT, ProductionGrader.grade("art", "act", emptyList()))
+        assertEquals(ProductionGrade.INCORRECT, ProductionGrader.grade("axt", "act", emptyList()))
+    }
+
+    @Test
+    fun `near miss never grades as correct`() {
+        // affect/effect-class confusions get the "قريب جدًا" retry nudge with no
+        // credit and no recorded failure (ADR-0008) — but never CORRECT.
+        assertEquals(ProductionGrade.NEAR_MISS, ProductionGrader.grade("effact", "effect", emptyList()))
+    }
+
+    @Test
     fun `blank input is never correct`() {
         assertEquals(ProductionGrade.INCORRECT, ProductionGrader.grade("", "substantial", emptyList()))
         assertEquals(ProductionGrade.INCORRECT, ProductionGrader.grade("   ", "substantial", emptyList()))
