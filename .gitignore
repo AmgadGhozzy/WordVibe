@@ -17,9 +17,8 @@ local.properties
 # Editor backups
 *~
 
-# Google Services (API keys — local only)
-google-services.json
-
+# google-services.json is COMMITTED: it contains public Android identifiers (no
+# secrets) and the Google Services plugin fails a clean clone without it.
 # Kotlin tooling cache
 .kotlin/
 

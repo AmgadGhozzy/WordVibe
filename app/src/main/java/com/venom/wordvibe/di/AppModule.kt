@@ -14,6 +14,8 @@ import com.venom.data.local.OnboardingStore
 import com.venom.data.local.RoomTransactionRunner
 import com.venom.data.local.TransactionRunner
 import com.venom.data.local.WordVibeDatabase
+import com.venom.data.local.DateProvider
+import com.venom.data.local.SystemDateProvider
 import com.venom.data.local.dao.QuizAttemptDao
 import com.venom.data.local.dao.UsageDailyDao
 import com.venom.data.local.dao.UserActivityDao
@@ -25,7 +27,9 @@ import com.venom.data.local.dao.XpEventDao
 import com.venom.data.repo.StubQuizRepository
 import com.venom.data.repo.StubRemoteConfig
 import com.venom.data.repo.StubWordMasterRepository
+import com.venom.data.repo.UserIdentityRepository
 import com.venom.domain.repo.IQuizRepository
+import com.venom.domain.repo.IUserIdentityRepository
 import com.venom.domain.repo.IRemoteConfig
 import com.venom.domain.repo.IWordMasterRepository
 import com.venom.domain.srs.SrsEngine
@@ -121,4 +125,14 @@ object AppModule {
     @Provides
     @Singleton
     fun provideTransactionRunner(impl: RoomTransactionRunner): TransactionRunner = impl
+
+    @Provides
+    @Singleton
+    fun provideDateProvider(): DateProvider = SystemDateProvider()
+
+    @Provides
+    @Singleton
+    fun provideIUserIdentityRepository(
+        impl: UserIdentityRepository
+    ): IUserIdentityRepository = impl
 }

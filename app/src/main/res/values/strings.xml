@@ -8,6 +8,9 @@
     <string name="synapse_nav_stats">الإحصائيات</string>
     <string name="synapse_nav_flashcards">البطاقات</string>
     <string name="synapse_nav_spelling">الإملاء</string>
+    <string name="nav_learn">تعلّم</string>
+    <string name="nav_write">الكتابة</string>
+    <string name="nav_progress">تقدّمي</string>
 
     <!-- Screen titles -->
     <string name="synapse_screen_dashboard">WordVibe</string>
@@ -42,6 +45,7 @@
     <string name="stat_words">الكلمات</string>
     <string name="stat_words_learned">الكلمات المتعلمة</string>
     <string name="stat_streak">السلسلة</string>
+    <string name="stat_best">أطول سلسلة</string>
     <string name="stat_xp">XP</string>
     <string name="stat_mastered">المُتقنة</string>
     <string name="stat_level">المستوى</string>
@@ -155,4 +159,44 @@
     <string name="mastery_your_progress">تقدمك</string>
     <string name="mastery_antonyms">أضداد</string>
     <string name="percent_mark">%</string>
+
+    <!-- Phase 1: shell & design system (Arabic-first, nothing hardcoded) -->
+    <string name="home_greeting">أهلًا بك مجددًا 👋</string>
+    <string name="home_streak_value">السلسلة: %1$d أيام</string>
+    <string name="home_today_session">جلسة اليوم</string>
+    <string name="home_due_label">%1$d كلمة مستحقة للمراجعة</string>
+    <string name="home_new_label">%1$d كلمة جديدة</string>
+    <string name="home_estimated_time">حوالي %1$d دقيقة</string>
+    <string name="home_attention_title">كلمات تحتاج انتباهك</string>
+    <string name="home_attention_empty">لا كلمات متعثرة — واصل التقدم!</string>
+    <string name="home_start_button">ابدأ جلسة اليوم</string>
+    <string name="home_practice_button">تدرّب على الكتابة</string>
+    <string name="state_new">جديدة</string>
+    <string name="state_learning">تتعلّم</string>
+    <string name="state_known">معروفة</string>
+    <string name="state_mastered">متقنة</string>
+    <string name="state_due">مستحقة</string>
+    <string name="write_title">الكتابة</string>
+    <string name="write_due_section">مستحقة الآن</string>
+    <string name="write_weak_section">ضعيفة في الإنتاج</string>
+    <string name="write_queue_empty_title">لا كلمات تنتظر التدريب</string>
+    <string name="write_queue_empty_body">أنهِ جلسة بطاقات أولًا، وستجد هنا الكلمات التي تحتاج ترسيخ الإملاء.</string>
+    <string name="write_count_label">%1$d كلمة</string>
+    <string name="progress_title">تقدّمي</string>
+    <string name="progress_words_by_state">كلماتك حسب الحالة</string>
+    <string name="progress_total_label">من %1$d كلمة</string>
+    <string name="spelling_translate_hint">ترجم إلى الإنجليزية</string>
+    <string name="spelling_perfect">ممتاز!</string>
+    <string name="spelling_reveal_answer">أظهر الإجابة</string>
+    <string name="spelling_attempts_left">محاولات متبقية: %1$d</string>
+    <string name="error_something_wrong">حدث خطأ ما</string>
+    <string name="error_try_again">حاول مجددًا</string>
+    <string name="context_label">السياق</string>
+    <string name="next_review_now">الآن</string>
+    <string name="next_review_soon">قريبًا</string>
+    <string name="next_review_today">اليوم</string>
+    <string name="next_review_tomorrow">غدًا</string>
+    <string name="next_review_in_days">بعد %1$d أيام</string>
+    <string name="next_review_in_weeks">بعد %1$d أسبوع</string>
+    <string name="next_review_in_months">بعد %1$d شهر</string>
 </resources>

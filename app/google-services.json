@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "155294032902",
+    "project_id": "wordvibe-venom",
+    "storage_bucket": "wordvibe-venom.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155294032902:android:f85d0285849bd9a22d4f87",
+        "android_client_info": {
+          "package_name": "com.venom.wordvibe"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAR004oU_MNOyXPGvn3DlRtEJwm9-jFayU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

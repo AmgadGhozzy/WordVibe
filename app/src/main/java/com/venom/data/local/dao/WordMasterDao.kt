@@ -48,6 +48,15 @@ interface WordMasterDao {
     """)
     suspend fun getNewWordsForUser(userId: String, limit: Int): List<WordMasterEntity>
 
+    /** Count of the same frozen new-word definition (LEFT JOIN no-progress-row). */
+    @Query("""
+        SELECT COUNT(*) FROM wordsMaster w
+        LEFT JOIN userWordProgress p
+          ON p.wordId = w.id AND p.userId = :userId
+        WHERE p.wordId IS NULL
+    """)
+    suspend fun countNewWordsForUser(userId: String): Int
+
     /** Get random words (for fallback / topic-based loading). */
     @Query("""
         SELECT * FROM wordsMaster

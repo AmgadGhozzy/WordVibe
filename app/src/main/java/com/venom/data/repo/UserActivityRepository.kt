@@ -2,6 +2,8 @@ package com.venom.data.repo
 
 import android.util.Log
 import com.venom.analytics.CrashlyticsManager
+import com.venom.data.local.DateProvider
+import com.venom.data.local.SystemDateProvider
 import com.venom.data.local.dao.UserActivityDao
 import com.venom.data.local.dao.UserProfileDao
 import com.venom.data.local.dao.UserWordProgressDao
@@ -16,10 +18,6 @@ import com.venom.domain.model.XpResult
 import com.venom.domain.provider.AppConfigProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,33 +28,18 @@ class UserActivityRepository @Inject constructor(
     private val xpEventDao: XpEventDao,
     private val progressDao: UserWordProgressDao,
     private val crashlytics: CrashlyticsManager,
-    private val appConfigProvider: AppConfigProvider
+    private val appConfigProvider: AppConfigProvider,
+    private val dates: DateProvider = SystemDateProvider()
 ) {
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-
     companion object {
         private const val TAG = "UserActivityRepo"
     }
 
-    fun today(): String = dateFormat.format(Date())
+    fun today(): String = dates.todayKey()
 
-    private fun yesterday(): String {
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.DAY_OF_YEAR, -1)
-        return dateFormat.format(cal.time)
-    }
+    private fun yesterday(): String = dates.yesterdayKey()
 
-    private fun previousDay(dateKey: String): String {
-        return try {
-            val date = dateFormat.parse(dateKey) ?: return dateKey
-            val cal = Calendar.getInstance()
-            cal.time = date
-            cal.add(Calendar.DAY_OF_YEAR, -1)
-            dateFormat.format(cal.time)
-        } catch (_: Exception) {
-            dateKey
-        }
-    }
+    private fun previousDay(dateKey: String): String = dates.previousDayKey(dateKey)
 
     suspend fun getOrCreateProfile(userId: String): UserProfileEntity =
         withContext(Dispatchers.IO) {

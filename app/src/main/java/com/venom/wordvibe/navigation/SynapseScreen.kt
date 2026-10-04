@@ -24,16 +24,22 @@ sealed class SynapseScreen(
         titleRes = R.string.synapse_screen_stackcard,
     )
 
-    data object Lingospell : SynapseScreen(
-        route = "wordvibe/lingospell",
-        titleRes = R.string.synapse_screen_lingospell,
+    data object Write : SynapseScreen(
+        route = "wordvibe/write",
+        titleRes = R.string.nav_write,
+    )
+
+    data object Progress : SynapseScreen(
+        route = "wordvibe/progress",
+        titleRes = R.string.nav_progress,
     )
 
     companion object {
         fun fromRoute(route: String?): SynapseScreen = when (route) {
             Dashboard.route -> Dashboard
             StackCard.route -> StackCard
-            Lingospell.route -> Lingospell
+            Write.route -> Write
+            Progress.route -> Progress
             Onboarding.route -> Onboarding
             else -> Dashboard
         }

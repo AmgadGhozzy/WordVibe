@@ -50,6 +50,8 @@ class GhostProgressContractTest {
             userId: String,
             limit: Int
         ): List<WordMasterEntity> = emptyList()
+
+        override suspend fun countNewWordsForUser(userId: String): Int = 0
         override suspend fun getRandomUnseenWordsForUser(
             userId: String,
             limit: Int

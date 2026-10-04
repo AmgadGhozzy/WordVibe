@@ -14,7 +14,6 @@ import com.venom.analytics.ext.logFlashcardSwipe
 import com.venom.data.local.PreferencesKeys
 import com.venom.data.mock.MockWordData
 import com.venom.data.repo.UserActivityRepository
-import com.venom.data.repo.UserIdentityRepository
 import com.venom.data.repo.UserWordProgressRepository
 import com.venom.domain.model.CefrLevel
 import com.venom.domain.model.DashboardData
@@ -26,6 +25,7 @@ import com.venom.domain.model.UserLevel
 import com.venom.domain.model.UserWordProgress
 import com.venom.domain.model.WordMaster
 import com.venom.domain.model.getLanguageOptions
+import com.venom.domain.repo.IUserIdentityRepository
 import com.venom.domain.repo.IWordMasterRepository
 import com.venom.stackcard.ui.components.insights.InsightsTab
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,11 +54,18 @@ import javax.inject.Inject
 @Immutable
 data class CurrentWordProgress(
     val repetitions: Int = 0,
-    val nextReviewText: String = "Now",
+    val nextReviewBucket: NextReviewBucket = NextReviewBucket.NOW,
+    val nextReviewCount: Int = 0,
     val masteryProgress: Float = 0f,
     val isBookmarked: Boolean = false,
     val knownState: KnownState = KnownState.SEEN
 )
+
+/**
+ * UI buckets for the next-review display. The view model classifies; the UI localizes
+ * from strings.xml — no English text crosses the state boundary.
+ */
+enum class NextReviewBucket { NOW, SOON, TODAY, TOMORROW, IN_DAYS, IN_WEEKS, IN_MONTHS }
 
 @Immutable
 data class SessionStats(
@@ -145,7 +152,7 @@ private sealed class DbOperation {
 @HiltViewModel
 class WordMasteryViewModel @Inject constructor(
     private val progressRepository: UserWordProgressRepository,
-    private val identityRepository: UserIdentityRepository,
+    private val identityRepository: IUserIdentityRepository,
     private val activityRepository: UserActivityRepository,
     private val wordMasterRepository: IWordMasterRepository,
     private val analyticsManager: AnalyticsManager,
@@ -461,30 +468,21 @@ class WordMasteryViewModel @Inject constructor(
         if (isRemembered) {
             analyticsManager.logFlashcardSwipe(wordId = word.wordEn, direction = "right", screenName = "FlashcardScreen")
             crashlyticsManager.logBreadcrumb("Swiped remember: ${word.wordEn}")
-            
-            val previousResult = sessionResults[word.id]
-            if (previousResult == null) {
-                sessionResults[word.id] = "GOOD"
-            }
-            val finalResult = sessionResults[word.id] ?: "GOOD"
+
+            // A forgotten-then-remembered card already recorded its failure at the
+            // forget tap; this remember tap records its own success. The session
+            // verdict is bookkeeping only and is never re-sent on the exit swipe.
+            sessionResults[word.id] = "GOOD"
 
             cardsSwipedInSession.incrementAndGet()
 
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 val userId = identityRepository.getCurrentUserId()
-                if (finalResult == "GOOD") {
-                    dbOperationChannel.send(
-                        DbOperation.RecordRecallSuccess(
-                            userId, word.id, tapKey(word.id, "GOOD"), sessionId()
-                        )
+                dbOperationChannel.send(
+                    DbOperation.RecordRecallSuccess(
+                        userId, word.id, tapKey(word.id, "GOOD"), sessionId()
                     )
-                } else {
-                    dbOperationChannel.send(
-                        DbOperation.RecordRecallFail(
-                            userId, word.id, tapKey(word.id, "AGAIN"), sessionId()
-                        )
-                    )
-                }
+                )
             }
 
             val currentState = _uiState.value
@@ -1039,31 +1037,35 @@ class WordMasteryViewModel @Inject constructor(
                 .coerceIn(0f, 1f)
         }
 
-        val nextReviewText = calculateNextReviewText(nextReview)
+        val nextReview = calculateNextReviewBucket(nextReview)
 
         return CurrentWordProgress(
             repetitions = totalAttempts,
-            nextReviewText = nextReviewText,
+            nextReviewBucket = nextReview.first,
+            nextReviewCount = nextReview.second,
             masteryProgress = masteryProgress,
             isBookmarked = bookmarked,
             knownState = knownState
         )
     }
 
-    private fun calculateNextReviewText(nextReview: Long?): String {
-        if (nextReview == null) return "Now"
+    private fun calculateNextReviewBucket(nextReview: Long?): Pair<NextReviewBucket, Int> {
+        if (nextReview == null) return NextReviewBucket.NOW to 0
 
         val now = System.currentTimeMillis()
         val diff = nextReview - now
 
         return when {
-            diff <= 0 -> "Now"
-            diff < TimeUnit.HOURS.toMillis(1) -> "Soon"
-            diff < TimeUnit.HOURS.toMillis(24) -> "Today"
-            diff < TimeUnit.DAYS.toMillis(2) -> "Tomorrow"
-            diff < TimeUnit.DAYS.toMillis(7) -> "${TimeUnit.MILLISECONDS.toDays(diff)} days"
-            diff < TimeUnit.DAYS.toMillis(30) -> "${TimeUnit.MILLISECONDS.toDays(diff) / 7} weeks"
-            else -> "${TimeUnit.MILLISECONDS.toDays(diff) / 30} months"
+            diff <= 0 -> NextReviewBucket.NOW to 0
+            diff < TimeUnit.HOURS.toMillis(1) -> NextReviewBucket.SOON to 0
+            diff < TimeUnit.DAYS.toMillis(1) -> NextReviewBucket.TODAY to 0
+            diff < TimeUnit.DAYS.toMillis(2) -> NextReviewBucket.TOMORROW to 0
+            diff < TimeUnit.DAYS.toMillis(7) ->
+                NextReviewBucket.IN_DAYS to TimeUnit.MILLISECONDS.toDays(diff).toInt()
+            diff < TimeUnit.DAYS.toMillis(30) ->
+                NextReviewBucket.IN_WEEKS to (TimeUnit.MILLISECONDS.toDays(diff) / 7).toInt()
+            else ->
+                NextReviewBucket.IN_MONTHS to (TimeUnit.MILLISECONDS.toDays(diff) / 30).toInt()
         }
     }
 

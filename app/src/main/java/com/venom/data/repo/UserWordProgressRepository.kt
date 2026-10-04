@@ -2,6 +2,8 @@ package com.venom.data.repo
 
 import android.util.Log
 import com.venom.analytics.CrashlyticsManager
+import com.venom.data.local.DateProvider
+import com.venom.data.local.SystemDateProvider
 import com.venom.data.local.TransactionRunner
 import com.venom.data.local.dao.QuizAttemptDao
 import com.venom.data.local.dao.UserWordProgressDao
@@ -17,9 +19,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,11 +30,10 @@ class UserWordProgressRepository @Inject constructor(
     private val srsEngine: SrsEngine,
     private val activityRepository: UserActivityRepository,
     private val crashlytics: CrashlyticsManager,
-    private val transactions: TransactionRunner
+    private val transactions: TransactionRunner,
+    private val dates: DateProvider = SystemDateProvider()
 ) {
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-
-    private fun today(): String = dateFormat.format(Date())
+    private fun today(): String = dates.todayKey()
 
     suspend fun getOrCreateProgress(userId: String, wordId: Int): UserWordProgress =
         withContext(Dispatchers.IO) {
@@ -72,6 +70,22 @@ class UserWordProgressRepository @Inject constructor(
         withContext(Dispatchers.IO) {
             wordMasterDao.getNewWordsForUser(userId, limit).map {
                 WordMasterEntityMapper.toDomain(it)
+            }
+        }
+
+    /** Count of the frozen new-word definition (LEFT JOIN no-progress-row). */
+    suspend fun countNewWordsForUser(userId: String): Int =
+        withContext(Dispatchers.IO) { wordMasterDao.countNewWordsForUser(userId) }
+
+    /**
+     * Weak-production candidates: the highest-lapse, non-mastered words (read-only
+     * projection over the existing high-lapse query). Feeds the spelling queue and
+     * the home "needs attention" rail.
+     */
+    suspend fun getWeakProductionWords(userId: String, limit: Int = 10): List<com.venom.domain.model.WordMaster> =
+        withContext(Dispatchers.IO) {
+            progressDao.getHighLapseWords(userId, limit).mapNotNull { p ->
+                wordMasterDao.getWordById(p.wordId)?.let { WordMasterEntityMapper.toDomain(it) }
             }
         }
 

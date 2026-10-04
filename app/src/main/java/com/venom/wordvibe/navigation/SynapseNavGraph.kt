@@ -5,9 +5,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.venom.wordvibe.navigation.core.AnimatedNavHost
 import com.venom.wordvibe.navigation.core.NavTransitions
+import com.venom.wordvibe.navigation.core.navigateToStart
+import com.venom.wordvibe.ui.screen.HomeRoute
+import com.venom.wordvibe.ui.screen.ProgressRoute
+import com.venom.wordvibe.ui.screen.SpellingQueueRoute
 import com.venom.wordvibe.ui.screen.OnboardingScreen
 import com.venom.wordvibe.ui.viewmodel.RootViewModel
-import com.venom.stackcard.ui.screen.WelcomeScreen
 import com.venom.stackcard.ui.screen.WordMasteryScreen
 
 @Composable
@@ -46,9 +49,9 @@ fun WordVibeNavGraph(
             popEnterTransition = NavTransitions.fadeThroughEnter(),
             popExitTransition = NavTransitions.fadeThroughExit(),
         ) {
-            WelcomeScreen(
-                onStart = { navController.navigate(SynapseScreen.StackCard.route) },
-                onBack = { navController.popBackStack() },
+            HomeRoute(
+                onStartSession = { navController.navigateToStart(SynapseScreen.StackCard.route) },
+                onPractice = { navController.navigateToStart(SynapseScreen.Write.route) },
             )
         }
 
@@ -66,16 +69,23 @@ fun WordVibeNavGraph(
         }
 
         composable(
-            route = SynapseScreen.Lingospell.route,
+            route = SynapseScreen.Write.route,
             enterTransition = NavTransitions.fadeThroughEnter(),
             exitTransition = NavTransitions.fadeThroughExit(),
             popEnterTransition = NavTransitions.fadeThroughEnter(),
             popExitTransition = NavTransitions.fadeThroughExit(),
         ) {
-            WordMasteryScreen(
-                isGenerative = false,
-                onBack = { navController.popBackStack() },
-            )
+            SpellingQueueRoute()
+        }
+
+        composable(
+            route = SynapseScreen.Progress.route,
+            enterTransition = NavTransitions.fadeThroughEnter(),
+            exitTransition = NavTransitions.fadeThroughExit(),
+            popEnterTransition = NavTransitions.fadeThroughEnter(),
+            popExitTransition = NavTransitions.fadeThroughExit(),
+        ) {
+            ProgressRoute()
         }
     }
 }

@@ -114,6 +114,7 @@ class StateSemanticsContractTest {
             joinLimit = limit
             return joinResult
         }
+        override suspend fun countNewWordsForUser(userId: String): Int = joinResult.size
         override suspend fun getRandomUnseenWordsForUser(
             userId: String,
             limit: Int

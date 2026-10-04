@@ -6,8 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.core.view.WindowCompat
-import com.venom.designsystem.theme.SynapseTheme
 import com.venom.wordvibe.ui.WordVibeApp
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.wordvibe.ui.viewmodel.RootViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -22,7 +22,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            SynapseTheme {
+            WordVibeTheme {
                 WordVibeApp(rootViewModel = rootViewModel)
             }
         }

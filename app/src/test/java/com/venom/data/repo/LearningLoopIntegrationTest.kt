@@ -110,6 +110,9 @@ class LearningLoopIntegrationTest {
         override suspend fun getRandomWords(limit: Int): List<WordMasterEntity> = emptyList()
         override suspend fun getNewWordsForUser(userId: String, limit: Int): List<WordMasterEntity> =
             emptyList()
+
+        // The word fake has no progress visibility; nothing in this suite reads the count.
+        override suspend fun countNewWordsForUser(userId: String): Int = 0
         override suspend fun getRandomUnseenWordsForUser(
             userId: String,
             limit: Int

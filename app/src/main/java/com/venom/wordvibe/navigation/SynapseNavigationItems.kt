@@ -21,13 +21,19 @@ enum class SynapseNavigationItems(
         route    = SynapseScreen.StackCard.route,
         icon     = R.drawable.ic_books,
         iconActive = R.drawable.ic_books_fill,
-        titleRes = R.string.synapse_nav_flashcards,
+        titleRes = R.string.nav_learn,
     ),
-    LINGOSPELL(
-        route    = SynapseScreen.Lingospell.route,
+    WRITE(
+        route    = SynapseScreen.Write.route,
+        icon     = R.drawable.ic_edit,
+        iconActive = R.drawable.ic_edit_fill,
+        titleRes = R.string.nav_write,
+    ),
+    PROGRESS(
+        route    = SynapseScreen.Progress.route,
         icon     = R.drawable.ic_bar_chart,
         iconActive = R.drawable.ic_bar_chart_fill,
-        titleRes = R.string.synapse_nav_spelling,
+        titleRes = R.string.nav_progress,
     );
 
     companion object {
