@@ -179,6 +179,11 @@
     <string name="write_title">الكتابة</string>
     <string name="write_due_section">مستحقة الآن</string>
     <string name="write_weak_section">ضعيفة في الإنتاج</string>
+    <string name="write_queue_title">طابور الكتابة — الأضعف إنتاجًا أولًا</string>
+    <string name="spelling_typed_label">اكتب الكلمة بالإنجليزية</string>
+    <string name="spelling_check">تحقّق</string>
+    <string name="spelling_near_miss">قريب جدًا! حاول مرة أخرى</string>
+    <string name="spelling_enter_training">وضع التدريب (بنك الحروف)</string>
     <string name="write_queue_empty_title">لا كلمات تنتظر التدريب</string>
     <string name="write_queue_empty_body">أنهِ جلسة بطاقات أولًا، وستجد هنا الكلمات التي تحتاج ترسيخ الإملاء.</string>
     <string name="write_count_label">%1$d كلمة</string>

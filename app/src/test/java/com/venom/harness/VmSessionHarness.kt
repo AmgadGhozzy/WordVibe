@@ -185,6 +185,13 @@ class FakeQuizAttemptDao : QuizAttemptDao {
     }
     override suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity? =
         events.firstOrNull { it.idempotencyKey == key }
+    override suspend fun getProductionAttemptCounts(
+        userId: String
+    ): List<com.venom.data.local.dao.ProductionAttemptCount> =
+        events.filter { it.userId == userId && it.questionType == "PRODUCTION" }
+            .groupingBy { it.wordId }
+            .eachCount()
+            .map { (wordId, attempts) -> com.venom.data.local.dao.ProductionAttemptCount(wordId, attempts) }
     override suspend fun getUnapplied(userId: String, limit: Int): List<QuizAttemptEntity> =
         events.filter {
             !it.projectionApplied && it.idempotencyKey != null && it.userId == userId

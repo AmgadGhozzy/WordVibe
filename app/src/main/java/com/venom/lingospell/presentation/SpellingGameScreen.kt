@@ -131,7 +131,24 @@ fun SpellingGameScreen(
                     )
                 }
 
-                Spacer(Modifier.height(24.adp))
+                Spacer(Modifier.height(12.adp))
+
+                // ADR-0005: the curated gapped recall sentence, when present.
+                state.currentWord?.recallTarget?.let { cloze ->
+                    Text(
+                        text = cloze,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        ),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.adp),
+                    )
+                }
+
+                Spacer(Modifier.height(16.adp))
 
                 Box(
                     modifier = Modifier.height(48.adp).fillMaxWidth(),
@@ -161,6 +178,11 @@ fun SpellingGameScreen(
                                     color = MaterialTheme.synapse.semantic.success,
                                 )
                             }
+                            FeedbackState.NEAR_MISS -> Text(
+                                text = stringResource(R.string.spelling_near_miss),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.tertiary,
+                            )
                             else -> Text(
                                 text = stringResource(R.string.spelling_translate_hint),
                                 style = MaterialTheme.typography.bodyLarge,
@@ -170,32 +192,67 @@ fun SpellingGameScreen(
                     }
                 }
 
-                Spacer(Modifier.height(32.adp))
-
-                WordSlots(
-                    slots = state.slots,
-                    onSlotClick = viewModel::onSlotClick,
-                    shakeTrigger = state.shakeTrigger,
-                    feedback = state.feedback,
-                )
-
                 Spacer(Modifier.height(24.adp))
 
-                Box(modifier = Modifier.height(48.adp), contentAlignment = Alignment.Center) {
-                    androidx.compose.animation.AnimatedVisibility(visible = state.showHintButton, enter = fadeIn(), exit = fadeOut()) {
-                        HintButton(
-                            hintLevel = state.hintLevel,
-                            onHintClick = viewModel::onHintRequest,
-                            enabled = true,
+                if (state.mode == SpellingGameMode.TYPING) {
+                    // ADR-0008 counted path: free-typed input, no help.
+                    androidx.compose.material3.OutlinedTextField(
+                        value = state.typedInput,
+                        onValueChange = viewModel::onTypedInputChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.adp),
+                        singleLine = true,
+                        enabled = !state.isInputBlocked,
+                        textStyle = MaterialTheme.typography.titleLarge,
+                        label = { Text(stringResource(R.string.spelling_typed_label)) },
+                    )
+                    Spacer(Modifier.height(12.adp))
+                    androidx.compose.material3.Button(
+                        onClick = viewModel::onSubmitTyped,
+                        enabled = state.typedInput.isNotBlank() && !state.isInputBlocked,
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.adp),
+                    ) {
+                        Text(stringResource(R.string.spelling_check))
+                    }
+                    Spacer(Modifier.height(8.adp))
+                    androidx.compose.material3.TextButton(
+                        onClick = viewModel::onEnterTraining,
+                        enabled = !state.isInputBlocked,
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.spelling_enter_training),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                    }
+                } else {
+                    WordSlots(
+                        slots = state.slots,
+                        onSlotClick = viewModel::onSlotClick,
+                        shakeTrigger = state.shakeTrigger,
+                        feedback = state.feedback,
+                    )
+                    Spacer(Modifier.height(16.adp))
+                    Box(modifier = Modifier.height(48.adp), contentAlignment = Alignment.Center) {
+                        androidx.compose.animation.AnimatedVisibility(visible = state.showHintButton, enter = fadeIn(), exit = fadeOut()) {
+                            HintButton(
+                                hintLevel = state.hintLevel,
+                                onHintClick = viewModel::onHintRequest,
+                                enabled = true,
+                            )
+                        }
                     }
                 }
 
-                // "Reveal answer" = one recorded production failure (API tested in Phase 0).
+                Spacer(Modifier.height(8.adp))
+
+                // "Reveal answer" = one recorded production failure (P-02, both modes).
                 androidx.compose.animation.AnimatedVisibility(
-                    visible = state.mistakes > 0 &&
-                        state.feedback != FeedbackState.SUCCESS &&
-                        !state.showMasteryDialog,
+                    visible = state.feedback != FeedbackState.SUCCESS,
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
@@ -211,11 +268,13 @@ fun SpellingGameScreen(
                 }
             }
 
-            LetterBank(
-                letters = state.bank,
-                onLetterClick = viewModel::onLetterClick,
-                onClear = viewModel::onClearAll,
-            )
+            if (state.mode == SpellingGameMode.TRAINING) {
+                LetterBank(
+                    letters = state.bank,
+                    onLetterClick = viewModel::onLetterClick,
+                    onClear = viewModel::onClearAll,
+                )
+            }
         }
 
         if (state.feedback == FeedbackState.SUCCESS) {

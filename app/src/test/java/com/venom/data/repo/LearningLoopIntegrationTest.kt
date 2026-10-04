@@ -155,6 +155,14 @@ class LearningLoopIntegrationTest {
             events.count { it.userId == userId && it.wordId == wordId }
         override suspend fun getSuccessCountForWord(userId: String, wordId: Int): Int =
             events.count { it.userId == userId && it.wordId == wordId && it.isCorrect }
+        override suspend fun getProductionAttemptCounts(
+            userId: String
+        ): List<com.venom.data.local.dao.ProductionAttemptCount> =
+            events.filter { it.userId == userId && it.questionType == "PRODUCTION" }
+                .groupingBy { it.wordId }.eachCount()
+                .map { (wordId, attempts) ->
+                    com.venom.data.local.dao.ProductionAttemptCount(wordId, attempts)
+                }
         override suspend fun getAttemptsForDate(
             userId: String,
             dateKey: String

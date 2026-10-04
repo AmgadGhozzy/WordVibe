@@ -77,6 +77,13 @@ class UserWordProgressRepository @Inject constructor(
     suspend fun countNewWordsForUser(userId: String): Int =
         withContext(Dispatchers.IO) { wordMasterDao.countNewWordsForUser(userId) }
 
+    /** Production attempts per word (read-only event aggregate, ADR-0008). */
+    suspend fun getProductionAttemptCounts(userId: String): Map<Int, Int> =
+        withContext(Dispatchers.IO) {
+            quizAttemptDao.getProductionAttemptCounts(userId)
+                .associate { it.wordId to it.attempts }
+        }
+
     /** Read-only KNOWN-state count (companion to the existing state counts). */
     suspend fun countKnownWordsForUser(userId: String): Int =
         withContext(Dispatchers.IO) { progressDao.getKnownCount(userId) }

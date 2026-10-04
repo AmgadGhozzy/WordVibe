@@ -6,6 +6,9 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.venom.data.local.entity.QuizAttemptEntity
 
+/** Projection row for the production-attempt aggregate. */
+data class ProductionAttemptCount(val wordId: Int, val attempts: Int)
+
 @Dao
 interface QuizAttemptDao {
 
@@ -31,6 +34,15 @@ interface QuizAttemptDao {
     /** Lookup by dedupe key for exactly-once session commits. */
     @Query("SELECT * FROM quiz_attempts WHERE idempotencyKey = :key LIMIT 1")
     suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity?
+
+    /** Production-attempt totals per word (ADR-0008 queue preference). Read-only. */
+    @Query("""
+        SELECT wordId AS wordId, COUNT(*) AS attempts
+        FROM quiz_attempts
+        WHERE userId = :userId AND questionType = 'PRODUCTION'
+        GROUP BY wordId
+    """)
+    suspend fun getProductionAttemptCounts(userId: String): List<ProductionAttemptCount>
 
     /** Durable events whose projection was never applied (crash recovery). */
     @Query("""

@@ -31,6 +31,7 @@ import com.venom.domain.model.WordFamily
 import com.venom.domain.model.WordMaster
 import com.venom.wordvibe.R
 import com.venom.wordvibe.ui.designsystem.EmptyState
+import com.venom.wordvibe.ui.designsystem.LocalWordStateColors
 import com.venom.wordvibe.ui.designsystem.MinTouchTarget
 import com.venom.wordvibe.ui.designsystem.Spacing
 import com.venom.wordvibe.ui.designsystem.WordStateChip
@@ -40,17 +41,16 @@ import com.venom.wordvibe.ui.viewmodel.SpellingQueueViewModel
 import com.venom.lingospell.presentation.SpellingGameScreen
 
 /**
- * Phase 1 writing tab: a real spelling queue — due words plus production-weak words.
- * Picking a word opens the existing spelling editor fullscreen; closing returns to
- * the refreshed queue. This replaces the duplicated flashcard route.
+ * Phase 2 writing tab: one queue, production-weak words first (ADR-0008).
+ * Picking a word opens the typing editor fullscreen; closing returns to the
+ * refreshed queue.
  */
 @Composable
 fun SpellingQueueRoute(viewModel: SpellingQueueViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     SpellingQueueContent(
         isLoading = state.isLoading,
-        dueWords = state.dueWords,
-        weakWords = state.weakWords,
+        items = state.items,
         selectedWord = state.selectedWord,
         onPick = viewModel::pick,
         onDismissEditor = viewModel::dismissEditor,
@@ -60,8 +60,7 @@ fun SpellingQueueRoute(viewModel: SpellingQueueViewModel = hiltViewModel()) {
 @Composable
 fun SpellingQueueContent(
     isLoading: Boolean,
-    dueWords: List<WordMaster>,
-    weakWords: List<WordMaster>,
+    items: List<SpellingQueueViewModel.QueueItem>,
     selectedWord: WordMaster?,
     onPick: (WordMaster) -> Unit,
     onDismissEditor: () -> Unit,
@@ -75,7 +74,7 @@ fun SpellingQueueContent(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        if (dueWords.isEmpty() && weakWords.isEmpty()) {
+        if (items.isEmpty()) {
             EmptyState(
                 title = stringResource(R.string.write_queue_empty_title),
                 body = stringResource(R.string.write_queue_empty_body),
@@ -87,27 +86,16 @@ fun SpellingQueueContent(
                 contentPadding = PaddingValues(Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
-                if (dueWords.isNotEmpty()) {
-                    item {
-                        QueueSectionHeader(
-                            title = stringResource(R.string.write_due_section),
-                            count = dueWords.size,
-                        )
-                    }
-                    items(dueWords, key = { "due-${it.id}" }) { word ->
-                        QueueRow(word, chip = WordStateChipStyle.DUE) { onPick(word) }
-                    }
+                item {
+                    Text(
+                        text = stringResource(R.string.write_queue_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = Spacing.xs),
+                    )
                 }
-                if (weakWords.isNotEmpty()) {
-                    item {
-                        QueueSectionHeader(
-                            title = stringResource(R.string.write_weak_section),
-                            count = weakWords.size,
-                        )
-                    }
-                    items(weakWords, key = { "weak-${it.id}" }) { word ->
-                        QueueRow(word, chip = WordStateChipStyle.LEARNING) { onPick(word) }
-                    }
+                items(items, key = { it.word.id }) { item ->
+                    QueueRow(item) { onPick(item.word) }
                 }
             }
         }
@@ -123,25 +111,15 @@ fun SpellingQueueContent(
 }
 
 @Composable
-private fun QueueSectionHeader(title: String, count: Int) {
-    Text(
-        text = "$title · " + stringResource(R.string.write_count_label, count),
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = Spacing.sm),
-    )
-}
-
-@Composable
-private fun QueueRow(
-    word: WordMaster,
-    chip: WordStateChipStyle,
-    onClick: () -> Unit,
-) {
+private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit) {
     Card(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+            containerColor = if (item.productionWeak) {
+                LocalWordStateColors.current.isDueContainer.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+            }
         ),
     ) {
         Row(
@@ -153,24 +131,19 @@ private fun QueueRow(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = word.wordEn, style = MaterialTheme.typography.titleSmall)
+                Text(text = item.word.wordEn, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    text = word.arabicAr,
+                    text = item.word.arabicAr,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            WordStateChip(style = chip, label = stringResource(chip.labelRes()))
+            WordStateChip(
+                style = if (item.isDue) WordStateChipStyle.DUE else WordStateChipStyle.LEARNING,
+                label = stringResource(if (item.isDue) R.string.state_due else R.string.state_learning),
+            )
         }
     }
-}
-
-private fun WordStateChipStyle.labelRes(): Int = when (this) {
-    WordStateChipStyle.NEW -> R.string.state_new
-    WordStateChipStyle.LEARNING -> R.string.state_learning
-    WordStateChipStyle.KNOWN -> R.string.state_known
-    WordStateChipStyle.MASTERED -> R.string.state_mastered
-    WordStateChipStyle.DUE -> R.string.state_due
 }
 
 @Preview(name = "Spelling queue — Arabic RTL", showBackground = true)
@@ -179,8 +152,10 @@ private fun SpellingQueueContentPreview() {
     WordVibeTheme {
         SpellingQueueContent(
             isLoading = false,
-            dueWords = listOf(previewWord(1, "substantial"), previewWord(2, "significant")),
-            weakWords = listOf(previewWord(3, "inevitable")),
+            items = listOf(
+                SpellingQueueViewModel.QueueItem(previewWord(1, "substantial"), isDue = true, productionWeak = true),
+                SpellingQueueViewModel.QueueItem(previewWord(2, "inevitable"), isDue = false, productionWeak = false),
+            ),
             selectedWord = null,
             onPick = {},
             onDismissEditor = {},

@@ -132,6 +132,9 @@ class StateSemanticsContractTest {
     private class FakeQuizDao : QuizAttemptDao {
         override suspend fun insert(attempt: QuizAttemptEntity) {}
         override suspend fun insertAll(attempts: List<QuizAttemptEntity>) {}
+        override suspend fun getProductionAttemptCounts(
+            userId: String
+        ): List<com.venom.data.local.dao.ProductionAttemptCount> = emptyList()
         override suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity? = null
         override suspend fun getUnapplied(userId: String, limit: Int): List<QuizAttemptEntity> =
             emptyList()

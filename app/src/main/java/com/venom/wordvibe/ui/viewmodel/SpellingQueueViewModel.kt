@@ -15,9 +15,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Phase 1 writing tab: a real spelling queue. Sections read existing projections:
- * due-for-review words and the high-lapse (production-weak) set. Picking a word
- * opens the existing, tested spelling editor for that word.
+ * Phase 2 writing tab: one spelling queue that PREFERS production-weak words —
+ * where the recorded production attempts exceed the production successes
+ * (ADR-0008). Ordering is derived from read-only event aggregates; no schema
+ * change, no contract surface. Picking a word opens the typing editor.
  */
 @HiltViewModel
 class SpellingQueueViewModel @Inject constructor(
@@ -25,10 +26,15 @@ class SpellingQueueViewModel @Inject constructor(
     private val progressRepository: UserWordProgressRepository,
 ) : ViewModel() {
 
+    data class QueueItem(
+        val word: WordMaster,
+        val isDue: Boolean,
+        val productionWeak: Boolean,
+    )
+
     data class QueueUiState(
         val isLoading: Boolean = true,
-        val dueWords: List<WordMaster> = emptyList(),
-        val weakWords: List<WordMaster> = emptyList(),
+        val items: List<QueueItem> = emptyList(),
         val selectedWord: WordMaster? = null,
     )
 
@@ -46,7 +52,23 @@ class SpellingQueueViewModel @Inject constructor(
                 val due = progressRepository.getWordsDueForReview(userId, 10)
                 val weak = progressRepository.getWeakProductionWords(userId, 10)
                     .filter { w -> due.none { it.id == w.id } }
-                _state.value = QueueUiState(isLoading = false, dueWords = due, weakWords = weak)
+                val candidates = (due.map { it to true } + weak.map { it to false })
+
+                val attemptCounts = progressRepository.getProductionAttemptCounts(userId)
+                val items = candidates.map { (word, isDue) ->
+                    val progress = progressRepository.getDisplayProgress(userId, word.id)
+                    val attempts = attemptCounts[word.id] ?: 0
+                    QueueItem(
+                        word = word,
+                        isDue = isDue,
+                        productionWeak = progress.productionSuccess < attempts,
+                    )
+                }.sortedWith(
+                    compareByDescending<QueueItem> { it.productionWeak }
+                        .thenByDescending { it.isDue }
+                )
+
+                _state.value = QueueUiState(isLoading = false, items = items)
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {

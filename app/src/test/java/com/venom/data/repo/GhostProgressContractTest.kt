@@ -62,6 +62,7 @@ class GhostProgressContractTest {
             limit: Int
         ): List<WordMasterEntity> = emptyList()
         override suspend fun insertAll(words: List<WordMasterEntity>) {}
+
         override suspend fun insert(word: WordMasterEntity) {}
     }
 
@@ -136,6 +137,10 @@ class GhostProgressContractTest {
         override suspend fun insertAll(attempts: List<QuizAttemptEntity>) {
             attempts.forEach { insert(it) }
         }
+
+        override suspend fun getProductionAttemptCounts(
+            userId: String
+        ): List<com.venom.data.local.dao.ProductionAttemptCount> = emptyList()
         override suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity? =
             inserts.firstOrNull { it.idempotencyKey == key }
         override suspend fun getUnapplied(userId: String, limit: Int): List<QuizAttemptEntity> =
