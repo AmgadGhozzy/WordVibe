@@ -482,5 +482,7 @@ fun testWord(id: Int = 7): WordMaster = WordMaster(
     examples = mapOf(CefrLevel.B1 to "She obtained her degree last year."),
     collocations = listOf("obtain permission"),
     relatedWords = com.venom.domain.model.RelatedWords(emptyList(), emptyList()),
-    arabicAr = "يحصل على"
+    arabicAr = "يحصل على",
+    productionExpected = "obtain",
+    productionVariants = listOf("acquire")
 )

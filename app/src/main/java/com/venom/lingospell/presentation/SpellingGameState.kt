@@ -6,19 +6,24 @@ import com.venom.lingospell.domain.HintLevel
 import com.venom.lingospell.domain.Letter
 import com.venom.lingospell.domain.Slot
 
+/**
+ * ADR-0008: TYPING is the counted path (free-typed, no help); TRAINING is the
+ * letter-bank-with-hints path that records no production events at all.
+ */
 enum class SpellingGameMode {
-    TRAINING,
-    TEST
+    TYPING,
+    TRAINING
 }
 
 /**
  * Immutable UI state for the Spelling Game.
  */
 data class SpellingGameState(
-    val mode: SpellingGameMode = SpellingGameMode.TRAINING,
+    val mode: SpellingGameMode = SpellingGameMode.TYPING,
     val wordIndex: Int = 0,
     val streak: Int = 0,
     val mistakes: Int = 0,
+    val typedInput: String = "",
     val hintLevel: HintLevel = HintLevel.NONE,
     val slots: List<Slot> = emptyList(),
     val bank: List<Letter> = emptyList(),
@@ -39,7 +44,7 @@ data class SpellingGameState(
      * Shows after first mistake, when idle, and hints remaining.
      */
     val showHintButton: Boolean
-        get() = mode == SpellingGameMode.TRAINING && mistakes > 0 && feedback == FeedbackState.IDLE && hintLevel.canUseHint
+        get() = mode == SpellingGameMode.TRAINING && feedback == FeedbackState.IDLE && hintLevel.canUseHint
 
     /**
      * Whether game input is blocked (during success/mastered states).

@@ -6,6 +6,8 @@ import com.venom.data.repo.UserWordProgressRepository
 import com.venom.domain.model.WordMaster
 import com.venom.domain.provider.AppConfigProvider
 import com.venom.domain.repo.IUserIdentityRepository
+import com.venom.domain.spelling.ProductionGrade
+import com.venom.domain.spelling.ProductionGrader
 import com.venom.lingospell.domain.FeedbackState
 import com.venom.lingospell.domain.HintLevel
 import com.venom.lingospell.domain.Letter
@@ -34,13 +36,17 @@ class SpellingGameViewModel @Inject constructor(
 ) : ViewModel() {
 
     private companion object {
-        /** Mistakes tolerated before the attempt persists as a production failure. */
+        /** Full errors tolerated before the attempt persists as a production failure. */
         const val MAX_MISTAKES_BEFORE_FAIL = 3
+        const val SUCCESS_HOLD_MS = 1200L
     }
 
     private val sessionId: String = UUID.randomUUID().toString()
     private val tapCounters = ConcurrentHashMap<Int, AtomicInteger>()
     private val failedWords: MutableSet<Int> = ConcurrentHashMap.newKeySet()
+
+    /** ADR-0008: at most one counted production success per word per session. */
+    private val creditedWords: MutableSet<Int> = ConcurrentHashMap.newKeySet()
 
     private val _state = MutableStateFlow(SpellingGameState())
     val state: StateFlow<SpellingGameState> = _state.asStateFlow()
@@ -49,7 +55,8 @@ class SpellingGameViewModel @Inject constructor(
     val events = _events.receiveAsFlow()
 
     init {
-        initializeWord(resetStreak = false)
+        // Typing is the default and the only counted path (ADR-0008).
+        _state.update { it.copy(mode = SpellingGameMode.TYPING) }
     }
 
     fun setCustomWord(wordData: WordMaster) {
@@ -60,11 +67,12 @@ class SpellingGameViewModel @Inject constructor(
                 mistakes = 0,
                 hintLevel = HintLevel.NONE,
                 feedback = FeedbackState.IDLE,
+                typedInput = "",
+                mode = SpellingGameMode.TYPING,
                 isLoading = true,
                 showMasteryDialog = false
             )
         }
-        // Pass wordData directly to avoid reading stale _state.value.overrideWord
         initializeWord(resetStreak = true, wordData = wordData)
     }
 
@@ -76,17 +84,13 @@ class SpellingGameViewModel @Inject constructor(
                 mistakes = 0,
                 hintLevel = HintLevel.NONE,
                 feedback = FeedbackState.IDLE,
+                typedInput = "",
                 isLoading = true,
                 showMasteryDialog = false
             )
         }
     }
 
-    /**
-     * Initializes or resets the current word.
-     * If wordData is provided, it will be used directly instead of reading overrideWord from state
-     * (avoids races with asynchronous state updates).
-     */
     private fun initializeWord(resetStreak: Boolean, wordData: WordMaster? = null) {
         val currentState = _state.value
         val currentWord = wordData ?: currentState.overrideWord ?: return
@@ -97,45 +101,26 @@ class SpellingGameViewModel @Inject constructor(
 
         _state.update { state ->
             state.copy(
-                // ensure overrideWord is set to the word we actually initialized with
                 overrideWord = currentWord,
                 slots = newSlots,
                 bank = newBank,
                 hintLevel = HintLevel.NONE,
                 mistakes = 0,
+                typedInput = "",
                 feedback = FeedbackState.IDLE,
                 streak = if (resetStreak) 0 else state.streak,
-                isLoading = false,
-                showMasteryDialog = false
+                isLoading = false
             )
         }
-
-        // Record view
-        viewModelScope.launch {
-            progressRepository.recordView(identityRepository.getCurrentUserId(), currentWord.id)
-        }
-
-
-        // Play Arabic TTS after short delay
-//        viewModelScope.launch {
-//            delay(appConfigProvider.spellingTtsInitialDelay)
-//            _events.send(SpellingGameEvent.PlayTts(currentWord.arabicAr, "ar-SA"))
-//        }
+        // ADR-0008: no recordView/XP here — viewing a prompt is not an attempt.
     }
 
-    /**
-     * Dedupe key for exactly-once production commits: session + word + outcome + ordinal
-     * (Constitution Article II). Each spelling attempt is a distinct tap event.
-     */
+    /** Dedupe key for exactly-once production commits (Constitution Article II). */
     private fun tapKey(wordId: Int, outcome: String): String =
         "$sessionId:$wordId:$outcome:" +
             tapCounters.getOrPut(wordId) { AtomicInteger(0) }.incrementAndGet()
 
-    /**
-     * One production failure per word per spelling visit: the first qualifying exit
-     * (third mistake, reveal answer, or exit-after-attempt) persists it; repeats are
-     * bookkeeping no-ops.
-     */
+    /** One production failure per word per spelling visit (P-02). */
     private fun recordProductionFailOnce(wordId: Int) {
         if (wordId <= 0 || !failedWords.add(wordId)) return
         viewModelScope.launch {
@@ -148,12 +133,88 @@ class SpellingGameViewModel @Inject constructor(
         }
     }
 
+    // ── Typing mode (the counted path) ──────────────────────────────────────
+
+    fun onTypedInputChange(text: String) {
+        if (_state.value.isInputBlocked) return
+        _state.update { it.copy(typedInput = text) }
+    }
+
+    fun onSubmitTyped() {
+        val currentState = _state.value
+        if (currentState.isInputBlocked) return
+        if (currentState.feedback != FeedbackState.IDLE &&
+            currentState.feedback != FeedbackState.NEAR_MISS
+        ) return
+        val word = currentState.currentWord ?: return
+
+        val grade = ProductionGrader.grade(
+            input = currentState.typedInput,
+            expected = word.productionExpected ?: word.wordEn,
+            variants = word.productionVariants
+        )
+        when (grade) {
+            ProductionGrade.CORRECT -> handleTypingSuccess(word)
+            ProductionGrade.NEAR_MISS -> handleNearMiss()
+            ProductionGrade.INCORRECT -> handleTypedError(word.id)
+        }
+    }
+
+    private fun handleTypingSuccess(word: com.venom.domain.model.WordMaster) {
+        val firstCredit = creditedWords.add(word.id)
+        if (firstCredit) {
+            viewModelScope.launch {
+                progressRepository.recordProductionSuccess(
+                    identityRepository.getCurrentUserId(),
+                    word.id,
+                    tapKey(word.id, "PROD_SUCCESS"),
+                    sessionId
+                )
+            }
+        }
+        succeed(newStreak = _state.value.streak + 1)
+    }
+
+    private fun handleNearMiss() {
+        _state.update { it.copy(feedback = FeedbackState.NEAR_MISS) }
+        viewModelScope.launch {
+            delay(appConfigProvider.spellingAutoAdvanceMs)
+            _state.update { if (it.feedback == FeedbackState.NEAR_MISS) it.copy(feedback = FeedbackState.IDLE) else it }
+        }
+    }
+
+    private fun handleTypedError(wordId: Int) {
+        val newMistakes = _state.value.mistakes + 1
+        _state.update { it.copy(mistakes = newMistakes, feedback = FeedbackState.ERROR) }
+        if (newMistakes >= MAX_MISTAKES_BEFORE_FAIL) {
+            recordProductionFailOnce(wordId)
+        }
+        viewModelScope.launch {
+            delay(appConfigProvider.spellingAutoAdvanceMs)
+            _state.update {
+                if (it.feedback == FeedbackState.ERROR) it.copy(feedback = FeedbackState.IDLE, typedInput = "")
+                else it
+            }
+        }
+    }
+
+    // ── Training mode (letter bank; records nothing) ────────────────────────
+
     /**
-     * Handles letter tap from the bank.
+     * Enters training from typing: converting the word to training mode is itself
+     * the first hint (ADR-0008 — help of any kind makes the attempt uncounted).
      */
+    fun onEnterTraining() {
+        val state = _state.value
+        if (state.isInputBlocked || state.mode == SpellingGameMode.TRAINING) return
+        _state.update { it.copy(mode = SpellingGameMode.TRAINING, typedInput = "") }
+        onHintRequest()
+    }
+
     fun onLetterClick(letter: Letter) {
         val currentState = _state.value
         if (currentState.isInputBlocked) return
+        if (currentState.mode != SpellingGameMode.TRAINING) return
         if (letter.status != LetterStatus.AVAILABLE) return
 
         val firstEmptyIndex = currentState.firstEmptySlotIndex
@@ -172,13 +233,9 @@ class SpellingGameViewModel @Inject constructor(
             state.copy(slots = newSlots, bank = newBank)
         }
 
-        // Check validation after placing letter
         checkValidation()
     }
 
-    /**
-     * Handles slot tap to remove letter.
-     */
     fun onSlotClick(index: Int) {
         val currentState = _state.value
         if (currentState.isInputBlocked) return
@@ -197,9 +254,6 @@ class SpellingGameViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Clears all non-locked letters from slots.
-     */
     fun onClearAll() {
         val currentState = _state.value
         if (currentState.isInputBlocked) return
@@ -220,10 +274,6 @@ class SpellingGameViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Applies next hint level.
-     * Only available in Training Mode.
-     */
     fun onHintRequest() {
         val currentState = _state.value
         if (currentState.mode != SpellingGameMode.TRAINING) return
@@ -243,21 +293,15 @@ class SpellingGameViewModel @Inject constructor(
 
         _state.update { it.copy(hintLevel = newLevel) }
 
-        // Auto-validate for Hint 1/2 if they fill slots
         if (newLevel == HintLevel.LEVEL_1 || newLevel == HintLevel.LEVEL_2) {
             checkValidation()
         }
     }
 
-    /**
-     * Hint 1: Reveal next needed letter.
-     * Immediate validation handled by caller.
-     */
     private fun applyHintLevel1(target: String) {
         val slots = _state.value.slots
         val bank = _state.value.bank.toMutableList()
 
-        // Find first position that's wrong or empty
         var targetIndex = -1
         for (i in slots.indices) {
             if (slots[i].letter?.char != target[i]) {
@@ -293,34 +337,18 @@ class SpellingGameViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Hint 2: Alternating Pattern (S _ H _ O _ L).
-     * Fills indices 0, 2, 4...
-     */
     private fun applyHintLevel2(target: String) {
-        _state.value
-
         _state.update { state ->
             val newSlots = state.slots.toMutableList()
             val newBank = state.bank.toMutableList()
-            mutableListOf<String>() // Track newly used to update bank at once if optimizing
 
-            // 1. Identify letters needed for alternating positions (0, 2, 4...)
             for (i in newSlots.indices step 2) {
-                // Skip if already correct/locked
                 if (newSlots[i].isLocked && newSlots[i].letter?.char == target[i]) continue
 
                 val targetChar = target[i]
-
-                // Find letter: prioritize bank, then steal from other slots
-                // Note: We need a fresh lookup each time or careful management of tempBank
-                // For simplicity, we restart search from current state for each slot,
-                // but real-world robust impl needs to track claimed letters.
-
-                val letter = findAvailableLetter(targetChar, newBank)
+                val letter = findAvailableLetterInBank(targetChar, newBank)
 
                 if (letter != null) {
-                    // Return existing letter if any
                     val prevLetter = newSlots[i].letter
                     if (prevLetter != null) {
                         val bankIdx = newBank.indexOfFirst { it.id == prevLetter.id }
@@ -328,7 +356,6 @@ class SpellingGameViewModel @Inject constructor(
                             newBank[bankIdx].copy(status = LetterStatus.AVAILABLE)
                     }
 
-                    // Mark new letter used
                     val bankIdx = newBank.indexOfFirst { it.id == letter.id }
                     if (bankIdx != -1) newBank[bankIdx] =
                         newBank[bankIdx].copy(status = LetterStatus.USED)
@@ -344,21 +371,9 @@ class SpellingGameViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Hint 3: Remove Distractors.
-     * Removes/Hides letters in the bank that are not part of the target word.
-     */
     private fun applyHintLevel3(target: String) {
-        target.groupingBy { it }.eachCount()
-
         _state.update { state ->
             val newBank = state.bank.map { letter ->
-                // If letter is available and NOT needed (or excess count), hide it.
-                // Simplified: If char not in word, hide.
-                // Advanced: Count needed vs available.
-                // Sticking to simple "Not in word" or "Excess" logic.
-                // User request: "Remove uncorrect letter from letters bank"
-
                 if (letter.status == LetterStatus.AVAILABLE && !target.contains(letter.char)) {
                     letter.copy(status = LetterStatus.HIDDEN)
                 } else {
@@ -369,18 +384,18 @@ class SpellingGameViewModel @Inject constructor(
         }
     }
 
+    private fun findAvailableLetterInBank(char: Char, bank: List<Letter>): Letter? =
+        bank.find { it.char == char && it.status == LetterStatus.AVAILABLE }
+
     private fun findAvailableLetter(
         char: Char,
         bank: List<Letter>
     ): Letter? {
-        // First try to find available in bank
         var letter = bank.find { it.char == char && it.status == LetterStatus.AVAILABLE }
 
-        // If not found, try to reclaim from a non-locked slot
         if (letter == null) {
             letter = bank.find { it.char == char && it.status == LetterStatus.USED }
             if (letter != null) {
-                // Clear that slot
                 _state.update { state ->
                     val newSlots = state.slots.map { slot ->
                         if (slot.letter?.id == letter.id) {
@@ -395,9 +410,7 @@ class SpellingGameViewModel @Inject constructor(
         return letter
     }
 
-    /**
-     * Validates the current spelling when all slots are filled.
-     */
+    /** Letter-bank validation: training only — records no production events (ADR-0008). */
     private fun checkValidation() {
         val currentState = _state.value
         if (!currentState.allSlotsFilled) return
@@ -407,67 +420,25 @@ class SpellingGameViewModel @Inject constructor(
         val target = currentState.currentWord?.wordEn?.uppercase() ?: return
 
         if (currentSpelling == target) {
-            handleSuccess()
+            succeed(newStreak = _state.value.streak + 1)
         } else {
             handleError(target)
         }
     }
 
-    private fun handleSuccess() {
-        val newStreak = _state.value.streak + 1
-        val isMastered = newStreak >= appConfigProvider.spellingMaxStreak
+    /** Success feedback shared by both modes; never repeats the same word. */
+    private fun succeed(newStreak: Int) {
+        _state.update { it.copy(streak = newStreak, feedback = FeedbackState.SUCCESS) }
 
-        // Mark all slots as correct
-        _state.update { state ->
-            val newSlots = state.slots.map { it.copy(status = SlotStatus.CORRECT, isLocked = true) }
-            state.copy(
-                slots = newSlots,
-                streak = newStreak,
-                feedback = if (isMastered) FeedbackState.MASTERED else FeedbackState.SUCCESS,
-                showMasteryDialog = isMastered
-            )
-        }
-
-        // Record progress (keyed production success, durable at tap time)
-        viewModelScope.launch {
-            val wordId = _state.value.overrideWord?.id ?: return@launch
-            progressRepository.recordProductionSuccess(
-                identityRepository.getCurrentUserId(),
-                wordId,
-                tapKey(wordId, "PROD_SUCCESS"),
-                sessionId
-            )
-        }
-
-
-        // Play TTS
         viewModelScope.launch {
             val wordEn = _state.value.currentWord?.wordEn ?: ""
-            val text = if (isMastered) {
-                "Perfect! $wordEn"
-            } else {
-                wordEn
-            }
-            _events.send(SpellingGameEvent.PlayTts(text, "en-US"))
+            _events.send(SpellingGameEvent.PlayTts(wordEn, "en-US"))
         }
 
-        // Auto-advance only if NOT mastered
-        if (!isMastered) {
-            viewModelScope.launch {
-                delay(appConfigProvider.spellingAutoAdvanceMs)
-                initializeWord(resetStreak = false)
-            }
-        }
-        // If mastered, wait for user to click Continue button
-    }
-
-    /**
-     * Called when user clicks Continue button on mastery dialog
-     */
-    fun onContinueAfterMastery() {
-        _state.update { it.copy(showMasteryDialog = false) }
-        // Navigate back to flashcard after mastering the word
+        // ADR-0008: the same word is never re-served in this session — the queue
+        // advances on [NavigateBack].
         viewModelScope.launch {
+            delay(SUCCESS_HOLD_MS)
             _events.send(SpellingGameEvent.NavigateBack)
         }
     }
@@ -475,7 +446,6 @@ class SpellingGameViewModel @Inject constructor(
     private fun handleError(target: String) {
         val newMistakes = _state.value.mistakes + 1
 
-        // Trigger shake animation
         _state.update { state ->
             val newSlots = state.slots.mapIndexed { index, slot ->
                 if (slot.isLocked) slot
@@ -487,21 +457,13 @@ class SpellingGameViewModel @Inject constructor(
                 slots = newSlots,
                 mistakes = newMistakes,
                 feedback = FeedbackState.ERROR,
-                shakeTrigger = state.shakeTrigger + 1,
-                // Using a potential animation duration tracker if needed, otherwise just updating state.
-                // We'll keep the logic simple as originally requested.
+                shakeTrigger = state.shakeTrigger + 1
             )
         }
 
-        // The third mistake means retrieval failed: persist one production failure.
-        if (newMistakes >= MAX_MISTAKES_BEFORE_FAIL) {
-            _state.value.currentWord?.id?.let { recordProductionFailOnce(it) }
-        }
-
-        // Reset incorrect letters after delay
+        // Bank errors are training mistakes: they never persist production failures.
         viewModelScope.launch {
             delay(appConfigProvider.spellingAutoAdvanceMs)
-
             _state.update { state ->
                 val returningIds = mutableListOf<String>()
 
@@ -531,26 +493,7 @@ class SpellingGameViewModel @Inject constructor(
     }
 
     /**
-     * Handles back/close button. Exiting after at least one attempt without a recorded
-     * outcome persists the attempt as a production failure — an abandoned retrieval
-     * never vanishes (durable at tap time).
-     */
-    fun onCloseClick() {
-        val state = _state.value
-        val word = state.currentWord
-        if (word != null && state.mistakes > 0 &&
-            state.feedback != FeedbackState.SUCCESS && state.feedback != FeedbackState.MASTERED
-        ) {
-            recordProductionFailOnce(word.id)
-        }
-        viewModelScope.launch {
-            _events.send(SpellingGameEvent.NavigateBack)
-        }
-    }
-
-    /**
-     * Shows the correct spelling and records the attempt as one production failure:
-     * seeing the answer after failing to produce it is a failed production event, and
+     * "Reveal answer": one recorded production failure in both modes (P-02);
      * the solved slots lock so the reveal cannot be replayed for credit.
      */
     fun onRevealAnswer() {
@@ -569,5 +512,22 @@ class SpellingGameViewModel @Inject constructor(
             )
         }
         _state.update { it.copy(slots = revealedSlots, feedback = FeedbackState.SUCCESS) }
+    }
+
+    /**
+     * Back/close. Exiting after an unrecorded attempt persists one production
+     * failure — an abandoned retrieval never vanishes (durable at tap time).
+     */
+    fun onCloseClick() {
+        val state = _state.value
+        val word = state.currentWord
+        if (word != null && state.mistakes > 0 &&
+            state.feedback != FeedbackState.SUCCESS && state.feedback != FeedbackState.MASTERED
+        ) {
+            recordProductionFailOnce(word.id)
+        }
+        viewModelScope.launch {
+            _events.send(SpellingGameEvent.NavigateBack)
+        }
     }
 }

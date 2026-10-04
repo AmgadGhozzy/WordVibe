@@ -41,7 +41,6 @@ import com.venom.domain.model.WordMaster
 import com.venom.lingospell.domain.FeedbackState
 import com.venom.lingospell.presentation.components.HintButton
 import com.venom.lingospell.presentation.components.LetterBank
-import com.venom.lingospell.presentation.components.MasteryDialog
 import com.venom.lingospell.presentation.components.StreakBar
 import com.venom.lingospell.presentation.components.WordSlots
 import com.venom.wordvibe.R
@@ -226,12 +225,5 @@ fun SpellingGameScreen(
             )
         }
 
-        if (state.showMasteryDialog) {
-            MasteryDialog(
-                word = state.currentWord?.wordEn ?: "",
-                arabicWord = state.currentWord?.arabicAr ?: "",
-                onContinue = viewModel::onContinueAfterMastery,
-            )
-        }
     }
 }

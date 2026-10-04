@@ -64,8 +64,9 @@ enum class HintLevel(val value: Int) {
  * Feedback state after word validation.
  */
 enum class FeedbackState {
-    IDLE,       // Waiting for input
-    SUCCESS,    // Word spelled correctly
-    ERROR,      // Word spelled incorrectly
-    MASTERED    // Word mastered (streak complete)
+    IDLE,        // Waiting for input
+    NEAR_MISS,   // One edit away (ADR-0008): retry, nothing recorded
+    SUCCESS,     // Word spelled correctly
+    ERROR,       // Word spelled incorrectly
+    MASTERED     // Legacy: no longer reached (hints can never master)
 }
