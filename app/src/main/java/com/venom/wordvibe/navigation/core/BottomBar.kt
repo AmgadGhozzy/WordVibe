@@ -283,7 +283,7 @@ fun BottomBar(
                             painter = painterResource(
                                 id = if (isSelected) item.iconActive else item.icon
                             ),
-                            contentDescription = null,
+                            contentDescription = stringResource(item.titleRes),
                             tint = iconTint,
                             modifier = Modifier
                                 .size(30.dp)
