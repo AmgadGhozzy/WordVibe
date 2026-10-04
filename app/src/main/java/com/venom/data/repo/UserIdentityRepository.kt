@@ -56,8 +56,18 @@ class UserIdentityRepository @Inject constructor(
 
     override fun isSignedIn(): Boolean = currentUserId != null
 
+    /**
+     * Phase 2 closure: a new identity is minted ONLY when the store has no row
+     * (true absence). A failed read propagates loudly instead of silently
+     * minting a replacement identity, which would orphan all learner data.
+     */
     suspend fun getOrCreateIdentity(): UserIdentity = withContext(Dispatchers.IO) {
-        val existing = dao.getIdentity()
+        val existing = try {
+            dao.getIdentity()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            throw IllegalStateException("identity read failed; refusing to mint a replacement", e)
+        }
         if (existing != null) {
             currentUserId = existing.userId
             dao.updateLastActive(System.currentTimeMillis())
