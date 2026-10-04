@@ -181,6 +181,9 @@ class LearningLoopIntegrationTest {
         override suspend fun getTotalActiveDays(userId: String): Int =
             rows.keys.count { it.first == userId }
         override suspend fun getTotalXp(userId: String): Int? = 0
+        override suspend fun getTotalWordsViewed(userId: String): Int = 0
+        override suspend fun getTotalSessionCount(userId: String): Int = 0
+        override suspend fun getTotalTimeMs(userId: String): Long = 0L
         override suspend fun incrementWordsViewed(userId: String, dateKey: String, now: Long) {}
         override suspend fun incrementRecallSuccess(
             userId: String,

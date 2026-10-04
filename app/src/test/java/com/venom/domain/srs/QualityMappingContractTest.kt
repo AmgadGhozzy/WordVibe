@@ -99,7 +99,6 @@ class QualityMappingContractTest {
     @Test
     fun `mapping is deterministic`() {
         val fixed = SrsEngine(clock = { 1_000_000L })
-
         assertEquals(
             fixed.onRecallFail(stableWord()),
             fixed.onRecallFail(stableWord()),
