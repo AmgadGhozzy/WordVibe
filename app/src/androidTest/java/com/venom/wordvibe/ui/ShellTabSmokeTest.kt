@@ -93,6 +93,7 @@ class ShellTabSmokeTest {
                 ProgressContent(
                     isLoading = false,
                     newWordsCount = 74,
+                    knownWordsCount = 11,
                     dashboard = DashboardData(
                         currentStreak = 4,
                         bestStreak = 9,
@@ -106,8 +107,10 @@ class ShellTabSmokeTest {
             }
         }
         compose.onNodeWithText("كلماتك حسب الحالة").assertIsDisplayed()
-        compose.onNodeWithText("متقنة").assertExists()
+        compose.onNodeWithText("جديدة").assertExists()
         compose.onNodeWithText("تتعلّم").assertExists()
+        compose.onNodeWithText("معروفة").assertExists()
+        compose.onNodeWithText("متقنة").assertExists()
         compose.onNodeWithText("مستحقة").assertExists()
     }
 

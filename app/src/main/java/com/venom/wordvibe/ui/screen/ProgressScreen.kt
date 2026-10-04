@@ -47,6 +47,7 @@ fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
         isLoading = state.isLoading,
         dashboard = state.dashboard,
         newWordsCount = state.newWordsCount,
+        knownWordsCount = state.knownWordsCount,
     )
 }
 
@@ -55,6 +56,7 @@ fun ProgressContent(
     isLoading: Boolean,
     dashboard: DashboardData?,
     newWordsCount: Int,
+    knownWordsCount: Int,
     modifier: Modifier = Modifier,
 ) {
     if (isLoading || dashboard == null) {
@@ -123,11 +125,14 @@ fun ProgressContent(
             )
         }
 
+        // Word states in progression order. "Learning" excludes KNOWN words
+        // (DashboardData's learning figure is LEARNING ∪ KNOWN).
         val stateCards = listOf(
             Triple(WordStateChipStyle.NEW, R.string.state_new, newWordsCount),
+            Triple(WordStateChipStyle.LEARNING, R.string.state_learning,
+                dashboard.totalWordsLearning - knownWordsCount),
+            Triple(WordStateChipStyle.KNOWN, R.string.state_known, knownWordsCount),
             Triple(WordStateChipStyle.MASTERED, R.string.state_mastered, dashboard.totalWordsMastered),
-            Triple(WordStateChipStyle.LEARNING, R.string.state_learning, dashboard.totalWordsLearning),
-            Triple(WordStateChipStyle.DUE, R.string.state_due, dashboard.totalWordsNeedsReview),
         )
         items(stateCards) { (style, labelRes, value) ->
             Card(
@@ -144,6 +149,34 @@ fun ProgressContent(
                 ) {
                     Text(text = "$value", style = MaterialTheme.typography.headlineSmall)
                     WordStateChip(style = style, label = stringResource(labelRes))
+                }
+            }
+        }
+
+        // Scheduling, not a word state: due count gets its own line.
+        item(span = { GridItemSpan(2) }) {
+            Card(
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                ),
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = stringResource(R.string.state_due),
+                        style = MaterialTheme.typography.titleSmall,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "${dashboard.totalWordsNeedsReview}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
@@ -183,6 +216,7 @@ private fun ProgressContentPreview() {
         ProgressContent(
             isLoading = false,
             newWordsCount = 74,
+            knownWordsCount = 11,
             dashboard = DashboardData(
                 currentStreak = 4,
                 bestStreak = 9,

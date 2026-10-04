@@ -77,6 +77,10 @@ class UserWordProgressRepository @Inject constructor(
     suspend fun countNewWordsForUser(userId: String): Int =
         withContext(Dispatchers.IO) { wordMasterDao.countNewWordsForUser(userId) }
 
+    /** Read-only KNOWN-state count (companion to the existing state counts). */
+    suspend fun countKnownWordsForUser(userId: String): Int =
+        withContext(Dispatchers.IO) { progressDao.getKnownCount(userId) }
+
     /**
      * Weak-production candidates: the highest-lapse, non-mastered words (read-only
      * projection over the existing high-lapse query). Feeds the spelling queue and

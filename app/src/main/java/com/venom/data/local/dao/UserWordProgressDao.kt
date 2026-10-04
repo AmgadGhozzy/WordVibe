@@ -71,6 +71,9 @@ interface UserWordProgressDao {
     @Query("SELECT COUNT(*) FROM userWordProgress WHERE userId = :userId AND knownState = 'MASTERED'")
     suspend fun getMasteredCount(userId: String): Int
 
+    @Query("SELECT COUNT(*) FROM userWordProgress WHERE userId = :userId AND knownState = 'KNOWN'")
+    suspend fun getKnownCount(userId: String): Int
+
     @Query("SELECT COUNT(*) FROM userWordProgress WHERE userId = :userId AND knownState IN ('LEARNING', 'KNOWN')")
     suspend fun getLearningCount(userId: String): Int
 

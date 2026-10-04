@@ -29,6 +29,7 @@ class ProgressViewModel @Inject constructor(
         val isLoading: Boolean = true,
         val dashboard: DashboardData? = null,
         val newWordsCount: Int = 0,
+        val knownWordsCount: Int = 0,
     )
 
     private val _state = MutableStateFlow(ProgressUiState())
@@ -46,6 +47,7 @@ class ProgressViewModel @Inject constructor(
                     isLoading = false,
                     dashboard = activityRepository.getDashboardData(userId),
                     newWordsCount = progressRepository.countNewWordsForUser(userId),
+                    knownWordsCount = progressRepository.countKnownWordsForUser(userId),
                 )
             } catch (e: CancellationException) {
                 throw e

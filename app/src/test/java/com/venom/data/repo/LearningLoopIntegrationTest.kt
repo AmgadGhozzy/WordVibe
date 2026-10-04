@@ -69,6 +69,7 @@ class LearningLoopIntegrationTest {
         override suspend fun getSeenCountByCefr(userId: String, cefrLevel: String): Int = 0
         override suspend fun getMasteredCount(userId: String): Int =
             rows.values.count { it.userId == userId && it.knownState == "MASTERED" }
+        override suspend fun getKnownCount(userId: String): Int = 0
         override suspend fun getLearningCount(userId: String): Int =
             rows.values.count {
                 it.userId == userId && (it.knownState == "LEARNING" || it.knownState == "KNOWN")

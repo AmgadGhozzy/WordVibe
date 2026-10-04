@@ -198,6 +198,7 @@ class StreakProgressContractTest {
         override suspend fun getLearningCount(userId: String): Int = 0
         override suspend fun getNeedsReviewCount(userId: String, now: Long): Int = 0
         override suspend fun incrementRecallSuccess(userId: String, wordId: Int) {}
+        override suspend fun getKnownCount(userId: String): Int = 0
         override suspend fun incrementProductionSuccess(userId: String, wordId: Int) {}
         override suspend fun incrementTotalAttempts(userId: String, wordId: Int) {}
         override suspend fun updateSrsFields(
