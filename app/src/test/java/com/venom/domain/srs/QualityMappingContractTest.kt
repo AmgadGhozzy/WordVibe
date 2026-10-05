@@ -23,7 +23,11 @@ class QualityMappingContractTest {
         totalAttempts = 4,
         difficulty = 5,
         stability = stability,
-        lapsesCount = 0
+        lapsesCount = 0,
+        // Ticket 08: firstSeen's default is System.currentTimeMillis() at construction,
+        // so two freshly built words differed by a millisecond and made the
+        // determinism assertion a wall-clock race. Pin it like the engine's clock.
+        firstSeen = 1_000_000L
     )
 
     @Test
