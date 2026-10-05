@@ -210,6 +210,7 @@ class StateSemanticsContractTest {
         override suspend fun getProfile(userId: String): UserProfileEntity? = store[userId]
         override suspend fun addXpAtomic(userId: String, xp: Int, now: Long) {}
         override suspend fun updateStreak(userId: String, streak: Int, lastActive: String, now: Long) {}
+        override suspend fun grantStreakFreeze(userId: String, now: Long) {}
         override suspend fun consumeStreakFreeze(userId: String, now: Long) {}
         override suspend fun updateDailyGoal(userId: String, goal: Int, now: Long) {}
         override suspend fun migrateUserId(fromUserId: String, toUserId: String) {}

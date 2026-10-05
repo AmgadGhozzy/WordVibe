@@ -269,6 +269,7 @@ class LearningLoopIntegrationTest {
                 bestStreak = maxOf(current.bestStreak, streak)
             )
         }
+        override suspend fun grantStreakFreeze(userId: String, now: Long) {}
         override suspend fun consumeStreakFreeze(userId: String, now: Long) {}
         override suspend fun updateDailyGoal(userId: String, goal: Int, now: Long) {}
         override suspend fun migrateUserId(fromUserId: String, toUserId: String) {}

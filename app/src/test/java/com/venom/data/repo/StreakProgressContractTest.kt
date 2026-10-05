@@ -131,6 +131,7 @@ class StreakProgressContractTest {
                 bestStreak = maxOf(current.bestStreak, streak)
             )
         }
+        override suspend fun grantStreakFreeze(userId: String, now: Long) {}
         override suspend fun consumeStreakFreeze(userId: String, now: Long) {
             freezesConsumed++
             val current = store[userId] ?: return
