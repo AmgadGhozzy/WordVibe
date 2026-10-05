@@ -223,4 +223,217 @@ class WordMasterySessionLifecycleContractTest {
             assertTrue(vm.uiState.value.sessionStats.sessionDurationMs > 0)
         }
     }
+
+    // ---------------------------------------------------------------------
+    // Multi-card coverage per path (PM review round 2): two- and three-card
+    // sessions through every path — remember, forget, re-queue, exit. These
+    // are the shapes the 3a regression window corrupted silently; the guard
+    // here is that keys stay unique and finalize fires exactly once.
+    // ---------------------------------------------------------------------
+
+    private fun keysSoFar(): List<String> =
+        harness.quizDao.events.map { it.idempotencyKey!! }
+
+    @Test
+    fun `two remember swipes clear both cards in order and finalize once`() {
+        kotlinx.coroutines.runBlocking {
+            harness.wordDao.insert(wordEntity(8, rank = 1500))
+            val vm = viewModel()
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 7 && it.isCorrect } == 1
+            }
+            assertEquals(listOf(8), vm.uiState.value.visibleCards.map { it.id })
+            assertEquals(listOf(7), vm.uiState.value.removedCards.map { it.id })
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && it.isCorrect } == 1
+            }
+            harness.await(scheduler) { harness.activityDao.getTotalSessionCount("u1") == 1 }
+            scheduler.advanceUntilIdle()
+
+            assertEquals(
+                listOf(7, 8), vm.uiState.value.removedCards.map { it.id },
+                "remembered cards join removed in swipe order"
+            )
+            assertTrue(vm.uiState.value.visibleCards.isEmpty())
+            val keys = keysSoFar()
+            assertEquals(keys.size, keys.distinct().size, "no key collision")
+            assertEquals(1, harness.activityDao.getTotalSessionCount("u1"))
+        }
+    }
+
+    @Test
+    fun `two forget swipes keep re-queueing with increasing ordinals and never end the session`() {
+        kotlinx.coroutines.runBlocking {
+            harness.wordDao.insert(wordEntity(8, rank = 1500))
+            val vm = viewModel()
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = false))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 7 && !it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = false))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && !it.isCorrect } == 1
+            }
+
+            val keys = keysSoFar()
+            assertEquals(
+                listOf("AGAIN", "AGAIN"), keys.map { it.split(":")[2] },
+                "both forget taps carry the AGAIN outcome"
+            )
+            assertEquals(keys.size, keys.distinct().size, "no key collision")
+            assertEquals(2, vm.uiState.value.sessionStats.needsReviewCount)
+            assertEquals(0, vm.uiState.value.processedCardsCount)
+            assertEquals(
+                2, vm.uiState.value.visibleCards.size,
+                "both cards are back in the deck — the session never ends"
+            )
+            assertEquals(
+                0, harness.activityDao.getTotalSessionCount("u1"),
+                "a forget never finalizes the session"
+            )
+        }
+    }
+
+    @Test
+    fun `re-queue cycle on a two-card deck records AGAIN then GOOD for the same word and completes`() {
+        kotlinx.coroutines.runBlocking {
+            harness.wordDao.insert(wordEntity(8, rank = 1500))
+            harness.wordDao.insert(wordEntity(9, rank = 2000))
+            val vm = viewModel()
+
+            // forgot(7) re-queues it behind the whole deck; forgot(8) re-queues
+            // behind 9 and 7; now 7 — the re-queued card — is current again.
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = false))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 7 && !it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = false))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && !it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 7 && it.isCorrect } == 1
+            }
+
+            val keys = keysSoFar()
+            assertEquals(keys.size, keys.distinct().size, "no key collision")
+            val word7Keys = keys.filter { it.split(":")[1] == "7" }
+            assertEquals(
+                listOf("AGAIN:1", "GOOD:2"),
+                word7Keys.map { it.split(":", limit = 3)[2] },
+                "the same word carries AGAIN:1 then GOOD:2 — per-word ordinals shared across outcomes"
+            )
+
+            // Close the session on the remaining cards and finalize once.
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(9), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 9 && it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && it.isCorrect } == 1
+            }
+            harness.await(scheduler) { harness.activityDao.getTotalSessionCount("u1") == 1 }
+            scheduler.advanceUntilIdle()
+            assertEquals(1, harness.activityDao.getTotalSessionCount("u1"))
+        }
+    }
+
+    @Test
+    fun `three-card mixed session keeps serving order, unique keys, and finalizes once`() {
+        kotlinx.coroutines.runBlocking {
+            harness.wordDao.insert(wordEntity(8, rank = 1500))
+            harness.wordDao.insert(wordEntity(9, rank = 2000))
+            val vm = viewModel()
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 7 && it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = false))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && !it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(9), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 9 && it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && it.isCorrect } == 1
+            }
+
+            assertEquals(
+                listOf(7, 9, 8), vm.uiState.value.removedCards.map { it.id },
+                "removed cards carry completion order: 7 remembered, 9 remembered, 8 remembered after re-queue"
+            )
+            assertTrue(vm.uiState.value.visibleCards.isEmpty())
+            val keys = keysSoFar()
+            assertEquals(keys.size, keys.distinct().size, "no key collision")
+            assertEquals(
+                listOf("GOOD", "AGAIN", "GOOD", "GOOD"),
+                keys.map { it.split(":")[2] }
+            )
+            assertEquals(1, vm.uiState.value.sessionStats.needsReviewCount)
+            harness.await(scheduler) { harness.activityDao.getTotalSessionCount("u1") == 1 }
+            scheduler.advanceUntilIdle()
+            assertEquals(
+                1, harness.activityDao.getTotalSessionCount("u1"),
+                "finalize exactly once for the whole three-card session"
+            )
+        }
+    }
+
+    @Test
+    fun `exit mid-three-card-session resets state and re-entry serves the remaining words to completion`() {
+        kotlinx.coroutines.runBlocking {
+            harness.wordDao.insert(wordEntity(8, rank = 1500))
+            harness.wordDao.insert(wordEntity(9, rank = 2000))
+            val vm = viewModel()
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 7 && it.isCorrect } == 1
+            }
+            assertEquals(listOf(8, 9), vm.uiState.value.visibleCards.map { it.id })
+
+            vm.onEvent(WordMasteryEvent.BackToWelcome)
+            harness.await(scheduler) {
+                val s = vm.uiState.value
+                s.visibleCards.isEmpty() && s.removedCards.isEmpty() &&
+                    s.processedCardsCount == 0 && s.currentWord == null
+            }
+
+            // Re-entry: word 7 already has a progress row (success, future
+            // review) so it is neither due nor new; 8 and 9 are new.
+            vm.onEvent(WordMasteryEvent.Initialize(isGenerative = false, topic = null))
+            harness.await(scheduler) {
+                vm.uiState.value.visibleCards.map { it.id } == listOf(8, 9)
+            }
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(8), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 8 && it.isCorrect } == 1
+            }
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(9), isRemembered = true))
+            harness.await(scheduler) {
+                harness.quizDao.events.count { it.wordId == 9 && it.isCorrect } == 1
+            }
+            harness.await(scheduler) { harness.activityDao.getTotalSessionCount("u1") == 1 }
+            scheduler.advanceUntilIdle()
+
+            val keys = keysSoFar()
+            assertEquals(keys.size, keys.distinct().size, "no key collision across both sessions")
+            assertEquals(
+                1, harness.activityDao.getTotalSessionCount("u1"),
+                "the re-entered session finalizes once; the abandoned one finalized never"
+            )
+        }
+    }
 }
