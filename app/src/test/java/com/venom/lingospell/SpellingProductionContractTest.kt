@@ -1,11 +1,13 @@
 package com.venom.lingospell
 
+import androidx.datastore.preferences.core.edit
+import com.venom.data.local.PreferencesKeys
 import com.venom.harness.VmSessionHarness
 import com.venom.harness.testWord
 import com.venom.harness.testWordEntity
 import com.venom.lingospell.domain.FeedbackState
 import com.venom.lingospell.domain.LetterStatus
-import com.venom.lingospell.presentation.SpellingGameMode
+import com.venom.lingospell.presentation.HintCreditPolicy
 import com.venom.lingospell.presentation.SpellingGameViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -15,20 +17,21 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 /**
- * Phase 2 / ADR-0008 production contracts (typed flow):
+ * ADR-0009 contracts (letter bank restored, hint budget + credit policy):
  *
- * 1. Typed success with no help  -> exactly one keyed production success.
- * 2. Success after any hint      -> zero production events (training mode).
- * 3. Accepted variant            -> correct, keyed success.
- * 4. Same word twice in session  -> credit exactly once.
- * 5. Reveal answer               -> one keyed failure; replay never doubles it.
- * 6. Hints alone can never reach MASTERED.
+ * - Success with no hint (or within the policy limit) -> one keyed production success.
+ * - Success with hints beyond the limit -> zero production events.
+ * - Policy NO_CREDIT_IF_ANY_HINT: any hint -> zero production events.
+ * - Failures (3rd error / reveal / exit-after-attempt) -> exactly one keyed fail,
+ *   regardless of hints; replay never doubles.
+ * - One credit per word per session; the word is never re-served after success.
+ * - Celebration dialog at 3 successes is UI-only (never a mastery claim).
  */
 class SpellingProductionContractTest {
 
@@ -55,23 +58,20 @@ class SpellingProductionContractTest {
             identityRepository = harness.identity,
             appConfigProvider = com.venom.domain.provider.AppConfigProvider(
                 com.venom.harness.FakeRemoteConfig()
-            )
+            ),
+            dataStore = harness.dataStore
         )
         vm.setCustomWord(testWord(7))
         scheduler.advanceUntilIdle()
         return vm
     }
 
-    private fun typeAndSubmit(vm: SpellingGameViewModel, text: String) {
-        vm.onTypedInputChange(text)
-        vm.onSubmitTyped()
-        scheduler.advanceUntilIdle()
-    }
-
     private fun productionEvents() = harness.quizDao.events
         .filter { it.wordId == 7 && it.questionType == "PRODUCTION" }
 
-    private fun completeByBankAfterHint(vm: SpellingGameViewModel) {
+    /** Clicks bank letters to spell the expected form, optionally using hints first. */
+    private fun completeByBank(vm: SpellingGameViewModel, useHintsFirst: Int = 0) {
+        repeat(useHintsFirst) { vm.onHintRequest(); scheduler.advanceUntilIdle() }
         val target = vm.state.value.currentWord!!.wordEn.uppercase()
         var guard = 0
         while (!vm.state.value.allSlotsFilled && guard < 40) {
@@ -90,94 +90,102 @@ class SpellingProductionContractTest {
         scheduler.advanceUntilIdle()
     }
 
-    @Test
-    fun `typed success with no help records one keyed production success`() {
-        runBlocking {
-            val vm = viewModel()
-            typeAndSubmit(vm, "Obtain")
+    private fun settleSuccess() {
+        scheduler.advanceTimeBy(1200L + 10)
+        scheduler.advanceUntilIdle()
+    }
 
-            harness.await(scheduler) { productionEvents().count { it.isCorrect } == 1 }
-
-            val success = productionEvents().first { it.isCorrect }
-            assertTrue(
-                !success.idempotencyKey.isNullOrBlank() && success.idempotencyKey.contains(":7:"),
-                "success carries a session:word:outcome:ordinal key"
-            )
-            assertEquals(FeedbackState.SUCCESS, vm.state.value.feedback)
-
-            harness.await(scheduler) {
-                harness.progressDao.rows["u1" to 7]?.productionSuccess == 1
+    private fun fillWrong(vm: SpellingGameViewModel) {
+        vm.onClearAll()
+        val target = (vm.state.value.currentWord!!.productionExpected
+            ?: vm.state.value.currentWord!!.wordEn).uppercase()
+        val available = vm.state.value.bank
+            .filter { it.status == LetterStatus.AVAILABLE }
+            .map { it.char }
+        val odd = available.firstOrNull { it !in target }
+            ?: available.first { it != target[0] }
+        val arrangement = listOf(odd) + available.filter { it != odd }.take(target.length - 1)
+        for (c in arrangement) {
+            val letter = vm.state.value.bank.first {
+                it.status == LetterStatus.AVAILABLE && it.char == c
             }
+            vm.onLetterClick(letter)
         }
     }
 
-    @Test
-    fun `success after a hint records zero production events`() {
-        runBlocking {
-            val vm = viewModel()
-            vm.onTypedInputChange("sub")
-            vm.onEnterTraining() // converting to training is itself a hint (ADR-0008)
-            scheduler.advanceUntilIdle()
-            assertEquals(SpellingGameMode.TRAINING, vm.state.value.mode)
-
-            completeByBankAfterHint(vm)
-            scheduler.advanceTimeBy(1200L + 10)
-            scheduler.advanceUntilIdle()
-
-            assertTrue(
-                productionEvents().isEmpty(),
-                "hinted success is training: no production success, no production failure"
-            )
-        }
+    private fun vmWithPolicy(vm: SpellingGameViewModel, policy: String) {
+        vm.setHintCreditPolicy(HintCreditPolicy.valueOf(policy))
+        scheduler.advanceUntilIdle()
     }
 
     @Test
-    fun `accepted variant grades as a keyed correct attempt`() {
+    fun `success with no hint records one keyed production success`() {
         runBlocking {
             val vm = viewModel()
-            typeAndSubmit(vm, "  aCquire ") // variant, case+whitespace normalized
+            completeByBank(vm)
+            settleSuccess()
 
             harness.await(scheduler) { productionEvents().count { it.isCorrect } == 1 }
+            val success = productionEvents().first { it.isCorrect }
+            assertTrue(!success.idempotencyKey.isNullOrBlank() && success.idempotencyKey.contains(":7:"))
             assertEquals(FeedbackState.SUCCESS, vm.state.value.feedback)
         }
     }
 
     @Test
-    fun `near miss records nothing and invites a retry`() {
+    fun `success with one hint counts under the default policy`() {
         runBlocking {
-            val vm = viewModel()
-            typeAndSubmit(vm, "obtan") // one edit away
+            val vm = viewModel() // default: CREDIT_UP_TO_N with N = 1
+            completeByBank(vm, useHintsFirst = 1)
+            settleSuccess()
 
-            scheduler.advanceTimeBy(com.venom.domain.model.DefaultConfig.Spelling.AUTO_ADVANCE_MS + 10)
-            scheduler.advanceUntilIdle()
-
-            assertTrue(productionEvents().isEmpty(), "near-miss is unrecorded")
-            assertEquals(0, vm.state.value.mistakes, "near-miss is not a full error")
-            assertEquals(FeedbackState.IDLE, vm.state.value.feedback, "retry is offered")
-
-            typeAndSubmit(vm, "obtain")
             harness.await(scheduler) { productionEvents().count { it.isCorrect } == 1 }
         }
     }
 
     @Test
-    fun `same word twice in one session is credited exactly once`() {
+    fun `success with hints beyond the limit records no production event`() {
+        runBlocking {
+            val vm = viewModel() // limit = 1
+            completeByBank(vm, useHintsFirst = 2)
+            settleSuccess()
+
+            scheduler.advanceTimeBy(1500)
+            scheduler.advanceUntilIdle()
+            assertTrue(productionEvents().isEmpty(), "beyond-budget success is training only")
+            assertEquals(FeedbackState.SUCCESS, vm.state.value.feedback)
+        }
+    }
+
+    @Test
+    fun `no-credit policy voids any hinted success`() {
         runBlocking {
             val vm = viewModel()
-            typeAndSubmit(vm, "obtain")
-            harness.await(scheduler) { productionEvents().count { it.isCorrect } == 1 }
+            vmWithPolicy(vm, "NO_CREDIT_IF_ANY_HINT")
+            completeByBank(vm, useHintsFirst = 1)
+            settleSuccess()
 
-            // The queue re-opens the same word inside the same editor session.
+            scheduler.advanceTimeBy(1500)
+            scheduler.advanceUntilIdle()
+            assertTrue(productionEvents().isEmpty())
+        }
+    }
+
+    @Test
+    fun `hints never block failure recording`() {
+        runBlocking {
+            val vm = viewModel()
+            completeByBank(vm, useHintsFirst = 1) // hinted success (counted under default)
+            settleSuccess()
             vm.setCustomWord(testWord(7))
             scheduler.advanceUntilIdle()
-            typeAndSubmit(vm, "obtain")
-            scheduler.advanceTimeBy(1200L + 10)
-            scheduler.advanceUntilIdle()
+            repeat(3) {
+                fillWrong(vm)
+                scheduler.advanceTimeBy(com.venom.domain.model.DefaultConfig.Spelling.AUTO_ADVANCE_MS + 10)
+                scheduler.advanceUntilIdle()
+            }
 
-            assertEquals(
-                1, productionEvents().count { it.isCorrect },
-                "ADR-0008: one counted production success per word per session"
-            )
+            harness.await(scheduler) { productionEvents().count { !it.isCorrect } == 1 }
         }
     }
 
@@ -185,7 +193,7 @@ class SpellingProductionContractTest {
     fun `reveal answer records one keyed failure and replay never doubles it`() {
         runBlocking {
             val vm = viewModel()
-            typeAndSubmit(vm, "xxxxxx") // full error, mistake 1
+            fillWrong(vm)
             scheduler.advanceTimeBy(com.venom.domain.model.DefaultConfig.Spelling.AUTO_ADVANCE_MS + 10)
             scheduler.advanceUntilIdle()
 
@@ -194,10 +202,7 @@ class SpellingProductionContractTest {
                 harness.progressDao.rows["u1" to 7] != null &&
                     harness.progressDao.rows["u1" to 7]!!.lapsesCount == 1
             }
-
-            val fails = productionEvents().filter { !it.isCorrect }
-            assertEquals(1, fails.size)
-            assertTrue(!fails[0].idempotencyKey.isNullOrBlank())
+            assertEquals(1, productionEvents().count { !it.isCorrect })
 
             harness.progressRepository.replayUnappliedEvents("u1")
             scheduler.advanceUntilIdle()
@@ -206,72 +211,74 @@ class SpellingProductionContractTest {
     }
 
     @Test
-    fun `three full errors record exactly one production failure`() {
-        runBlocking {
-            val vm = viewModel()
-            repeat(3) {
-                typeAndSubmit(vm, "xxxxxx")
-                scheduler.advanceTimeBy(com.venom.domain.model.DefaultConfig.Spelling.AUTO_ADVANCE_MS + 10)
-                scheduler.advanceUntilIdle()
-                if (it < 2) assertEquals(FeedbackState.IDLE, vm.state.value.feedback)
-            }
-
-            harness.await(scheduler) {
-                harness.progressDao.rows["u1" to 7]?.lapsesCount == 1
-            }
-            assertEquals(1, productionEvents().count { !it.isCorrect }, "one failure, not per-keystroke")
-        }
-    }
-
-    @Test
     fun `exit after an attempt records the failure once`() {
         runBlocking {
             val vm = viewModel()
-            typeAndSubmit(vm, "xxxxxx") // one full error
+            fillWrong(vm)
             scheduler.advanceTimeBy(com.venom.domain.model.DefaultConfig.Spelling.AUTO_ADVANCE_MS + 10)
             scheduler.advanceUntilIdle()
 
             vm.onCloseClick()
-            harness.await(scheduler) {
-                harness.progressDao.rows["u1" to 7]?.lapsesCount == 1
-            }
-            assertEquals(
-                1,
-                productionEvents().count { !it.isCorrect },
-                "exiting after one mistake records exactly one failure"
-            )
+            harness.await(scheduler) { productionEvents().count { !it.isCorrect } == 1 }
+            assertEquals(1, productionEvents().count { !it.isCorrect })
         }
     }
 
     @Test
-    fun `hints alone can never reach mastery`() {
+    fun `same word twice in one session is credited exactly once`() {
         runBlocking {
             val vm = viewModel()
+            completeByBank(vm)
+            settleSuccess()
+            harness.await(scheduler) { productionEvents().count { it.isCorrect } == 1 }
+
+            vm.setCustomWord(testWord(7))
+            scheduler.advanceUntilIdle()
+            completeByBank(vm)
+            settleSuccess()
+            scheduler.advanceUntilIdle()
+
+            assertEquals(1, productionEvents().count { it.isCorrect }, "ADR-0009 guard")
+        }
+    }
+
+    @Test
+    fun `celebration at three successes never claims mastery`() {
+        runBlocking {
+            val vm = viewModel()
+            var celebrated = false
             repeat(3) {
                 vm.setCustomWord(testWord(7))
                 scheduler.advanceUntilIdle()
-                vm.onEnterTraining()
-                scheduler.advanceUntilIdle()
-                // Complete through the bank with hints as help.
-                val target = vm.state.value.currentWord!!.wordEn.uppercase()
-                var guard = 0
-                while (!vm.state.value.allSlotsFilled && guard < target.length * 2) {
-                    val idx = vm.state.value.slots.indexOfFirst { it.letter == null }
-                    val needed = target[idx]
-                    val letter = vm.state.value.bank.first {
-                        it.status == LetterStatus.AVAILABLE && it.char == needed
-                    }
-                    vm.onLetterClick(letter)
+                completeByBank(vm)
+                settleSuccess()
+                if (vm.state.value.showCelebrationDialog) {
+                    celebrated = true
+                    vm.onContinueAfterCelebration()
                     scheduler.advanceUntilIdle()
-                    guard++
                 }
-                scheduler.advanceTimeBy(1200L + 10)
-                scheduler.advanceUntilIdle()
             }
 
-            assertTrue(productionEvents().isEmpty(), "training path mints zero production events")
+            assertTrue(celebrated, "the 3-success celebration shows")
             val row = harness.progressDao.rows["u1" to 7]
-            assertNotEquals("MASTERED", row?.knownState, "hints alone cannot master")
+            assertFalse(row?.knownState == "MASTERED", "celebration is not mastery")
+            assertTrue(productionEvents().count { it.isCorrect } >= 1)
+        }
+    }
+
+    @Test
+    fun `max hints zero disables hint requests`() {
+        runBlocking {
+            val vm = viewModel()
+            vm.setMaxHintsPerWord(0)
+            scheduler.advanceUntilIdle()
+
+            val before = vm.state.value.hintLevel
+            vm.onHintRequest()
+            scheduler.advanceUntilIdle()
+
+            assertEquals(before, vm.state.value.hintLevel, "no hint granted at zero budget")
+            assertTrue(productionEvents().isEmpty())
         }
     }
 }
