@@ -82,60 +82,66 @@ class ShellScreenshotTest {
         FileOutputStream(out).use { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
     }
 
-    @Test
-    fun captureAllTabSurfacesLightAndDark() {
-        org.junit.Assume.assumeTrue(
-            "captureToImage needs PixelCopy (API 26+); API 24 evidence comes from adb screencap",
-            apiLevel >= 26
-        )
-        val dashboard = DashboardData(
-            currentStreak = 4,
-            bestStreak = 9,
-            totalXp = 640,
-            todayXp = 45,
-            levelProgress = 0.62f,
-            dailyGoalProgress = 45,
-            dailyGoalTarget = 50,
-            totalWordsMastered = 8,
-            totalWordsLearning = 14,
-            totalWordsNeedsReview = 7,
-            totalDaysActive = 11,
-            totalSessionCount = 13,
-        )
-        val queue = listOf(
-            SpellingQueueViewModel.QueueItem(word(1, "substantial"), isDue = true, productionWeak = true),
-            SpellingQueueViewModel.QueueItem(word(2, "inevitable"), isDue = false, productionWeak = false),
-        )
-        for (dark in listOf(false, true)) {
-            val suffix = if (dark) "dark" else "light"
-            capture("home-$suffix.png", dark) {
-                HomeContent(
-                    isLoading = false,
-                    dashboard = dashboard,
-                    newWordsCount = 12,
-                    attentionWords = listOf(word(7, "obtain")),
-                    estimatedMinutes = 9,
-                    onStartSession = {},
-                    onPractice = {},
-                )
-            }
-            capture("progress-$suffix.png", dark) {
-                ProgressContent(
-                    isLoading = false,
-                    newWordsCount = 74,
-                    knownWordsCount = 11,
-                    dashboard = dashboard,
-                )
-            }
-            capture("write-queue-$suffix.png", dark) {
-                SpellingQueueContent(
-                    isLoading = false,
-                    items = queue,
-                    selectedWord = null,
-                    onPick = {},
-                    onDismissEditor = {},
-                )
-            }
+    private val dashboard = DashboardData(
+        currentStreak = 4,
+        bestStreak = 9,
+        totalXp = 640,
+        todayXp = 45,
+        levelProgress = 0.62f,
+        dailyGoalProgress = 45,
+        dailyGoalTarget = 50,
+        totalWordsMastered = 8,
+        totalWordsLearning = 14,
+        totalWordsNeedsReview = 7,
+        totalDaysActive = 11,
+        totalSessionCount = 13,
+    )
+
+    private val queue = listOf(
+        SpellingQueueViewModel.QueueItem(word(1, "substantial"), isDue = true, productionWeak = true),
+        SpellingQueueViewModel.QueueItem(word(2, "inevitable"), isDue = false, productionWeak = false),
+    )
+
+    private fun shoot(name: String, dark: Boolean, content: @Composable () -> Unit) {
+        compose.setContent { WordVibeTheme(darkTheme = dark) { content() } }
+        compose.waitForIdle()
+        val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
+        val dir = InstrumentationRegistry.getInstrumentation()
+            .targetContext.getExternalFilesDir(null)!!
+        FileOutputStream(File(dir, name)).use {
+            bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it)
         }
+    }
+
+    @Test fun homeLight() = shoot("home-light.png", false) {
+        HomeContent(
+            isLoading = false, dashboard = dashboard, newWordsCount = 12,
+            attentionWords = listOf(word(7, "obtain")), estimatedMinutes = 9,
+            onStartSession = {}, onPractice = {},
+        )
+    }
+
+    @Test fun homeDark() = shoot("home-dark.png", true) {
+        HomeContent(
+            isLoading = false, dashboard = dashboard, newWordsCount = 12,
+            attentionWords = listOf(word(7, "obtain")), estimatedMinutes = 9,
+            onStartSession = {}, onPractice = {},
+        )
+    }
+
+    @Test fun progressLight() = shoot("progress-light.png", false) {
+        ProgressContent(isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard)
+    }
+
+    @Test fun progressDark() = shoot("progress-dark.png", true) {
+        ProgressContent(isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard)
+    }
+
+    @Test fun writeQueueLight() = shoot("write-queue-light.png", false) {
+        SpellingQueueContent(false, queue, null, {}, {})
+    }
+
+    @Test fun writeQueueDark() = shoot("write-queue-dark.png", true) {
+        SpellingQueueContent(false, queue, null, {}, {})
     }
 }
