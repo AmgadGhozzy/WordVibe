@@ -27,6 +27,7 @@ import com.venom.domain.model.WordMaster
 import com.venom.domain.model.getLanguageOptions
 import com.venom.domain.repo.IUserIdentityRepository
 import com.venom.domain.repo.IWordMasterRepository
+import com.venom.stackcard.session.WordSessionEngine
 import com.venom.stackcard.ui.components.insights.InsightsTab
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
@@ -166,14 +167,13 @@ class WordMasteryViewModel @Inject constructor(
     private val loadDataJob = AtomicReference<Job?>(null)
     private val postLoginSyncJob = AtomicReference<Job?>(null)
 
-    private val sessionStartTime = AtomicLong(0L)
-    private val cardsSwipedInSession = AtomicInteger(0)
     private val sessionMasteredCount = AtomicInteger(0)
     private val sessionLearningCount = AtomicInteger(0)
-    private val sessionNeedsReviewCount = AtomicInteger(0)
 
-    private val sessionResults = ConcurrentHashMap<Int, String>()
-    private val tapCounters = ConcurrentHashMap<Int, AtomicInteger>()
+    // Step 3: session decisions (tap keys, deck order, needs-review counter) live
+    // in the pure engine; the view model only executes them. sessionResults was
+    // write-only dead state and is intentionally not carried over.
+    private var sessionEngine: WordSessionEngine? = null
 
     private val dbOperationChannel = Channel<DbOperation>(Channel.BUFFERED)
     private val wordProgressCache = ConcurrentHashMap<Int, CurrentWordProgress>()
@@ -417,19 +417,20 @@ class WordMasteryViewModel @Inject constructor(
 
         viewModelScope.launch(Dispatchers.IO) {
             val userId = identityRepository.getCurrentUserId()
+            val engine = sessionEngine
             if (result.isCorrect) {
                 progressRepository.recordProductionSuccess(
                     userId,
                     result.wordId,
-                    tapKey(result.wordId, "GOOD"),
-                    sessionId()
+                    engine?.tapProductionKey(result.wordId, true) ?: "orphan:${result.wordId}:GOOD",
+                    engine?.sessionId ?: "orphan"
                 )
             } else {
                 progressRepository.recordProductionFail(
                     userId,
                     result.wordId,
-                    tapKey(result.wordId, "AGAIN"),
-                    sessionId()
+                    engine?.tapProductionKey(result.wordId, false) ?: "orphan:${result.wordId}:AGAIN",
+                    engine?.sessionId ?: "orphan"
                 )
             }
             // Refresh word progress cache
@@ -453,69 +454,54 @@ class WordMasteryViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Dedupe key for exactly-once session commits: session + word + outcome + tap ordinal.
-     * Each tap is a distinct event; re-applying the same key is a no-op in the repository.
-     */
-    private fun tapKey(wordId: Int, outcome: String): String {
-        val ordinal = tapCounters.getOrPut(wordId) { AtomicInteger(0) }.incrementAndGet()
-        return "${sessionStartTime.get()}:$wordId:$outcome:$ordinal"
-    }
-
-    private fun sessionId(): String = sessionStartTime.get().toString()
-
     private fun handleSwipeCard(word: WordMaster, isRemembered: Boolean) {
         if (isRemembered) {
             analyticsManager.logFlashcardSwipe(wordId = word.wordEn, direction = "right", screenName = "FlashcardScreen")
             crashlyticsManager.logBreadcrumb("Swiped remember: ${word.wordEn}")
 
-            // A forgotten-then-remembered card already recorded its failure at the
-            // forget tap; this remember tap records its own success. The session
-            // verdict is bookkeeping only and is never re-sent on the exit swipe.
-            sessionResults[word.id] = "GOOD"
-
-            cardsSwipedInSession.incrementAndGet()
+            val decision = sessionEngine!!.swipeRemembered(word, nowMs = System.currentTimeMillis())
 
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 val userId = identityRepository.getCurrentUserId()
                 dbOperationChannel.send(
                     DbOperation.RecordRecallSuccess(
-                        userId, word.id, tapKey(word.id, "GOOD"), sessionId()
+                        userId, decision.recall.wordId, decision.recall.idempotencyKey,
+                        decision.recall.sessionId
                     )
                 )
             }
 
-            val currentState = _uiState.value
-            val remainingCards = currentState.visibleCards.filterIndexed { index, _ -> index != 0 }
-            val nextWord = remainingCards.firstOrNull()
-            val isSessionFinished = remainingCards.isEmpty()
-            
+            val isSessionFinished = decision.sessionFinished
+
             wordProgressCache.remove(word.id)
-            
+
             _uiState.update { state ->
                 state.copy(
-                    visibleCards = remainingCards,
-                    removedCards = state.removedCards + word,
-                    currentWord = nextWord,
-                    processedCardsCount = state.processedCardsCount + 1,
+                    visibleCards = decision.visibleCards,
+                    removedCards = decision.removedCards,
+                    currentWord = decision.currentWord,
+                    processedCardsCount = decision.processedCardsCount,
                     isFlipped = false,
                     isHintRevealed = false,
                     showPowerTip = false,
                     isSheetOpen = false,
                     flipRotation = 0f,
-                    sessionStats = updateSessionStats(state.sessionStats, isSessionFinished),
+                    sessionStats = state.sessionStats.copy(
+                        sessionDurationMs = if (isSessionFinished) {
+                            sessionEngine!!.durationMs(System.currentTimeMillis())
+                        } else state.sessionStats.sessionDurationMs
+                    ),
                     cardChangeCounter = state.cardChangeCounter + 1
                 )
             }
-            
-            prepareNextWordProgress(nextWord, remainingCards)
+
+            prepareNextWordProgress(decision.currentWord, decision.visibleCards)
         } else {
             analyticsManager.logFlashcardSwipe(wordId = word.wordEn, direction = "left", screenName = "FlashcardScreen")
             crashlyticsManager.logBreadcrumb("Swiped forgot: ${word.wordEn}")
             
-            sessionResults[word.id] = "AGAIN"
-            cardsSwipedInSession.incrementAndGet()
-            sessionNeedsReviewCount.incrementAndGet()
+            val decision = sessionEngine!!.swipeForgot(word, nowMs = System.currentTimeMillis())
+
             updateSessionStatsInUI()
 
             // Durable at tap time: a forgotten tap is a stored failure even if the
@@ -524,19 +510,16 @@ class WordMasteryViewModel @Inject constructor(
                 val userId = identityRepository.getCurrentUserId()
                 dbOperationChannel.send(
                     DbOperation.RecordRecallFail(
-                        userId, word.id, tapKey(word.id, "AGAIN"), sessionId()
+                        userId, decision.recall.wordId, decision.recall.idempotencyKey,
+                        decision.recall.sessionId
                     )
                 )
             }
 
-            val currentState = _uiState.value
-            val remainingCards = currentState.visibleCards.filterIndexed { index, _ -> index != 0 } + word
-            val nextWord = remainingCards.firstOrNull()
-            
             _uiState.update { state ->
                 state.copy(
-                    visibleCards = remainingCards,
-                    currentWord = nextWord,
+                    visibleCards = decision.visibleCards,
+                    currentWord = decision.currentWord,
                     isFlipped = false,
                     isHintRevealed = false,
                     showPowerTip = false,
@@ -545,8 +528,8 @@ class WordMasteryViewModel @Inject constructor(
                     cardChangeCounter = state.cardChangeCounter + 1
                 )
             }
-            
-            prepareNextWordProgress(nextWord, remainingCards)
+
+            prepareNextWordProgress(decision.currentWord, decision.visibleCards)
         }
     }
 
@@ -587,7 +570,7 @@ class WordMasteryViewModel @Inject constructor(
             _uiState.update { state ->
                 state.copy(
                     sessionStats = state.sessionStats.copy(
-                        sessionDurationMs = System.currentTimeMillis() - sessionStartTime.get()
+                        sessionDurationMs = sessionEngine?.durationMs(System.currentTimeMillis()) ?: 0L
                     )
                 )
             }
@@ -603,14 +586,14 @@ class WordMasteryViewModel @Inject constructor(
             currentStats.copy(
                 masteredCount = sessionMasteredCount.get(),
                 learningCount = sessionLearningCount.get(),
-                needsReviewCount = sessionNeedsReviewCount.get(),
-                sessionDurationMs = System.currentTimeMillis() - sessionStartTime.get()
+                needsReviewCount = sessionEngine?.needsReviewCount ?: 0,
+                sessionDurationMs = sessionEngine?.durationMs(System.currentTimeMillis()) ?: 0L
             )
         } else {
             currentStats.copy(
                 masteredCount = sessionMasteredCount.get(),
                 learningCount = sessionLearningCount.get(),
-                needsReviewCount = sessionNeedsReviewCount.get()
+                needsReviewCount = sessionEngine?.needsReviewCount ?: 0
             )
         }
     }
@@ -624,8 +607,7 @@ class WordMasteryViewModel @Inject constructor(
                 // (durable channel sends with idempotency keys). Finalization only
                 // reconciles session-level bookkeeping, never re-records words.
 
-                val startTime = sessionStartTime.get()
-                val duration = if (startTime > 0) System.currentTimeMillis() - startTime else 0L
+                val duration = sessionEngine?.durationMs(System.currentTimeMillis()) ?: 0L
                 activityRepository.recordSessionComplete(userId, duration)
 
                 reloadUserProgress(userId)
@@ -688,7 +670,7 @@ class WordMasteryViewModel @Inject constructor(
                 sessionStats = state.sessionStats.copy(
                     masteredCount = sessionMasteredCount.get(),
                     learningCount = sessionLearningCount.get(),
-                    needsReviewCount = sessionNeedsReviewCount.get()
+                    needsReviewCount = sessionEngine?.needsReviewCount ?: 0
                 )
             )
         }
@@ -703,14 +685,10 @@ class WordMasteryViewModel @Inject constructor(
     }
 
     private suspend fun loadDataInternal(isGenerative: Boolean, topic: String?) {
-        sessionStartTime.set(System.currentTimeMillis())
-        cardsSwipedInSession.set(0)
+        sessionEngine = WordSessionEngine(sessionStartMs = System.currentTimeMillis())
         sessionMasteredCount.set(0)
         sessionLearningCount.set(0)
-        sessionNeedsReviewCount.set(0)
         wordProgressCache.clear()
-        sessionResults.clear()
-        tapCounters.clear()
 
         crashlyticsManager.setCurrentScreen("FlashcardScreen")
         crashlyticsManager.setCurrentFeature("WordMastery")
@@ -934,10 +912,10 @@ class WordMasteryViewModel @Inject constructor(
 
         sessionMasteredCount.set(0)
         sessionLearningCount.set(0)
-        sessionNeedsReviewCount.set(0)
         wordProgressCache.clear()
-        sessionResults.clear()
-        tapCounters.clear()
+        sessionEngine = WordSessionEngine(
+            sessionStartMs = sessionEngine?.sessionId?.toLongOrNull() ?: System.currentTimeMillis()
+        )
 
         _uiState.update {
             WordMasteryUiState(
@@ -991,8 +969,8 @@ class WordMasteryViewModel @Inject constructor(
     }
 
     private fun logSessionCompletion() {
-        val startTime = sessionStartTime.get()
-        val cardsSwiped = cardsSwipedInSession.get()
+        val startTime = sessionEngine?.sessionId?.toLongOrNull() ?: 0L
+        val cardsSwiped = sessionEngine?.cardsSwiped ?: 0
 
         if (startTime > 0 && cardsSwiped > 0) {
             val sessionDuration = System.currentTimeMillis() - startTime
@@ -1004,14 +982,14 @@ class WordMasteryViewModel @Inject constructor(
             )
             analyticsManager.logEvent(
                 eventName = AnalyticsEvent.FEATURE_COMPLETED,
-                params = mapOf(
+                params = mapOf<String, Any>(
                     AnalyticsParam.FEATURE_NAME to "flashcard_session",
                     AnalyticsParam.DURATION_MS to sessionDuration,
                     "cards_swiped" to cardsSwiped,
                     "cards_remaining" to _uiState.value.visibleCards.size,
                     "mastered" to sessionMasteredCount.get(),
                     "learning" to sessionLearningCount.get(),
-                    "needs_review" to sessionNeedsReviewCount.get()
+                    "needs_review" to (sessionEngine?.needsReviewCount ?: 0)
                 )
             )
         }
