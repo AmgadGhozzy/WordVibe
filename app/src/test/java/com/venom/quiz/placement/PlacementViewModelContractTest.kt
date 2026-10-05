@@ -159,6 +159,33 @@ class PlacementViewModelContractTest {
     }
 
     @Test
+    fun `a thin level borrows from the nearest neighbor instead of ending the test`() = vmTest {
+        // B1 is rich, B2 has a single word: the ladder's second question must still
+        // be served for B2, with its distractors borrowed from the neighbor.
+        val rig = Rig((11..14).map { wordEntity(it, "B1") } + listOf(wordEntity(21, "B2")))
+        rig.vm.start()
+
+        awaitVm(
+            cond = {
+                val q = rig.vm.uiState.value.currentQuestion
+                    as? QuizQuestionUi.FlashcardQuestion
+                q != null && !rig.vm.uiState.value.isAnswered && q.input.cefrLevel == "B1"
+            },
+            message = "the floor question was never served"
+        )
+        rig.vm.selectOption(rig.correctAnswer!!)
+
+        awaitVm(
+            cond = {
+                val q = rig.vm.uiState.value.currentQuestion
+                    as? QuizQuestionUi.FlashcardQuestion
+                q != null && !rig.vm.uiState.value.isAnswered && q.input.cefrLevel == "B2"
+            },
+            message = "the B2 question was never served from a borrowed pool"
+        )
+    }
+
+    @Test
     fun `passing every ladder question caps the result at B2 and persists it`() = vmTest {
         // Every floor-ladder level has usable words, so no borrowing is involved here.
         val rig = Rig(

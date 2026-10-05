@@ -63,6 +63,11 @@ class PlacementViewModel @Inject constructor(
 
     private val allLevels = PlacementLevels.levels()
 
+    private companion object {
+        /** One target plus three distinct distractors. */
+        const val MIN_POOL = 4
+    }
+
     /**
      * ADR-0010: the ladder starts at the lowest level that actually has words in
      * the seeded corpus (floor), so placement never degenerates into a
@@ -156,30 +161,52 @@ class PlacementViewModel @Inject constructor(
         _uiState.update { it.copy(isAbandoned = true, isLoading = false) }
     }
 
+    /**
+     * ADR-0010: candidates for this level. A pool too thin for one target plus three
+     * distractors borrows from the nearest ladder levels (index distance). The target
+     * comes from the level's own words when any exist; borrowed words fill distractors
+     * and only back the target when the level has none — the test never ends on zero
+     * questions while any ladder level can serve one.
+     */
+    private suspend fun placementPool(level: WordLevels): Pair<List<WordMaster>, List<WordMaster>> {
+        fun usable(words: List<WordMaster>) =
+            words.filter { it.definitionEn.isNotBlank() && it.arabicAr.isNotBlank() }
+
+        val own = withContext(Dispatchers.IO) {
+            wordRepository.getWordsByCefr(level.cefrLevel, 30)
+        }
+        if (usable(own).size >= MIN_POOL) return usable(own) to own
+
+        val merged = own.toMutableList()
+        for (neighbor in allLevels.filter { it.cefrLevel != level.cefrLevel }
+            .sortedBy { kotlin.math.abs(PlacementLevels.indexOf(it) - PlacementLevels.indexOf(level)) }) {
+            merged += wordRepository.getWordsByCefr(neighbor.cefrLevel, 30)
+            if (usable(merged).size >= MIN_POOL) break
+        }
+        val usableOwn = usable(own)
+        val usableMerged = usable(merged)
+        return usableOwn.ifEmpty { usableMerged } to merged
+    }
+
     private suspend fun loadQuestionForLevel(level: WordLevels) {
         _uiState.update { it.copy(isLoading = true) }
 
-        val candidates = withContext(Dispatchers.IO) {
-            wordRepository.getWordsByCefr(level.cefrLevel, 30)
-        }
+        val (targetPool, distractorPool) = placementPool(level)
 
-        val target = candidates
-            .filter { it.definitionEn.isNotBlank() && it.arabicAr.isNotBlank() }
+        val target = targetPool
             .filter { it.id !in usedWordIds }
-            .randomOrNull() ?: candidates
-            .filter { it.definitionEn.isNotBlank() && it.arabicAr.isNotBlank() }
-            .randomOrNull()
+            .randomOrNull() ?: targetPool.randomOrNull()
 
         if (target == null) {
             levelResults[level.id] = false
             finalize()
             return
         }
-        
+
         usedWordIds.add(target.id)
 
         val type = pickQuestionType(PlacementLevels.indexOf(level))
-        val distractors = buildDistractors(target, type, candidates)
+        val distractors = buildDistractors(target, type, distractorPool)
 
         if (distractors.isEmpty()) {
             levelResults[level.id] = false
