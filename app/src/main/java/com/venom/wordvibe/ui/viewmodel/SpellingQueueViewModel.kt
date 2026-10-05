@@ -20,10 +20,14 @@ import javax.inject.Inject
  * (ADR-0008). Ordering is derived from read-only event aggregates; no schema
  * change, no contract surface. Picking a word opens the typing editor.
  */
+import com.venom.analytics.CrashlyticsManager
+import com.venom.analytics.ext.logApiError
+
 @HiltViewModel
 class SpellingQueueViewModel @Inject constructor(
     private val identityRepository: IUserIdentityRepository,
     private val progressRepository: UserWordProgressRepository,
+    private val crashlyticsManager: CrashlyticsManager,
 ) : ViewModel() {
 
     data class QueueItem(
@@ -72,7 +76,7 @@ class SpellingQueueViewModel @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                android.util.Log.e("SpellingQueue", "queue load failed", e)
+                crashlyticsManager.logNonFatalException(e, "queue load failed")
                 _state.value = QueueUiState(isLoading = false)
             }
         }

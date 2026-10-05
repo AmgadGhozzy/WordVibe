@@ -70,10 +70,11 @@ fun getTypography(fontFamily: FontFamily) = defaultType.copy(
  * - Arabic locale → [arabicFamily] (Cairo by default)
  * - All others    → [latinFamily]  (Inter by default)
  *
- * This is what [SynapseTheme] passes to [MaterialTheme].
+ * This is what [WordVibeTheme] passes to [MaterialTheme].
  */
 fun getTypographyForLocale(
     latinFamily: FontFamily,
     arabicFamily: FontFamily,
     isArabic: Boolean,
 ): Typography = getTypography(if (isArabic) arabicFamily else latinFamily)
+

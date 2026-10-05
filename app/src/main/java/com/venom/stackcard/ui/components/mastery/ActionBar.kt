@@ -43,7 +43,7 @@ import com.venom.domain.model.AppTheme
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import androidx.compose.ui.graphics.vector.ImageVector
 
 /**
@@ -222,7 +222,7 @@ private fun PracticeButton(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun ActionBarPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         Box(
             Modifier
                 .fillMaxWidth()
@@ -243,7 +243,7 @@ private fun ActionBarPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun ActionBarPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         Box(
             Modifier
                 .fillMaxWidth()
@@ -260,4 +260,5 @@ private fun ActionBarPreviewLight() {
         }
     }
 }
+
 

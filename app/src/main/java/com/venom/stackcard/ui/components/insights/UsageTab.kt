@@ -59,7 +59,7 @@ import com.venom.stackcard.ui.components.mastery.InteractiveText
 import com.venom.stackcard.ui.components.mastery.SectionHeader
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 import com.venom.wordvibe.core.theme.tokens.getCefrColorScheme
 
@@ -530,7 +530,7 @@ private fun HighlightedExampleText(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun UsageTabPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         UsageTab(
             word = MockWordData.journeyWord,
             userCefrLevel = CefrLevel.A2
@@ -541,11 +541,12 @@ private fun UsageTabPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun UsageTabPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         UsageTab(
             word = MockWordData.journeyWord,
             userCefrLevel = CefrLevel.C2
         )
     }
 }
+
 

@@ -1,6 +1,5 @@
 package com.venom.data.repo
 
-import android.util.Log
 import com.venom.analytics.CrashlyticsManager
 import com.venom.data.local.DateProvider
 import com.venom.data.local.SystemDateProvider
@@ -253,7 +252,7 @@ class UserActivityRepository @Inject constructor(
             val activeDays = activityDao.getActiveDays(userId)
             StreakEngine.calculateStreak(activeDays, today(), yesterday(), ::previousDay)
         } catch (e: Exception) {
-            Log.e(TAG, "Streak calc error: ${e.message}")
+            crashlytics.logNonFatalException(e, "Streak calc error")
             0
         }
     }
@@ -333,7 +332,7 @@ class UserActivityRepository @Inject constructor(
                     profileDao.migrateUserId(fromUserId, toUserId)
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Migration failed: ${e.message}", e)
+                crashlytics.logNonFatalException(e, "Migration failed")
             }
         }
 }

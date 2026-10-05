@@ -44,7 +44,7 @@ import com.venom.wordvibe.R
 import com.venom.stackcard.ui.components.mastery.InteractiveText
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 /**
  * Languages tab content for Insights sheet.
@@ -244,7 +244,7 @@ private fun LanguageRow(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun LanguagesTabPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         LanguagesTab(
             word = MockWordData.journeyWord,
             pinnedLanguage = LanguageOption("German", "Reise"),
@@ -256,7 +256,7 @@ private fun LanguagesTabPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun LanguagesTabPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         LanguagesTab(
             word = MockWordData.journeyWord,
             pinnedLanguage = LanguageOption("French", "voyage"),
@@ -268,7 +268,7 @@ private fun LanguagesTabPreviewLight() {
 @Preview(showBackground = true, name = "No Pinned Language")
 @Composable
 private fun LanguagesTabNoPinPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         LanguagesTab(
             word = MockWordData.journeyWord,
             pinnedLanguage = null,
@@ -276,4 +276,5 @@ private fun LanguagesTabNoPinPreview() {
         )
     }
 }
+
 

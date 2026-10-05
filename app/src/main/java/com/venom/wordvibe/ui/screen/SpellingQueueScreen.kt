@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.venom.wordvibe.ui.screen
 
 import androidx.compose.foundation.clickable

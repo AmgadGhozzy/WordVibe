@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
@@ -54,7 +55,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.wordvibe.navigation.SynapseNavigationItems
 
 private data class BarColors(
@@ -62,13 +63,9 @@ private data class BarColors(
     val glassBottom: Color,
     val borderHighlight: Color,
     val borderShadow: Color,
-    val shimmerA: Color,
-    val shimmerB: Color,
-    val shimmerC: Color,
     val glow: Color,
     val iconSelected: Color,
     val iconUnselected: Color,
-    val arcStroke: Color,
 )
 
 @Composable
@@ -82,25 +79,17 @@ private fun rememberBarColors(isDark: Boolean): BarColors {
             glassBottom = cs.background.copy(alpha = 0.88f),
             borderHighlight = primary.copy(alpha = 0.18f),
             borderShadow = primary.copy(alpha = 0.06f),
-            shimmerA = Color.White.copy(alpha = 0.03f),
-            shimmerB = primary.copy(alpha = 0.06f),
-            shimmerC = Color.White.copy(alpha = 0.02f),
             glow = primary.copy(alpha = 0.35f),
             iconSelected = primary,
             iconUnselected = cs.onSurfaceVariant.copy(alpha = 0.6f),
-            arcStroke = primary.copy(alpha = 0.90f),
         ) else BarColors(
             glassTop = cs.surface.copy(alpha = 0.96f),
             glassBottom = cs.background.copy(alpha = 0.90f),
             borderHighlight = primary.copy(alpha = 0.22f),
             borderShadow = primary.copy(alpha = 0.08f),
-            shimmerA = Color.White.copy(alpha = 0.55f),
-            shimmerB = primary.copy(alpha = 0.08f),
-            shimmerC = Color.White.copy(alpha = 0.30f),
             glow = primary.copy(alpha = 0.15f),
             iconSelected = primary,
             iconUnselected = cs.onSurfaceVariant.copy(alpha = 0.6f),
-            arcStroke = primary.copy(alpha = 0.80f),
         )
     }
 }
@@ -112,7 +101,9 @@ fun BottomBar(
     currentRoute: String?,
     modifier: Modifier = Modifier,
 ) {
-    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val cs = MaterialTheme.colorScheme
+    val primary = cs.primary
+    val isDark = cs.background.luminance() < 0.5f
     val colors = rememberBarColors(isDark)
     val layoutDirection = LocalLayoutDirection.current
     val isRtl = layoutDirection == LayoutDirection.Rtl
@@ -140,6 +131,11 @@ fun BottomBar(
     val cornerRadius = 50.dp
     val barShape = RoundedCornerShape(cornerRadius)
 
+    val shimmerA = if (isDark) Color.White.copy(alpha = 0.03f) else Color.White.copy(alpha = 0.55f)
+    val shimmerB = primary.copy(alpha = if (isDark) 0.06f else 0.08f)
+    val shimmerC = if (isDark) Color.White.copy(alpha = 0.02f) else Color.White.copy(alpha = 0.30f)
+    val arcStrokeColor = primary.copy(alpha = if (isDark) 0.90f else 0.80f)
+
     Box(
         modifier = modifier
             .wrapContentWidth()
@@ -147,9 +143,74 @@ fun BottomBar(
             .scale(0.95f)
             .offset(y = (-12).dp)
             .drawWithCache {
-                val brush = Brush.verticalGradient(listOf(colors.glassTop, colors.glassBottom))
-                onDrawBehind {
-                    drawRoundRect(brush = brush, cornerRadius = CornerRadius(cornerRadius.toPx()))
+                val glassBrush = Brush.verticalGradient(listOf(colors.glassTop, colors.glassBottom))
+                val shimmerBrush = Brush.linearGradient(listOf(shimmerA, shimmerB, shimmerC))
+                val cornerRadiusPx = CornerRadius(cornerRadius.toPx())
+
+                val tabWidth = size.width / visibleItems.size
+                val centerOffset = Offset(
+                    x = tabWidth * animatedIndex + tabWidth / 2f,
+                    y = size.height / 2f,
+                )
+                val glowRadius = size.height * 1.5f
+                val glowColor = animatedGlow.copy(alpha = if (isDark) 0.55f else 0.35f)
+                val glowBrush = Brush.radialGradient(
+                    colors = listOf(glowColor, Color.Transparent),
+                    center = centerOffset,
+                    radius = glowRadius
+                )
+
+                val path = Path().apply {
+                    addRoundRect(RoundRect(size.toRect(), CornerRadius(size.height)))
+                }
+                val pathLen = PathMeasure().apply { setPath(path, false) }.length
+                
+                val strokeBrush = Brush.horizontalGradient(
+                    colors = listOf(
+                        arcStrokeColor.copy(alpha = 0.00f),
+                        arcStrokeColor.copy(alpha = 0.90f),
+                        arcStrokeColor.copy(alpha = 0.90f),
+                        arcStrokeColor.copy(alpha = 0.00f),
+                    ),
+                    startX = tabWidth * animatedIndex,
+                    endX = tabWidth * (animatedIndex + 1f),
+                )
+
+                onDrawWithContent {
+                    // 1. Draw glass background
+                    drawRoundRect(brush = glassBrush, cornerRadius = cornerRadiusPx)
+                    
+                    // 2. Draw shimmer fill
+                    drawRoundRect(brush = shimmerBrush, cornerRadius = cornerRadiusPx)
+
+                    // 3. Draw glow blob
+                    withTransform({ 
+                        clipPath(path)
+                        if (isRtl) scale(scaleX = -1f, scaleY = 1f, pivot = center) 
+                    }) {
+                        drawCircle(brush = glowBrush, radius = glowRadius, center = centerOffset)
+                    }
+
+                    // 4. Draw arc stroke on active tab
+                    withTransform({ 
+                        clipPath(path)
+                        if (isRtl) scale(scaleX = -1f, scaleY = 1f, pivot = center) 
+                    }) {
+                        drawPath(
+                            path = path,
+                            brush = strokeBrush,
+                            style = Stroke(
+                                width = 3.5f,
+                                cap = StrokeCap.Round,
+                                pathEffect = PathEffect.dashPathEffect(
+                                    intervals = floatArrayOf(pathLen / 2f, pathLen),
+                                )
+                            )
+                        )
+                    }
+                    
+                    // 5. Draw actual contents (the Row with tab items)
+                    drawContent()
                 }
             }
             .border(
@@ -159,84 +220,6 @@ fun BottomBar(
             )
             .clip(barShape),
     ) {
-
-        // ── Glass shimmer fill ────────────────────────────────────────────────
-        Canvas(modifier = Modifier.matchParentSize()) {
-            drawRoundRect(
-                brush = Brush.linearGradient(
-                    listOf(colors.shimmerA, colors.shimmerB, colors.shimmerC)
-                ),
-                cornerRadius = CornerRadius(cornerRadius.toPx()),
-            )
-        }
-
-        // ── Glow blob  ─────────────────────────────────────────────────────────
-        Canvas(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(barShape)
-        ) {
-            withTransform({ if (isRtl) scale(scaleX = -1f, scaleY = 1f, pivot = center) }) {
-                val tabWidth = size.width / visibleItems.size
-
-                val centerOffset = Offset(
-                    x = tabWidth * animatedIndex + tabWidth / 2f,
-                    y = size.height / 2f,
-                )
-                val glowColor = animatedGlow.copy(alpha = if (isDark) 0.55f else 0.35f)
-                val glowRadius = size.height * 1.5f
-
-                drawCircle(
-                    brush = Brush.radialGradient(
-                        colors = listOf(glowColor, Color.Transparent),
-                        center = centerOffset,
-                        radius = glowRadius
-                    ),
-                    radius = glowRadius,
-                    center = centerOffset,
-                )
-            }
-        }
-
-        // ── Arc stroke on active tab ──────────────────────────────────────────
-        Canvas(modifier = Modifier
-            .matchParentSize()
-            .clip(barShape)) {
-            withTransform({ if (isRtl) scale(scaleX = -1f, scaleY = 1f, pivot = center) }) {
-                val tabWidth = size.width / visibleItems.size
-                val path = Path().apply {
-                    addRoundRect(
-                        RoundRect(
-                            size.toRect(),
-                            CornerRadius(size.height)
-                        )
-                    )
-                }
-                val pathLen = PathMeasure().apply { setPath(path, false) }.length
-
-                drawPath(
-                    path = path,
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(
-                            colors.arcStroke.copy(alpha = 0.00f),
-                            colors.arcStroke.copy(alpha = 0.90f),
-                            colors.arcStroke.copy(alpha = 0.90f),
-                            colors.arcStroke.copy(alpha = 0.00f),
-                        ),
-                        startX = tabWidth * animatedIndex,
-                        endX = tabWidth * (animatedIndex + 1f),
-                    ),
-                    style = Stroke(
-                        width = 3.5f,
-                        cap = StrokeCap.Round,
-                        pathEffect = PathEffect.dashPathEffect(
-                            intervals = floatArrayOf(pathLen / 2f, pathLen),
-                        ),
-                    ),
-                )
-            }
-        }
-
         // ── Tab items ─────────────────────────────────────────────────────────
         Row(
             modifier = Modifier
@@ -308,7 +291,7 @@ fun BottomBar(
 @Preview(name = "Android 8 (API 26)", apiLevel = 36, showBackground = true)
 @Composable
 private fun BottomBarPreview() {
-    SynapseTheme {
+    WordVibeTheme {
         Box(
             modifier = Modifier.padding(16.dp),
             contentAlignment = Alignment.Center

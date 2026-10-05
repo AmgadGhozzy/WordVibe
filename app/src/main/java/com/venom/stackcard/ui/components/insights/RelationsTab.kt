@@ -41,7 +41,7 @@ import com.venom.stackcard.ui.components.mastery.InteractiveText
 import com.venom.stackcard.ui.components.mastery.SectionHeader
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 import com.venom.wordvibe.core.theme.tokens.getPosColor
 
@@ -425,7 +425,7 @@ private fun WordFamilyCard(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun RelationsTabPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         RelationsTab(
             word = MockWordData.journeyWord
         )
@@ -435,10 +435,11 @@ private fun RelationsTabPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun RelationsTabPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         RelationsTab(
             word = MockWordData.journeyWord
         )
     }
 }
+
 

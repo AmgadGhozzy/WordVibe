@@ -22,7 +22,7 @@ import com.venom.ui.components.buttons.GlassOutlinedButton
 import com.venom.ui.components.buttons.GradientActionButton
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 @Composable
 fun PlacementChoiceDialog(
@@ -101,7 +101,7 @@ fun PlacementChoiceDialog(
 @Preview(showBackground = true)
 @Composable
 private fun PlacementChoiceDialogPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         PlacementChoiceDialog(
             onStartFromBeginning = {},
             onTakePlacementTest = {},

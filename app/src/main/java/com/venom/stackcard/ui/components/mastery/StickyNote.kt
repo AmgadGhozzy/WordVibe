@@ -39,7 +39,7 @@ import com.venom.ui.components.common.asp
 import com.venom.ui.components.other.BiDiFormatter
 import com.venom.domain.model.AppTheme
 import com.venom.wordvibe.core.theme.PlaypenSans
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import kotlin.random.Random
 
 enum class StickyVariant { YELLOW, AMBER, ROSE, BLUE }
@@ -217,7 +217,7 @@ fun StickyNoteCard(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 fun StickyNotePreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         Column(
             modifier = Modifier.padding(24.adp),
             verticalArrangement = Arrangement.spacedBy(16.adp)
@@ -233,7 +233,7 @@ fun StickyNotePreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9, name = "Light Theme - Paper Texture")
 @Composable
 fun StickyNotePreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         Column(
             modifier = Modifier.padding(24.adp),
             verticalArrangement = Arrangement.spacedBy(16.adp)
@@ -245,3 +245,4 @@ fun StickyNotePreviewLight() {
         }
     }
 }
+

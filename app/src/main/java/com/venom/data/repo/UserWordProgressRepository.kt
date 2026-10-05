@@ -1,6 +1,6 @@
 package com.venom.data.repo
 
-import android.util.Log
+import android.database.sqlite.SQLiteException
 import com.venom.analytics.CrashlyticsManager
 import com.venom.data.local.DateProvider
 import com.venom.data.local.SystemDateProvider
@@ -358,13 +358,12 @@ class UserWordProgressRepository @Inject constructor(
                 if (toCount > 0) {
                     // Target user already has progress — delete stale anonymous data
                     progressDao.deleteByUserId(fromUserId)
-                    Log.d(TAG, "Deleted $fromCount anonymous progress records (target has $toCount)")
+                    crashlytics.logBreadcrumb("Deleted $fromCount anonymous progress records (target has $toCount)")
                 } else {
                     progressDao.migrateUserId(fromUserId, toUserId)
-                    Log.d(TAG, "Migrated $fromCount word progress records: $fromUserId → $toUserId")
+                    crashlytics.logBreadcrumb("Migrated $fromCount word progress records: $fromUserId → $toUserId")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Migration failed: ${e.message}", e)
                 crashlytics.logNonFatalException(e, "Word progress migration failed")
             }
         }

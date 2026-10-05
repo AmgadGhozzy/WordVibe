@@ -48,7 +48,7 @@ import com.venom.ui.components.other.GlassThickness
 import com.venom.ui.components.other.GradientGlassCard
 import com.venom.ui.viewmodel.TTSViewModel
 import com.venom.wordvibe.R
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.wordvibe.core.theme.tokens.getCefrColorScheme
 import com.venom.wordvibe.core.theme.tokens.getDifficultyTheme
 
@@ -317,7 +317,7 @@ private fun PhoneticButton(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun CardFrontPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         CardFront(
             word = MockWordData.journeyWord,
             isBookmarked = false,
@@ -333,7 +333,7 @@ private fun CardFrontPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun CardFrontPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         CardFront(
             word = MockWordData.journeyWord,
             isBookmarked = false,
@@ -345,4 +345,5 @@ private fun CardFrontPreviewLight() {
         )
     }
 }
+
 

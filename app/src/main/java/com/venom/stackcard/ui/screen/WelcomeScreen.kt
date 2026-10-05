@@ -59,7 +59,7 @@ import com.venom.ui.components.buttons.GradientActionButton
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
 import com.venom.ui.components.dialogs.PlacementChoiceDialog
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 import kotlinx.coroutines.delay
 
@@ -338,7 +338,7 @@ private fun AppTitle() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun WelcomeScreenPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         WelcomeScreen(isSignedIn = false, isLoading = false)
     }
 }
@@ -346,7 +346,7 @@ private fun WelcomeScreenPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun WelcomeScreenSignedInPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         WelcomeScreen(
             isSignedIn = false,
             userProgress = DashboardData(
@@ -355,4 +355,5 @@ private fun WelcomeScreenSignedInPreview() {
         )
     }
 }
+
 

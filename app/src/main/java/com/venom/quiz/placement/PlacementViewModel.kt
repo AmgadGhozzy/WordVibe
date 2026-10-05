@@ -1,8 +1,10 @@
 package com.venom.quiz.placement
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.venom.analytics.CrashlyticsManager
+import com.venom.analytics.ext.logApiError
+import com.venom.analytics.ext.logUserAction
 import com.venom.data.local.dao.UserProfileDao
 import com.venom.data.repo.UserIdentityRepository
 import com.venom.domain.model.LevelScore
@@ -34,7 +36,8 @@ import kotlin.random.Random
 class PlacementViewModel @Inject constructor(
     private val wordRepository: IWordMasterRepository,
     private val userProfileDao: UserProfileDao,
-    private val identityRepository: UserIdentityRepository
+    private val identityRepository: UserIdentityRepository,
+    private val crashlyticsManager: CrashlyticsManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -275,14 +278,10 @@ class PlacementViewModel @Inject constructor(
                     takenAt = now, 
                     now = now
                 )
-                Log.d(TAG, "Saved: unit=$levelIndex cefr=$cefr userId=$userId")
+                crashlyticsManager.logUserAction("placement_saved", mapOf("unit" to levelIndex.toString(), "cefr" to cefr).toString())
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to persist placement result", e)
+                crashlyticsManager.logNonFatalException(e, "Failed to persist placement result")
             }
         }
-    }
-
-    companion object {
-        private const val TAG = "Placement"
     }
 }

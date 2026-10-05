@@ -41,7 +41,7 @@ import com.venom.domain.model.WordProgressState
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 
 @Composable
@@ -332,7 +332,7 @@ fun StreakIndicator(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun SessionProgressCardPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         SessionProgressCard(
             state = WordProgressState(
                 completed = 10,
@@ -350,4 +350,5 @@ private fun SessionProgressCardPreview() {
         )
     }
 }
+
 

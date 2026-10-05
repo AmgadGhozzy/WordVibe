@@ -44,7 +44,7 @@ import com.venom.ui.components.buttons.GradientActionButton
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
 import com.venom.ui.components.other.ConfettiView
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 import kotlinx.coroutines.delay
 
@@ -173,7 +173,7 @@ OverallStatItem(stringResource(R.string.stat_total_xp), stats.totalXp.toString()
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun SessionFinishedPreviewDark() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         SessionFinishedView(
             sessionStats = SessionStats(
                 totalCards = 10, masteredCount = 6, learningCount = 3, needsReviewCount = 1,
@@ -186,4 +186,5 @@ private fun SessionFinishedPreviewDark() {
         )
     }
 }
+
 

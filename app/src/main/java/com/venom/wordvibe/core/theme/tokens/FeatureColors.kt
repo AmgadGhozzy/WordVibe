@@ -4,6 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import com.venom.domain.model.CefrLevel
+// ─────────────────────────────────────────────────────────────────────────────
+// PHASED MIGRATION (F-6):
+// FeatureColors uses raw palette colors (Emerald50, Teal400, etc.) from the
+// external 'designsystem' module (AAR). The app shell uses WordVibeColors.
+// In this phased state, WordVibeTheme/WordVibeColors owns semantic app colors
+// (backgrounds, surfaces), while these external tokens are permitted ONLY for
+// CEFR levels and Difficulty visual tags.
+// ─────────────────────────────────────────────────────────────────────────────
 import com.venom.designsystem.theme.*
 
 // ── CefrColorScheme ──────────────────────────────────────────────────────────

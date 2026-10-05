@@ -278,8 +278,7 @@ fun ErrorState(
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .size(64.dp)
-                .align(Alignment.CenterHorizontally)
-                .then(Modifier),
+                .align(Alignment.CenterHorizontally),
         )
         Text(
             text = title,

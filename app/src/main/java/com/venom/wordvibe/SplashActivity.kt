@@ -27,7 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -50,7 +50,7 @@ class SplashActivity : ComponentActivity() {
                 navigate()
             } else {
                 setContent {
-                    SynapseTheme {
+                    WordVibeTheme {
                         SimpleSplashScreen { navigate() }
                     }
                 }
@@ -100,3 +100,4 @@ class SplashActivity : ComponentActivity() {
         finish()
     }
 }
+

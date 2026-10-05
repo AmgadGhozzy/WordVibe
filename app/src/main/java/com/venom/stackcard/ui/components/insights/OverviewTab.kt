@@ -50,7 +50,7 @@ import com.venom.wordvibe.R as ShellR
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
 import com.venom.ui.components.other.CircularProgressRing
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.wordvibe.core.theme.tokens.CefrColorScheme
 import com.venom.wordvibe.core.theme.tokens.getCefrColorScheme
 
@@ -453,7 +453,7 @@ private fun NextReviewBucket.displayLabel(count: Int): String = when (this) {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun OverviewTabPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         OverviewTab(
             word = MockWordData.journeyWord,
             wordProgress = CurrentWordProgress(
@@ -470,7 +470,7 @@ private fun OverviewTabPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun OverviewTabPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         OverviewTab(
             word = MockWordData.journeyWord,
             wordProgress = CurrentWordProgress(
@@ -483,4 +483,5 @@ private fun OverviewTabPreviewLight() {
         )
     }
 }
+
 

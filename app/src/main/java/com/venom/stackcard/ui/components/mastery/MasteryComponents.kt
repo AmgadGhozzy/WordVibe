@@ -52,7 +52,7 @@ import com.venom.domain.model.getFrequencyLabel
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 import com.venom.wordvibe.core.theme.tokens.getDifficultyTheme
 
@@ -508,7 +508,7 @@ fun TapIndicator(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun PowerCellFlippedPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         Box(modifier = Modifier.padding(16.adp)) {
             PowerCell(
                 showPowerTip = true,
@@ -523,7 +523,7 @@ private fun PowerCellFlippedPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFFF1F5F9)
 @Composable
 private fun PowerCellPreviewLight() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         Box(modifier = Modifier.padding(16.adp)) {
             PowerCell(
                 showPowerTip = false,
@@ -563,7 +563,7 @@ fun DifficultyMeter(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun SectionHeaderPreview() {
-    SynapseTheme {
+    WordVibeTheme {
         SectionHeader(
             title = "Synonyms",
             icon = painterResource(id = R.drawable.ic_equals),
@@ -575,7 +575,7 @@ private fun SectionHeaderPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun BookmarkButtonPreview() {
-    SynapseTheme {
+    WordVibeTheme {
         Row(
             modifier = Modifier.padding(16.adp),
             horizontalArrangement = Arrangement.spacedBy(16.adp)
@@ -589,7 +589,7 @@ private fun BookmarkButtonPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun FrequencyWidgetPreview() {
-    SynapseTheme {
+    WordVibeTheme {
         Column(
             modifier = Modifier.padding(16.adp),
             verticalArrangement = Arrangement.spacedBy(16.adp)
@@ -604,7 +604,7 @@ private fun FrequencyWidgetPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun InteractiveTextPreview() {
-    SynapseTheme {
+    WordVibeTheme {
         InteractiveText(
             text = "Hello World",
             onTtsToggle = { _, _ -> },
@@ -619,5 +619,6 @@ private fun InteractiveTextPreview() {
         }
     }
 }
+
 
 

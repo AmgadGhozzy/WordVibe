@@ -37,7 +37,7 @@ abstract class BaseAppState(
      * Raw navigate — prefer app-specific helpers (navigateToTab, etc.)
      * for semantically correct back-stack behaviour.
      */
-    fun navigateTo(route: String) = navController.navigate(route)
+    protected fun navigateTo(route: String) = navController.navigate(route)
 
     /** @return true if the back stack was popped, false if it was already empty */
     fun navigateBack(): Boolean = navController.popBackStack()

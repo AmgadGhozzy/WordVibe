@@ -47,7 +47,7 @@ import com.venom.stackcard.ui.components.mastery.StreakIndicator
 import com.venom.stackcard.ui.viewmodel.WordMasteryViewModel
 import com.venom.ui.components.buttons.CloseButton
 import com.venom.ui.components.common.adp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 
 @Composable
@@ -406,7 +406,7 @@ Text(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun ProgressScreenPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         ProgressScreenContent(
             data = DashboardData(
                 totalXp = 2450, todayXp = 85, level = UserLevel.ADEPT,
@@ -420,4 +420,5 @@ private fun ProgressScreenPreview() {
         )
     }
 }
+
 

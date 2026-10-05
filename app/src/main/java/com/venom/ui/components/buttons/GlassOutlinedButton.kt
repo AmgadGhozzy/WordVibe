@@ -34,7 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.venom.ui.components.common.adp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 @Composable
 fun GlassOutlinedButton(
@@ -113,7 +113,7 @@ fun GlassOutlinedButton(
 @Preview(name = "Glass Outlined Button – Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun GlassOutlinedButtonLightPreview() {
-    SynapseTheme {
+    WordVibeTheme {
         Box(
             modifier = Modifier.fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface),
@@ -126,4 +126,5 @@ private fun GlassOutlinedButtonLightPreview() {
         }
     }
 }
+
 

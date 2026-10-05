@@ -2,7 +2,6 @@ package com.venom.wordvibe
 
 import android.app.Application
 import android.os.StrictMode
-import android.util.Log
 import com.venom.data.corpus.CorpusSeeder
 import com.venom.data.corpus.CorpusSeederEntryPoint
 import com.venom.data.corpus.DataStoreSeedFlag
@@ -41,15 +40,15 @@ class Application : Application() {
                     entry.wordRepository(),
                     DataStoreSeedFlag(entry.dataStore())
                 ).seedIfNeeded(json)
-                Log.d(TAG, "Corpus seed complete, inserted=$inserted")
+                println("Corpus seed complete, inserted=$inserted")
             } catch (e: Exception) {
-                Log.w(TAG, "Corpus seed failed: ${e.message}")
+                println("Corpus seed failed: ${e.message}")
             }
         }
     }
 
     private fun enableStrictMode() {
-        Log.d(TAG, "StrictMode Enabled")
+        println("StrictMode Enabled")
         StrictMode.setThreadPolicy(
             StrictMode.ThreadPolicy.Builder()
                 .detectAll()

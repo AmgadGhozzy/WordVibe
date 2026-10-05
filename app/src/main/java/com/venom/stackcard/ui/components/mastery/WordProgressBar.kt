@@ -36,7 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.venom.ui.components.common.adp
 import com.venom.wordvibe.R
 import com.venom.domain.model.AppTheme
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 @Composable
 fun CardsProgressIndicator(
@@ -127,9 +127,10 @@ fun CardsProgressIndicator(
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A)
 @Composable
 private fun CardsProgressIndicatorPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         CardsProgressIndicator(currentIndex = 3, totalCards = 10, difficultyScore = 2, modifier = Modifier.padding(16.adp))
     }
 }
+
 
 

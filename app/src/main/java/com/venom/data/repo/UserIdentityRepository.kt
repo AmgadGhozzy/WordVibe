@@ -2,7 +2,6 @@ package com.venom.data.repo
 
 import android.content.Context
 import android.provider.Settings
-import android.util.Log
 import com.venom.data.local.dao.QuizAttemptDao
 import com.venom.data.local.dao.UsageDailyDao
 import com.venom.data.local.dao.UserIdentityDao
@@ -10,6 +9,7 @@ import com.venom.data.local.dao.XpEventDao
 import com.venom.data.local.entity.UserIdentityEntity
 import com.venom.domain.model.UserIdentity
 import com.venom.domain.repo.IUserIdentityRepository
+import com.venom.analytics.ext.logUserAction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +34,7 @@ class UserIdentityRepository @Inject constructor(
     private val xpEventDao: XpEventDao,
     private val quizAttemptDao: QuizAttemptDao,
     private val usageDailyDao: UsageDailyDao,
+    private val crashlytics: com.venom.analytics.CrashlyticsManager,
 ) : IUserIdentityRepository {
     private val _authState = MutableStateFlow(IUserIdentityRepository.AuthState())
     override val authState: StateFlow<IUserIdentityRepository.AuthState> = _authState.asStateFlow()
@@ -98,7 +99,7 @@ class UserIdentityRepository @Inject constructor(
     suspend fun signOut() = withContext(Dispatchers.IO) {
         currentUserId = null
         refreshAuthState()
-        Log.d(TAG, "User signed out")
+        crashlytics.logUserAction("user_signed_out")
     }
 
     private fun createLocalIdentity(userId: String, isAnonymous: Boolean): UserIdentity {
