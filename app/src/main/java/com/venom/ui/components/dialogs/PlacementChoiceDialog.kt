@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,6 +94,18 @@ fun PlacementChoiceDialog(
                     color = colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                     textAlign = TextAlign.Center
                 )
+
+                Spacer(Modifier.height(12.adp))
+
+                // ADR-0010: an explicit, honest skip — flags placement as handled,
+                // stores nothing, and never re-appears.
+                TextButton(onClick = onDismiss) {
+                    Text(
+                        text = stringResource(R.string.placement_cta_skip),
+                        fontSize = 13.asp,
+                        color = colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

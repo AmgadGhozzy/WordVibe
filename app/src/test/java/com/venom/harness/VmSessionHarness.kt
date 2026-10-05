@@ -353,7 +353,16 @@ class FakeProfileDao : UserProfileDao {
         assignedXp: Int,
         takenAt: Long,
         now: Long
-    ) {}
+    ) {
+        val current = store[userId] ?: UserProfileEntity(userId = userId)
+        store[userId] = current.copy(
+            placementUnit = unit,
+            placementCefr = cefr,
+            placementTakenAt = takenAt,
+            totalXp = assignedXp,
+            updatedAt = now
+        )
+    }
     override suspend fun getPlacementUnit(userId: String): Int? = null
     override suspend fun deleteByUserId(userId: String) {}
 }

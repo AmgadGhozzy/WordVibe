@@ -56,6 +56,11 @@ fun PlacementScreen(
 
     LaunchedEffect(Unit) { viewModel.start() }
 
+    // ADR-0010: abandoning the test closes it with no result and no persistence.
+    LaunchedEffect(state.isAbandoned) {
+        if (state.isAbandoned) onBack()
+    }
+
     AnimatedContent(
         targetState = result != null,
         transitionSpec = {

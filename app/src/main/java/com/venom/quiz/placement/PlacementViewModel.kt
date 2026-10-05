@@ -150,10 +150,10 @@ class PlacementViewModel @Inject constructor(
 
     fun skip() {
         if (isFinished || isProcessing) return
-        val level = questionSequence[currentQuestionIndex]
-        levelResults[level.id] = false
-        // Skip = fail → stop adaptively
-        viewModelScope.launch { finalize() }
+        isFinished = true
+        // ADR-0010: abandoning the test is honest — no result, no persistence.
+        // The dialog dismiss path is what marks placement as handled for the shell.
+        _uiState.update { it.copy(isAbandoned = true, isLoading = false) }
     }
 
     private suspend fun loadQuestionForLevel(level: WordLevels) {

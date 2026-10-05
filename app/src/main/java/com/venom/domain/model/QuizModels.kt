@@ -95,7 +95,9 @@ data class QuizUiState(
     val totalQuestions: Int = 0,
     val correctCount: Int = 0,
     val placementBand: Int = 0,
-    val placementBandLabel: String = ""
+    val placementBandLabel: String = "",
+    /** ADR-0010: the user abandoned the placement — the UI closes it without a result. */
+    val isAbandoned: Boolean = false
 ) {
     val currentQuestion: QuizQuestionUi? get() = questions.getOrNull(currentIndex)
     val progress: Float get() = if (totalQuestions == 0) 0f else (currentIndex + 1f) / totalQuestions

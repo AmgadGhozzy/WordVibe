@@ -71,6 +71,7 @@
     <string name="placement_cta_test_hint">أجب عن 6 أسئلة سريعة لتحديد مستواك</string>
     <string name="placement_cta_beginner">ابدأ من البداية</string>
     <string name="placement_cta_beginner_hint">ابدأ من المستوى المبتدئ (A1)</string>
+    <string name="placement_cta_skip">تخطّي</string>
 
     <!-- Theme -->
     <string name="profile_dark_mode">داكن</string>
