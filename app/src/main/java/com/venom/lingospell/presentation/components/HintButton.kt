@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -63,7 +64,7 @@ fun HintButton(
         )
         Spacer(modifier = Modifier.width(8.adp))
         Text(
-            text = "Get Hint (${3 - hintLevel.ordinal} left)",
+            text = stringResource(com.venom.wordvibe.R.string.spelling_get_hint, 3 - hintLevel.ordinal),
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onPrimaryContainer
         )

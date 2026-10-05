@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -85,7 +86,7 @@ fun LetterBank(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "AVAILABLE LETTERS",
+                text = stringResource(com.venom.wordvibe.R.string.spelling_available_letters),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -111,7 +112,7 @@ fun LetterBank(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "RESET",
+                    text = stringResource(com.venom.wordvibe.R.string.action_reset),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

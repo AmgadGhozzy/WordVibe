@@ -203,6 +203,9 @@
     <string name="spelling_policy_up_to_n">النجاح يُحتسب ضمن حد التلميحات</string>
     <string name="spelling_credit_limit">حد التلميحات المحتسبة</string>
     <string name="spelling_celebration_title">٣ نجاحات متتالية!</string>
+    <string name="spelling_get_hint">تلميح (%1$d متبقية)</string>
+    <string name="spelling_available_letters">الحروف المتاحة</string>
+    <string name="action_reset">إعادة ضبط</string>
     <string name="spelling_attempts_left">محاولات متبقية: %1$d</string>
     <string name="error_something_wrong">حدث خطأ ما</string>
     <string name="error_try_again">حاول مجددًا</string>
