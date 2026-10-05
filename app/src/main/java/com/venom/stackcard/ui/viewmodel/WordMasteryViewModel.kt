@@ -921,9 +921,10 @@ class WordMasteryViewModel @Inject constructor(
         sessionMasteredCount.set(0)
         sessionLearningCount.set(0)
         wordProgressCache.clear()
-        sessionEngine = WordSessionEngine(
-            sessionStartMs = sessionEngine?.sessionId?.toLongOrNull() ?: System.currentTimeMillis()
-        )
+        // Exit decision from the engine: the reset keeps the interrupted
+        // session's id, counters restart clean in the fresh instance.
+        sessionEngine = sessionEngine?.restarted()
+            ?: WordSessionEngine(sessionStartMs = System.currentTimeMillis())
 
         _uiState.update {
             WordMasteryUiState(
@@ -977,30 +978,28 @@ class WordMasteryViewModel @Inject constructor(
     }
 
     private fun logSessionCompletion() {
-        val startTime = sessionEngine?.sessionId?.toLongOrNull() ?: 0L
-        val cardsSwiped = sessionEngine?.cardsSwiped ?: 0
+        val completion = sessionEngine?.completionFor(
+            nowMs = System.currentTimeMillis(),
+            cardsRemaining = _uiState.value.visibleCards.size
+        ) ?: return
 
-        if (startTime > 0 && cardsSwiped > 0) {
-            val sessionDuration = System.currentTimeMillis() - startTime
-
-            analyticsManager.logFeatureCompleted(
-                featureName = "flashcard_session",
-                result = "completed",
-                durationMs = sessionDuration
+        analyticsManager.logFeatureCompleted(
+            featureName = "flashcard_session",
+            result = "completed",
+            durationMs = completion.durationMs
+        )
+        analyticsManager.logEvent(
+            eventName = AnalyticsEvent.FEATURE_COMPLETED,
+            params = mapOf<String, Any>(
+                AnalyticsParam.FEATURE_NAME to "flashcard_session",
+                AnalyticsParam.DURATION_MS to completion.durationMs,
+                "cards_swiped" to completion.cardsSwiped,
+                "cards_remaining" to completion.cardsRemaining,
+                "mastered" to sessionMasteredCount.get(),
+                "learning" to sessionLearningCount.get(),
+                "needs_review" to completion.needsReviewCount
             )
-            analyticsManager.logEvent(
-                eventName = AnalyticsEvent.FEATURE_COMPLETED,
-                params = mapOf<String, Any>(
-                    AnalyticsParam.FEATURE_NAME to "flashcard_session",
-                    AnalyticsParam.DURATION_MS to sessionDuration,
-                    "cards_swiped" to cardsSwiped,
-                    "cards_remaining" to _uiState.value.visibleCards.size,
-                    "mastered" to sessionMasteredCount.get(),
-                    "learning" to sessionLearningCount.get(),
-                    "needs_review" to (sessionEngine?.needsReviewCount ?: 0)
-                )
-            )
-        }
+        )
     }
 
     fun refreshProgress() {

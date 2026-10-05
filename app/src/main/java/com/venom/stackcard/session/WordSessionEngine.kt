@@ -38,6 +38,14 @@ class WordSessionEngine(private val sessionStartMs: Long) {
         val sessionFinished: Boolean,
     )
 
+    /** Termination facts for the view model to log on clear/exit (Step 3b). */
+    data class SessionCompletion(
+        val durationMs: Long,
+        val cardsSwiped: Int,
+        val needsReviewCount: Int,
+        val cardsRemaining: Int,
+    )
+
     private val visible = mutableListOf<WordMaster>()
     private val removed = mutableListOf<WordMaster>()
     private val tapOrdinals = HashMap<Int, Int>()
@@ -100,6 +108,28 @@ class WordSessionEngine(private val sessionStartMs: Long) {
             processedCardsCount = processedCardsCount,
             needsReviewCount = needsReviewCount,
             sessionFinished = false,
+        )
+    }
+
+    /**
+     * Exit decision (Step 3b): the welcome-screen reset keeps the interrupted
+     * session's id — durable keys stay attributable to the original session —
+     * while counters restart clean in the fresh instance.
+     */
+    fun restarted(): WordSessionEngine = WordSessionEngine(sessionStartMs)
+
+    /**
+     * Termination decision (Step 3b): null when the session produced no taps
+     * or its start timestamp is unusable — exactly the gate the view model
+     * used to apply before logging completion.
+     */
+    fun completionFor(nowMs: Long, cardsRemaining: Int): SessionCompletion? {
+        if (sessionStartMs <= 0 || cardsSwiped == 0) return null
+        return SessionCompletion(
+            durationMs = nowMs - sessionStartMs,
+            cardsSwiped = cardsSwiped,
+            needsReviewCount = needsReviewCount,
+            cardsRemaining = cardsRemaining,
         )
     }
 
