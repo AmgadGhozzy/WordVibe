@@ -72,7 +72,13 @@ class ShellScreenshotTest {
 
     private fun capture(name: String, dark: Boolean, content: @Composable () -> Unit) {
         compose.setContent {
-            WordVibeTheme(darkTheme = dark) { content() }
+            WordVibeTheme(darkTheme = dark) {
+                // A real Surface so the root paints colorScheme.background — a bare
+                // node captures as white and makes the dark capture lie.
+                androidx.compose.material3.Surface(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+                    content()
+                }
+            }
         }
         compose.waitForIdle()
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
@@ -105,7 +111,13 @@ class ShellScreenshotTest {
     )
 
     private fun shoot(name: String, dark: Boolean, content: @Composable () -> Unit) {
-        compose.setContent { WordVibeTheme(darkTheme = dark) { content() } }
+        compose.setContent {
+            WordVibeTheme(darkTheme = dark) {
+                androidx.compose.material3.Surface(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+                    content()
+                }
+            }
+        }
         compose.waitForIdle()
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
         val dir = InstrumentationRegistry.getInstrumentation()
