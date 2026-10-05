@@ -27,6 +27,7 @@ import com.venom.domain.model.WordMaster
 import com.venom.domain.model.getLanguageOptions
 import com.venom.domain.repo.IUserIdentityRepository
 import com.venom.domain.repo.IWordMasterRepository
+import com.venom.stackcard.session.SessionPlanner
 import com.venom.stackcard.session.WordSessionEngine
 import com.venom.stackcard.ui.components.insights.InsightsTab
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -738,9 +739,9 @@ class WordMasteryViewModel @Inject constructor(
 
     private suspend fun loadSrsWords(userId: String): List<WordMaster> {
         return withContext(Dispatchers.IO) {
-            val reviewLimit = 15
-            val reviewWords = progressRepository.getWordsDueForReview(userId, reviewLimit)
-            val newNeeded = reviewLimit - reviewWords.size
+            val limit = SessionPlanner.SESSION_LIMIT
+            val due = progressRepository.getWordsDueForReview(userId, limit)
+            val newNeeded = limit - due.size
 
             val newWords = if (newNeeded > 0) {
                 progressRepository.getNewWordsForUser(
@@ -751,7 +752,7 @@ class WordMasteryViewModel @Inject constructor(
                 emptyList()
             }
 
-            reviewWords + newWords
+            SessionPlanner.plan(due, newWords, limit)
         }
     }
 
