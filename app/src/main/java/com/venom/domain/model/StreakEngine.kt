@@ -49,6 +49,21 @@ object StreakEngine {
 
     fun checkMilestone(streak: Int): StreakMilestone? =
         StreakMilestone.entries.firstOrNull { it.days == streak }
+
+    /**
+     * Freeze grants (ADR-0010): one freeze per multiple of 7 of the honest streak,
+     * capped at 2, never twice for the same multiple. Callers pass the streak value
+     * observed at the previous evaluation as lastGrantedAtStreak; a real study day
+     * advances the streak by exactly one, so a multiple is reached at most once per
+     * climb and that marker is a sound duplicate guard.
+     */
+    fun freezeGrant(currentStreak: Int, freezes: Int, lastGrantedAtStreak: Int): Int {
+        if (currentStreak <= 0 || currentStreak % 7 != 0) return freezes
+        if (currentStreak <= lastGrantedAtStreak) return freezes
+        return minOf(freezes + 1, MAX_STREAK_FREEZES)
+    }
+
+    const val MAX_STREAK_FREEZES = 2
 }
 
 enum class StreakMilestone(
