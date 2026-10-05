@@ -473,25 +473,37 @@ class VmSessionHarness(
     }
 
     /**
-     * Real-time bounded wait for async repository work (Dispatchers.IO inside the
-     * repositories) while yielding to the Main test scheduler between polls.
+     * Deterministic wait: drains the Main test scheduler first — advanceUntilIdle
+     * runs every queued task to completion immediately — then, because the real
+     * repositories hop through Dispatchers.IO (which no test API virtualizes),
+     * yields briefly so in-flight IO can land and re-drains. There is NO
+     * wall-clock budget: the give-up rule is count-based — after MAX_IDLE_POLLS
+     * consecutive scheduler-drained checks with the condition still unmet, the
+     * wait fails. A loaded machine gets as many polls as it needs (each is
+     * cheap); only a condition that never materializes fails.
      */
     suspend fun await(
         scheduler: kotlinx.coroutines.test.TestCoroutineScheduler,
-        timeoutMs: Long = 5_000,
         cond: suspend () -> Boolean
     ) {
-        val start = System.currentTimeMillis()
+        scheduler.advanceUntilIdle()
+        var idlePolls = 0
         while (!cond()) {
-            if (System.currentTimeMillis() - start > timeoutMs) {
-                throw AssertionError("condition not met within ${timeoutMs}ms")
-            }
-            scheduler.advanceUntilIdle()
             kotlinx.coroutines.delay(10)
+            scheduler.advanceUntilIdle()
+            if (cond()) break
+            idlePolls++
+            if (idlePolls >= MAX_IDLE_POLLS) {
+                throw AssertionError(
+                    "condition not met: scheduler drained on all $MAX_IDLE_POLLS consecutive idle polls"
+                )
+            }
         }
         scheduler.advanceUntilIdle()
     }
 }
+
+private const val MAX_IDLE_POLLS = 3_000
 
 fun testWordEntity(id: Int): WordMasterEntity = WordMasterEntity(
     id = id,
