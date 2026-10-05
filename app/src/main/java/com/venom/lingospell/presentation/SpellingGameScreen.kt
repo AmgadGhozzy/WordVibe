@@ -1,3 +1,4 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.venom.lingospell.presentation
 
 import androidx.compose.animation.AnimatedContent
@@ -28,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -40,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.venom.domain.model.WordMaster
 import com.venom.lingospell.domain.FeedbackState
 import com.venom.lingospell.presentation.components.HintButton
+import com.venom.lingospell.presentation.components.MasteryDialog
 import com.venom.lingospell.presentation.components.LetterBank
 import com.venom.lingospell.presentation.components.StreakBar
 import com.venom.lingospell.presentation.components.WordSlots
@@ -63,6 +66,11 @@ fun SpellingGameScreen(
     ttsViewModel: TTSViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    var showHintSettings by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(false)
+    }
+    val onShowHintSettings = { showHintSettings = true }
+    val onHideHintSettings = { showHintSettings = false }
 
     LaunchedEffect(customWord) {
         if (customWord.wordEn != state.currentWord?.wordEn) {
@@ -192,59 +200,45 @@ fun SpellingGameScreen(
                     }
                 }
 
-                Spacer(Modifier.height(24.adp))
+                Spacer(Modifier.height(16.adp))
 
-                if (state.mode == SpellingGameMode.TYPING) {
-                    // ADR-0008 counted path: free-typed input, no help.
-                    androidx.compose.runtime.CompositionLocalProvider(
-                        androidx.compose.ui.platform.LocalLayoutDirection provides
-                            androidx.compose.ui.unit.LayoutDirection.Ltr
-                    ) {
-                        androidx.compose.material3.OutlinedTextField(
-                            value = state.typedInput,
-                            onValueChange = viewModel::onTypedInputChange,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.adp),
-                            singleLine = true,
-                            enabled = !state.isInputBlocked,
-                            textStyle = MaterialTheme.typography.titleLarge,
-                            label = { Text(stringResource(R.string.spelling_typed_label)) },
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                keyboardType = androidx.compose.ui.text.input.KeyboardType.Ascii
-                            ),
-                        )
-                    }
-                    Spacer(Modifier.height(12.adp))
-                    androidx.compose.material3.Button(
-                        onClick = viewModel::onSubmitTyped,
-                        enabled = state.typedInput.isNotBlank() && !state.isInputBlocked,
-                        modifier = Modifier
-                            .heightIn(min = 48.dp)
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.adp),
-                    ) {
-                        Text(stringResource(R.string.spelling_check))
-                    }
-                    Spacer(Modifier.height(8.adp))
-                    androidx.compose.material3.TextButton(
-                        onClick = viewModel::onEnterTraining,
-                        enabled = !state.isInputBlocked,
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.spelling_enter_training),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                } else {
-                    WordSlots(
-                        slots = state.slots,
-                        onSlotClick = viewModel::onSlotClick,
-                        shakeTrigger = state.shakeTrigger,
-                        feedback = state.feedback,
+                // Hint counter: always visible; states whether the attempt counts.
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.adp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.spelling_hints_used, state.hintLevel.value, state.maxHintsPerWord
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Spacer(Modifier.height(16.adp))
+                    if (!state.attemptWillCount) {
+                        Text(
+                            text = stringResource(R.string.spelling_attempt_not_counted),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.adp))
+
+                WordSlots(
+                    slots = state.slots,
+                    onSlotClick = viewModel::onSlotClick,
+                    shakeTrigger = state.shakeTrigger,
+                    feedback = state.feedback,
+                )
+
+                Spacer(Modifier.height(16.adp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.adp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Box(modifier = Modifier.height(48.adp), contentAlignment = Alignment.Center) {
                         androidx.compose.animation.AnimatedVisibility(visible = state.showHintButton, enter = fadeIn(), exit = fadeOut()) {
                             HintButton(
@@ -254,11 +248,20 @@ fun SpellingGameScreen(
                             )
                         }
                     }
+                    androidx.compose.material3.TextButton(
+                        onClick = onShowHintSettings,
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.spelling_hint_settings),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(8.adp))
 
-                // "Reveal answer" = one recorded production failure (P-02, both modes).
+                // "Reveal answer" = one recorded production failure (P-02).
                 androidx.compose.animation.AnimatedVisibility(
                     visible = state.feedback != FeedbackState.SUCCESS,
                     enter = fadeIn(),
@@ -276,13 +279,11 @@ fun SpellingGameScreen(
                 }
             }
 
-            if (state.mode == SpellingGameMode.TRAINING) {
-                LetterBank(
-                    letters = state.bank,
-                    onLetterClick = viewModel::onLetterClick,
-                    onClear = viewModel::onClearAll,
-                )
-            }
+            LetterBank(
+                letters = state.bank,
+                onLetterClick = viewModel::onLetterClick,
+                onClear = viewModel::onClearAll,
+            )
         }
 
         if (state.feedback == FeedbackState.SUCCESS) {
@@ -292,5 +293,142 @@ fun SpellingGameScreen(
             )
         }
 
+        if (state.showCelebrationDialog) {
+            MasteryDialog(
+                word = state.currentWord?.wordEn ?: "",
+                arabicWord = state.currentWord?.arabicAr ?: "",
+                onContinue = viewModel::onContinueAfterCelebration,
+            )
+        }
+
+        if (showHintSettings) {
+            HintSettingsBottomSheet(
+                onDismiss = onHideHintSettings,
+                hintsEnabled = state.hintsEnabled,
+                maxHintsPerWord = state.maxHintsPerWord,
+                policyName = state.hintCreditPolicy,
+                creditLimit = state.hintCreditLimit,
+                onHintsEnabled = viewModel::setHintsEnabled,
+                onMaxHints = viewModel::setMaxHintsPerWord,
+                onPolicy = viewModel::setHintCreditPolicy,
+                onLimit = viewModel::setHintCreditLimit,
+            )
+        }
+
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun HintSettingsBottomSheet(
+    onDismiss: () -> Unit,
+    hintsEnabled: Boolean,
+    maxHintsPerWord: Int,
+    policyName: String,
+    creditLimit: Int,
+    onHintsEnabled: (Boolean) -> Unit,
+    onMaxHints: (Int) -> Unit,
+    onPolicy: (HintCreditPolicy) -> Unit,
+    onLimit: (Int) -> Unit,
+) {
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss) {
+        HintSettingsSheet(
+            hintsEnabled, maxHintsPerWord, policyName, creditLimit,
+            onHintsEnabled, onMaxHints, onPolicy, onLimit,
+        )
+    }
+}
+
+/**
+ * Hint-budget settings (ADR-0009): enable/disable hints, per-word budget,
+ * credit policy and its limit. Every change persists to DataStore immediately.
+ */
+@androidx.compose.runtime.Composable
+private fun HintSettingsSheet(
+    hintsEnabled: Boolean,
+    maxHintsPerWord: Int,
+    policyName: String,
+    creditLimit: Int,
+    onHintsEnabled: (Boolean) -> Unit,
+    onMaxHints: (Int) -> Unit,
+    onPolicy: (HintCreditPolicy) -> Unit,
+    onLimit: (Int) -> Unit,
+) {
+    androidx.compose.foundation.layout.Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.adp, vertical = 16.adp),
+        verticalArrangement = Arrangement.spacedBy(12.adp),
+    ) {
+        Text(
+            text = stringResource(R.string.spelling_hint_settings),
+            style = MaterialTheme.typography.titleLarge,
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(R.string.spelling_hints_enabled),
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f),
+            )
+            androidx.compose.material3.Switch(
+                checked = hintsEnabled,
+                onCheckedChange = onHintsEnabled,
+            )
+        }
+
+        if (hintsEnabled) {
+            Text(
+                text = stringResource(R.string.spelling_max_hints),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.adp)) {
+                (0..3).forEach { n ->
+                    androidx.compose.material3.FilterChip(
+                        selected = maxHintsPerWord == n,
+                        onClick = { onMaxHints(n) },
+                        label = { Text("$n") },
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.spelling_credit_policy),
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            androidx.compose.material3.RadioButton(
+                selected = policyName == HintCreditPolicy.NO_CREDIT_IF_ANY_HINT.name,
+                onClick = { onPolicy(HintCreditPolicy.NO_CREDIT_IF_ANY_HINT) },
+            )
+            Text(text = stringResource(R.string.spelling_policy_no_credit))
+            androidx.compose.material3.RadioButton(
+                selected = policyName == HintCreditPolicy.CREDIT_UP_TO_N.name,
+                onClick = { onPolicy(HintCreditPolicy.CREDIT_UP_TO_N) },
+            )
+            Text(text = stringResource(R.string.spelling_policy_up_to_n))
+
+            if (policyName == HintCreditPolicy.CREDIT_UP_TO_N.name) {
+                Text(
+                    text = stringResource(R.string.spelling_credit_limit),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.adp)) {
+                    (0..3).forEach { n ->
+                        androidx.compose.material3.FilterChip(
+                            selected = creditLimit == n,
+                            onClick = { onLimit(n) },
+                            label = { Text("$n") },
+                        )
+                    }
+                }
+            }
+        }
+
+        androidx.compose.foundation.layout.Spacer(
+            modifier = Modifier.height(24.adp)
+        )
     }
 }

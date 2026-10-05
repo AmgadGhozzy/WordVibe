@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.venom.domain.model.AppTheme
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 
 @Composable
@@ -145,7 +145,7 @@ private fun StreakBarSegment(
 @Preview(name = "Light - Streak")
 @Composable
 private fun StreakBarLightPreview() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         StreakBar(
             streak = 2,
             isMastered = false,
@@ -153,4 +153,5 @@ private fun StreakBarLightPreview() {
         )
     }
 }
+
 

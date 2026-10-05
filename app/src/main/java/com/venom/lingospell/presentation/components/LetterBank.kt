@@ -37,7 +37,7 @@ import com.venom.lingospell.domain.Letter
 import com.venom.lingospell.domain.LetterStatus
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 
 @Composable
@@ -151,7 +151,7 @@ private fun LetterBankLightPreview() {
         Letter("4", 'X', LetterStatus.USED),
         Letter("5", 'Z', LetterStatus.AVAILABLE)
     )
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         LetterBank(
             letters = sampleLetters,
             onLetterClick = {},
@@ -170,7 +170,7 @@ private fun LetterBankDarkPreview() {
         Letter("4", 'X', LetterStatus.USED),
         Letter("5", 'Z', LetterStatus.AVAILABLE)
     )
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
             LetterBank(
                 letters = sampleLetters,
@@ -180,5 +180,6 @@ private fun LetterBankDarkPreview() {
         }
     }
 }
+
 
 

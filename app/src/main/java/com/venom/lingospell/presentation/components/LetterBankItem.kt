@@ -38,7 +38,7 @@ import com.venom.lingospell.domain.Letter
 import com.venom.lingospell.domain.LetterStatus
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 
 /**
@@ -152,7 +152,7 @@ fun LetterBankItem(
 @Preview(name = "Light - Available")
 @Composable
 private fun LetterBankItemLightPreview() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         LetterBankItem(
             letter = Letter(id = "1", char = 'A', status = LetterStatus.AVAILABLE),
             onClick = {},
@@ -164,7 +164,7 @@ private fun LetterBankItemLightPreview() {
 @Preview(name = "Dark - Used")
 @Composable
 private fun LetterBankItemDarkPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         LetterBankItem(
             letter = Letter(id = "1", char = 'B', status = LetterStatus.USED),
             onClick = {},
@@ -172,4 +172,5 @@ private fun LetterBankItemDarkPreview() {
         )
     }
 }
+
 

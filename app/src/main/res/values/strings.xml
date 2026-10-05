@@ -193,6 +193,16 @@
     <string name="spelling_translate_hint">ترجم إلى الإنجليزية</string>
     <string name="spelling_perfect">ممتاز!</string>
     <string name="spelling_reveal_answer">أظهر الإجابة</string>
+    <string name="spelling_hints_used">التلميحات: %1$d من %2$d</string>
+    <string name="spelling_attempt_not_counted">هذه المحاولة لن تُحتسب في الإنتاج</string>
+    <string name="spelling_hint_settings">إعدادات التلميحات</string>
+    <string name="spelling_hints_enabled">التلميحات مفعّلة</string>
+    <string name="spelling_max_hints">أقصى تلميحات للكلمة</string>
+    <string name="spelling_credit_policy">سياسة احتساب النجاح</string>
+    <string name="spelling_policy_no_credit">أي تلميح يجعل المحاولة تدريبًا غير محتسب</string>
+    <string name="spelling_policy_up_to_n">النجاح يُحتسب ضمن حد التلميحات</string>
+    <string name="spelling_credit_limit">حد التلميحات المحتسبة</string>
+    <string name="spelling_celebration_title">٣ نجاحات متتالية!</string>
     <string name="spelling_attempts_left">محاولات متبقية: %1$d</string>
     <string name="error_something_wrong">حدث خطأ ما</string>
     <string name="error_try_again">حاول مجددًا</string>

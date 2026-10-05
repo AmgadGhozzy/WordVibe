@@ -26,7 +26,7 @@ import com.venom.domain.model.AppTheme
 import com.venom.lingospell.domain.HintLevel
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 @Composable
 fun HintButton(
@@ -73,7 +73,7 @@ fun HintButton(
 @Preview(name = "Light - Hint")
 @Composable
 private fun HintButtonLightPreview() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         HintButton(hintLevel = HintLevel.NONE, onHintClick = {}, enabled = true)
     }
 }
@@ -81,9 +81,10 @@ private fun HintButtonLightPreview() {
 @Preview(name = "Dark - Hint")
 @Composable
 private fun HintButtonDarkPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         HintButton(hintLevel = HintLevel.LEVEL_1, onHintClick = {}, enabled = true)
     }
 }
+
 
 

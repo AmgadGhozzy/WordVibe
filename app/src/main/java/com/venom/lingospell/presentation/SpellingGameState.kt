@@ -7,23 +7,13 @@ import com.venom.lingospell.domain.Letter
 import com.venom.lingospell.domain.Slot
 
 /**
- * ADR-0008: TYPING is the counted path (free-typed, no help); TRAINING is the
- * letter-bank-with-hints path that records no production events at all.
- */
-enum class SpellingGameMode {
-    TYPING,
-    TRAINING
-}
-
-/**
- * Immutable UI state for the Spelling Game.
+ * Immutable UI state for the Spelling Game (ADR-0009: letter bank is the only
+ * input surface).
  */
 data class SpellingGameState(
-    val mode: SpellingGameMode = SpellingGameMode.TYPING,
     val wordIndex: Int = 0,
     val streak: Int = 0,
     val mistakes: Int = 0,
-    val typedInput: String = "",
     val hintLevel: HintLevel = HintLevel.NONE,
     val slots: List<Slot> = emptyList(),
     val bank: List<Letter> = emptyList(),
@@ -31,38 +21,45 @@ data class SpellingGameState(
     val shakeTrigger: Int = 0,
     val isLoading: Boolean = true,
     val overrideWord: WordMaster? = null,
-    val showMasteryDialog: Boolean = false
+    /** Celebration at 3 consecutive successes — never a mastery claim (ADR-0009). */
+    val showCelebrationDialog: Boolean = false,
+    /** Live hint-budget settings snapshot (DataStore-backed, ADR-0009). */
+    val hintsEnabled: Boolean = true,
+    val maxHintsPerWord: Int = 3,
+    val hintCreditPolicy: String = "CREDIT_UP_TO_N",
+    val hintCreditLimit: Int = 1
 ) {
-    /**
-     * Current word being spelled.
-     */
     val currentWord: WordMaster?
         get() = overrideWord
 
-    /**
-     * Whether hint button should be visible.
-     * Shows after first mistake, when idle, and hints remaining.
-     */
+    /** Hint button shows while budget remains, idle, enabled. */
     val showHintButton: Boolean
-        get() = mode == SpellingGameMode.TRAINING && feedback == FeedbackState.IDLE && hintLevel.canUseHint
+        get() = hintsEnabled && hintLevel.value < maxHintsPerWord &&
+            feedback == FeedbackState.IDLE && hintLevel.canUseHint
 
-    /**
-     * Whether game input is blocked (during success/mastered states).
-     */
     val isInputBlocked: Boolean
         get() = feedback == FeedbackState.SUCCESS || feedback == FeedbackState.MASTERED
 
-    /**
-     * First empty slot index, or -1 if all filled.
-     */
+    /** Will the current attempt (given hints used so far) earn production credit? */
+    val attemptWillCount: Boolean
+        get() = when (hintCreditPolicy) {
+            "NO_CREDIT_IF_ANY_HINT" -> hintLevel.value == 0
+            else -> hintLevel.value <= hintCreditLimit
+        }
+
     val firstEmptySlotIndex: Int
         get() = slots.indexOfFirst { it.letter == null }
 
-    /**
-     * Whether all slots are filled.
-     */
     val allSlotsFilled: Boolean
         get() = slots.all { it.letter != null }
+}
+
+/**
+ * Hint credit policy (ADR-0009).
+ */
+enum class HintCreditPolicy {
+    NO_CREDIT_IF_ANY_HINT,
+    CREDIT_UP_TO_N
 }
 
 /**

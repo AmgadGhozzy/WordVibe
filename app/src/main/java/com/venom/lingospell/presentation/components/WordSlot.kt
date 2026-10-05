@@ -42,7 +42,7 @@ import com.venom.lingospell.domain.LetterStatus
 import com.venom.lingospell.domain.Slot
 import com.venom.lingospell.domain.SlotStatus
 import com.venom.ui.components.common.adp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.designsystem.theme.synapse
 import com.venom.designsystem.theme.SemanticColors
 
@@ -245,7 +245,7 @@ private fun getSlotStyle(
 @Preview(name = "Light - Row", showBackground = true, backgroundColor = 0xFFF0F0F0)
 @Composable
 private fun WordSlotRowLightPreview() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         Row(modifier = Modifier.padding(20.adp)) {
             // Empty
             WordSlot(
@@ -279,5 +279,6 @@ private fun WordSlotRowLightPreview() {
         }
     }
 }
+
 
 

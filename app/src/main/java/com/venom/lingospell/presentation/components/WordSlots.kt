@@ -26,7 +26,7 @@ import com.venom.lingospell.domain.LetterStatus
 import com.venom.lingospell.domain.Slot
 import com.venom.lingospell.domain.SlotStatus
 import com.venom.ui.components.common.adp
-import com.venom.designsystem.theme.SynapseTheme
+import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -99,7 +99,7 @@ fun WordSlots(
 @Preview(showBackground = true, backgroundColor = 0xFFF8FAFC, name = "Light Mode")
 @Composable
 private fun WordSlotsLightPreview() {
-    SynapseTheme(darkTheme = false) {
+    WordVibeTheme(darkTheme = false) {
         val slots = listOf(
             Slot("0", Letter("l1", 'C', LetterStatus.USED), false, SlotStatus.FILLED),
             Slot("1", null, false, SlotStatus.EMPTY),
@@ -117,7 +117,7 @@ private fun WordSlotsLightPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A, name = "Dark Mode")
 @Composable
 private fun WordSlotsDarkPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         val slots = listOf(
             Slot("0", Letter("l1", 'C', LetterStatus.USED), false, SlotStatus.FILLED),
             Slot("1", null, false, SlotStatus.EMPTY),
@@ -135,7 +135,7 @@ private fun WordSlotsDarkPreview() {
 @Preview(showBackground = true, backgroundColor = 0xFF0F172A, name = "Dark - Correct State")
 @Composable
 private fun WordSlotsCorrectDarkPreview() {
-    SynapseTheme(darkTheme = true) {
+    WordVibeTheme(darkTheme = true) {
         val slots = listOf(
             Slot("0", Letter("l1", 'C', LetterStatus.USED), true, SlotStatus.CORRECT),
             Slot("1", Letter("l2", 'A', LetterStatus.USED), true, SlotStatus.CORRECT),
@@ -149,4 +149,5 @@ private fun WordSlotsCorrectDarkPreview() {
         )
     }
 }
+
 
