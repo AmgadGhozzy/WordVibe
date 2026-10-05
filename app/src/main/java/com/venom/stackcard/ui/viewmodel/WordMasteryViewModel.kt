@@ -763,6 +763,10 @@ class WordMasteryViewModel @Inject constructor(
     ) {
         val firstWord = words.firstOrNull()
 
+        // Swipe decisions are read from the engine's deck — it must mirror the
+        // visible list or a multi-card session loses its remaining cards.
+        sessionEngine?.start(words)
+
         val wordProgress = firstWord?.let {
             loadWordProgressDirect(it.id)
         } ?: CurrentWordProgress()
@@ -877,6 +881,9 @@ class WordMasteryViewModel @Inject constructor(
         val defaultPinnedLanguage = fallbackWords.firstOrNull()?.let {
             getLanguageOptions(it).find { lang -> lang.langName == "Spanish" }
         }
+
+        // Same engine-mirrors-visible-list rule as the main load path.
+        sessionEngine?.start(fallbackWords)
 
         _uiState.update {
             it.copy(
