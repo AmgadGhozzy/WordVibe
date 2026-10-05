@@ -27,6 +27,7 @@ import com.venom.domain.repo.IRemoteConfig
 import com.venom.domain.repo.IUserIdentityRepository
 import com.venom.domain.repo.IWordMasterRepository
 import com.venom.domain.srs.SrsEngine
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -35,6 +36,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -437,15 +440,36 @@ class VmSessionHarness(
         transactions = FakeTransactions()
     )
 
+    // R2 root fix: the producer hands back a unique path that does NOT pre-exist —
+    // DataStore creates the file itself, so no write ever renames onto a
+    // pre-created empty target.
+    private val dataStoreFile: File = File.createTempFile("vm_harness", ".preferences_pb")
+        .apply { deleteOnExit(); delete() }
+
+    private val dataStoreFailures = mutableListOf<Throwable>()
+
+    // A late actor failure is captured here and rethrown by close(), so it fails the
+    // OWNING test instead of leaking as a process-level uncaught exception that
+    // attributes to whichever suite runs next.
+    private val dataStoreGuard = CoroutineExceptionHandler { _, throwable ->
+        dataStoreFailures += throwable
+    }
+
     private val dataStoreScope = CoroutineScope(
-        kotlinx.coroutines.test.UnconfinedTestDispatcher()
+        SupervisorJob() + kotlinx.coroutines.test.UnconfinedTestDispatcher() + dataStoreGuard
     )
     val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.create(scope = dataStoreScope) {
-        File.createTempFile("vm_harness", ".preferences_pb").apply { deleteOnExit() }
+        dataStoreFile
     }
 
     fun close() {
+        // Drain first: give the actor a quiescent point so an in-flight write is never
+        // cut mid-rename by the cancellation below.
+        runCatching {
+            runBlocking { withTimeoutOrNull(2_000) { dataStore.data.first() } }
+        }
         dataStoreScope.cancel()
+        dataStoreFailures.firstOrNull()?.let { throw it }
     }
 
     /**

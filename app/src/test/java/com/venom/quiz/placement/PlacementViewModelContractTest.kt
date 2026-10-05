@@ -93,12 +93,11 @@ class PlacementViewModelContractTest {
     }
 
     /**
-     * runBlocking, deliberately not runTest: other suites' harness DataStore writes
-     * can surface as process-level uncaught exceptions, which runTest fails on at
-     * enter; runBlocking is immune. Virtual time for the VM's Main dispatcher still
-     * advances via its own scheduler below.
+     * The harness DataStore race (R2) is fixed at its root (drain-before-cancel +
+     * owned-failure rethrow), so runTest is safe again.
      */
-    private fun vmTest(test: suspend () -> Unit) = runBlocking { test() }
+    private fun vmTest(test: suspend kotlinx.coroutines.test.TestScope.() -> Unit) =
+        kotlinx.coroutines.test.runTest { test() }
 
     @Test
     fun `a corpus without A1 serves its first question from the floor level`() = vmTest {
