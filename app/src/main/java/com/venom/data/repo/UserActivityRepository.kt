@@ -212,8 +212,13 @@ class UserActivityRepository @Inject constructor(
         profileDao.updateStreak(userId, streak, todayKey, now)
 
         // Milestones reward real continuity only: a bridged count must never mint
-        // milestone XP for a day with no study behind it.
+        // milestone XP for a day with no study behind it. The same honesty gates
+        // the freeze grant (ADR-0010): earned at exact 7-day marks, capped at 2,
+        // never from a bridged day.
         if (!bridged) {
+            if (streak > 0 && streak % 7 == 0 && profile.streakFreezes < 2) {
+                profileDao.grantStreakFreeze(userId, now)
+            }
             StreakEngine.checkMilestone(streak)?.let { milestone ->
                 xpEventDao.insert(
                     XpEventEntity(
@@ -255,6 +260,11 @@ class UserActivityRepository @Inject constructor(
             crashlytics.logNonFatalException(e, "Streak calc error")
             0
         }
+    }
+
+    /** Placement band for new-word ordering (ADR-0010). Null when never taken. */
+    suspend fun getPlacementCefr(userId: String): String? = withContext(Dispatchers.IO) {
+        profileDao.getProfile(userId)?.placementCefr
     }
 
     suspend fun getDashboardData(userId: String): DashboardData = withContext(Dispatchers.IO) {

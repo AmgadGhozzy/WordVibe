@@ -765,7 +765,10 @@ class WordMasteryViewModel @Inject constructor(
             val newNeeded = reviewLimit - reviewWords.size
 
             val newWords = if (newNeeded > 0) {
-                progressRepository.getNewWordsForUser(userId, newNeeded)
+                progressRepository.getNewWordsForUser(
+                    userId, newNeeded,
+                    preferredCefr = activityRepository.getPlacementCefr(userId)
+                )
             } else {
                 emptyList()
             }

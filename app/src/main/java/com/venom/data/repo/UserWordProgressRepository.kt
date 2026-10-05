@@ -63,13 +63,30 @@ class UserWordProgressRepository @Inject constructor(
      * New words by the single DB-backed definition: word rows with no progress row for
      * this user, rank-ordered. Never assembled from ID lists in callers.
      */
+    /**
+     * ADR-0010: new words of the placed band come first (rank-ordered), then the
+     * rest (rank-ordered). The frozen new-word definition is unchanged — this is
+     * serving order only. `preferredCefr = null` keeps pure rank order.
+     */
     suspend fun getNewWordsForUser(
         userId: String,
-        limit: Int = 15
+        limit: Int = 15,
+        preferredCefr: String? = null
     ): List<com.venom.domain.model.WordMaster> =
         withContext(Dispatchers.IO) {
-            wordMasterDao.getNewWordsForUser(userId, limit).map {
+            // Pure-rank serving keeps the exact limit passthrough (frozen contract);
+            // band-first serving widens the window for band selection.
+            val window = if (preferredCefr.isNullOrBlank()) limit else limit * 2
+            val pool = wordMasterDao.getNewWordsForUser(userId, window).map {
                 WordMasterEntityMapper.toDomain(it)
+            }
+            if (preferredCefr.isNullOrBlank()) {
+                pool.take(limit)
+            } else {
+                val (band, rest) = pool.partition {
+                    it.cefrLevel.name.equals(preferredCefr, ignoreCase = true)
+                }
+                (band + rest).take(limit)
             }
         }
 
