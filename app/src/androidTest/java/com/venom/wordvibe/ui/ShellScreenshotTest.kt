@@ -95,6 +95,8 @@ class ShellScreenshotTest {
         totalWordsNeedsReview = 7,
         totalDaysActive = 11,
         totalSessionCount = 13,
+        // ADR-0010 evidence: the freeze balance must be visible in the captures.
+        streakFreezes = 2,
     )
 
     private val queue = listOf(
