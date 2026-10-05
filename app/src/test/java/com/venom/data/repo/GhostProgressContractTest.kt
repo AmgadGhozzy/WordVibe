@@ -29,6 +29,10 @@ import org.junit.jupiter.api.Test
  *
  * Frozen contract: recording a failure for a word that does not exist in the word store
  * must never fabricate a progress row. Hand-written fakes, real collaborators, zero mocks.
+ *
+ * Loud-rejection pinning (P-07 chain): every unknown-word rejection — recall, production,
+ * and the replay drain — is reported through CrashlyticsManager, whose debug stub mirrors
+ * it to logcat under the WordVibeCrash tag.
  */
 class GhostProgressContractTest {
 
@@ -263,8 +267,11 @@ class GhostProgressContractTest {
     }
 
     private class FakeCrashlytics : CrashlyticsManager {
+        val nonFatals = mutableListOf<Pair<Throwable, String?>>()
         override fun initialize(enableCollection: Boolean) {}
-        override fun logNonFatalException(throwable: Throwable, message: String?) {}
+        override fun logNonFatalException(throwable: Throwable, message: String?) {
+            nonFatals += throwable to message
+        }
         override fun logBreadcrumb(message: String) {}
         override fun setCustomKey(key: String, value: String) {}
         override fun setCustomKey(key: String, value: Boolean) {}
@@ -285,11 +292,16 @@ class GhostProgressContractTest {
         override suspend fun <T> withTransaction(block: suspend () -> T): T = block()
     }
 
-    private fun repository(
+    private class RepoWithCrash(
+        val repo: UserWordProgressRepository,
+        val crashlytics: FakeCrashlytics,
+    )
+
+    private fun repositoryWithCrash(
         progressDao: FakeProgressDao,
         wordMasterDao: FakeWordMasterDao = FakeWordMasterDao(),
         quizDao: FakeQuizAttemptDao = FakeQuizAttemptDao()
-    ): UserWordProgressRepository {
+    ): RepoWithCrash {
         val crashlytics = FakeCrashlytics()
         val activityRepository = UserActivityRepository(
             activityDao = FakeActivityDao(),
@@ -299,16 +311,25 @@ class GhostProgressContractTest {
             crashlytics = crashlytics,
             appConfigProvider = AppConfigProvider(FakeRemoteConfig())
         )
-        return UserWordProgressRepository(
-            progressDao = progressDao,
-            wordMasterDao = wordMasterDao,
-            quizAttemptDao = quizDao,
-            srsEngine = SrsEngine(),
-            activityRepository = activityRepository,
-            crashlytics = crashlytics,
-            transactions = FakeTransactions()
+        return RepoWithCrash(
+            UserWordProgressRepository(
+                progressDao = progressDao,
+                wordMasterDao = wordMasterDao,
+                quizAttemptDao = quizDao,
+                srsEngine = SrsEngine(),
+                activityRepository = activityRepository,
+                crashlytics = crashlytics,
+                transactions = FakeTransactions()
+            ),
+            crashlytics
         )
     }
+
+    private fun repository(
+        progressDao: FakeProgressDao,
+        wordMasterDao: FakeWordMasterDao = FakeWordMasterDao(),
+        quizDao: FakeQuizAttemptDao = FakeQuizAttemptDao()
+    ): UserWordProgressRepository = repositoryWithCrash(progressDao, wordMasterDao, quizDao).repo
 
     @Test
     fun `failed recall for unknown word creates no progress row`() = runTest {
@@ -546,6 +567,108 @@ class GhostProgressContractTest {
         assertTrue(
             last.lapsesCount == 1 && last.recallSuccess == 0,
             "replayed production failure must lapse without touching recall counters"
+        )
+    }
+
+    @Test
+    fun `recall rejections for unknown words are loud through CrashlyticsManager`() = runTest {
+        val progressDao = FakeProgressDao()
+        val quizDao = FakeQuizAttemptDao()
+        val built = repositoryWithCrash(progressDao, quizDao = quizDao)
+
+        built.repo.recordRecallSuccess("u1", 999_999)
+        built.repo.recordRecallFail("u1", 999_999)
+
+        assertEquals(
+            2, built.crashlytics.nonFatals.size,
+            "both recall signals for a missing word must be reported loudly"
+        )
+        assertTrue(
+            built.crashlytics.nonFatals.all {
+                it.second == "Rejected recall event: word missing from store"
+            },
+            "each rejection carries the loud context message"
+        )
+        assertTrue(
+            built.crashlytics.nonFatals.any {
+                it.first.message?.contains("recall success for unknown word 999999") == true
+            } && built.crashlytics.nonFatals.any {
+                it.first.message?.contains("recall failure for unknown word 999999") == true
+            },
+            "the exception names the signal and the missing word id"
+        )
+        assertTrue(
+            quizDao.inserts.isEmpty(),
+            "no durable event may be persisted for an unknown word"
+        )
+        assertTrue(
+            progressDao.upserts.none { it.wordId == 999_999 },
+            "an unknown word must not fabricate progress either"
+        )
+    }
+
+    @Test
+    fun `production rejections for unknown words are loud through CrashlyticsManager`() = runTest {
+        val progressDao = FakeProgressDao()
+        val quizDao = FakeQuizAttemptDao()
+        val built = repositoryWithCrash(progressDao, quizDao = quizDao)
+
+        built.repo.recordProductionFail("u1", 999_999, "session:9:PROD_FAIL:1", "s1")
+
+        assertEquals(
+            1, built.crashlytics.nonFatals.size,
+            "the production rejection must be reported loudly"
+        )
+        assertTrue(
+            built.crashlytics.nonFatals.single()
+                .first.message?.contains("production failure for unknown word 999999") == true,
+            "the exception names the signal and the missing word id"
+        )
+        assertTrue(
+            quizDao.inserts.isEmpty(),
+            "no durable event may be persisted for an unknown word"
+        )
+        assertTrue(
+            progressDao.upserts.none { it.wordId == 999_999 },
+            "an unknown word must not fabricate progress either"
+        )
+    }
+
+    @Test
+    fun `unprojectable replayed events drain loudly through CrashlyticsManager`() = runTest {
+        val progressDao = FakeProgressDao()
+        val quizDao = FakeQuizAttemptDao()
+        quizDao.inserts += QuizAttemptEntity(
+            userId = "u1",
+            wordId = 999_999,
+            dateKey = "2026-10-05",
+            questionType = "RECALL",
+            source = "FLASHCARD",
+            isCorrect = false,
+            selectedAnswer = "",
+            correctAnswer = "",
+            idempotencyKey = "session:999:GHOST:1",
+            projectionApplied = false
+        )
+        val built = repositoryWithCrash(progressDao, quizDao = quizDao)
+
+        built.repo.replayUnappliedEvents("u1")
+
+        assertEquals(
+            1, built.crashlytics.nonFatals.size,
+            "draining an unprojectable event must be loud"
+        )
+        assertEquals(
+            "Draining unprojectable event",
+            built.crashlytics.nonFatals.single().second
+        )
+        assertTrue(
+            quizDao.inserts.single { it.idempotencyKey == "session:999:GHOST:1" }.projectionApplied,
+            "the drained event is marked applied exactly once"
+        )
+        assertTrue(
+            progressDao.upserts.isEmpty(),
+            "no projection is possible for a missing word"
         )
     }
 }
