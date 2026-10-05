@@ -332,7 +332,18 @@ class FakeProfileDao : UserProfileDao {
             bestStreak = maxOf(current.bestStreak, streak)
         )
     }
-    override suspend fun consumeStreakFreeze(userId: String, now: Long) {}
+        override suspend fun grantStreakFreeze(userId: String, now: Long) {
+            val current = store[userId] ?: return
+            if (current.streakFreezes < 2) {
+                store[userId] = current.copy(streakFreezes = current.streakFreezes + 1)
+            }
+        }
+    override suspend fun consumeStreakFreeze(userId: String, now: Long) {
+        val current = store[userId] ?: return
+        if (current.streakFreezes > 0) {
+            store[userId] = current.copy(streakFreezes = current.streakFreezes - 1)
+        }
+    }
     override suspend fun updateDailyGoal(userId: String, goal: Int, now: Long) {}
     override suspend fun migrateUserId(fromUserId: String, toUserId: String) {}
     override suspend fun updatePlacementAndXp(
@@ -380,6 +391,7 @@ class FakeWordMasterRepository(private val wordDao: FakeWordDao) : IWordMasterRe
     override suspend fun getLevelProgress(level: com.venom.domain.model.WordLevels): Float = 0f
     override suspend fun getLevelsProgress(): Map<String, Float> = emptyMap()
     override suspend fun getWordCount(): Int = wordDao.getWordCount()
+    override suspend fun countWordsByCefr(level: CefrLevel): Int = wordDao.getCountByCefr(level.name)
     override suspend fun insertWords(words: List<WordMaster>) {}
     override suspend fun getRandomWords(limit: Int): List<WordMaster> =
         wordDao.getRandomWords(limit)

@@ -31,8 +31,15 @@ interface UserProfileDao {
     suspend fun updateStreak(userId: String, streak: Int, lastActive: String, now: Long)
 
     @Query("""
-        UPDATE userProfile 
-        SET streakFreezes = streakFreezes - 1, updatedAt = :now 
+        UPDATE userProfile
+        SET streakFreezes = streakFreezes + 1, updatedAt = :now
+        WHERE userId = :userId AND streakFreezes < 2
+    """)
+    suspend fun grantStreakFreeze(userId: String, now: Long)
+
+    @Query("""
+        UPDATE userProfile
+        SET streakFreezes = streakFreezes - 1, updatedAt = :now
         WHERE userId = :userId AND streakFreezes > 0
     """)
     suspend fun consumeStreakFreeze(userId: String, now: Long)
