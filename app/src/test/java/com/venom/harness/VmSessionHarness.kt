@@ -220,7 +220,7 @@ class FakeQuizAttemptDao : QuizAttemptDao {
 }
 
 class FakeActivityDao : UserActivityDao {
-    val rows = mutableMapOf<Pair<String, String>, UserActivityEntity>()
+    val rows = java.util.concurrent.ConcurrentHashMap<Pair<String, String>, UserActivityEntity>()
     override suspend fun upsert(entity: UserActivityEntity) {
         rows[entity.userId to entity.dateKey] = entity
     }
