@@ -1,5 +1,8 @@
 package com.venom.wordvibe.ui
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.onRoot
@@ -75,7 +78,7 @@ class ShellScreenshotTest {
             WordVibeTheme(darkTheme = dark) {
                 // A real Surface so the root paints colorScheme.background — a bare
                 // node captures as white and makes the dark capture lie.
-                androidx.compose.material3.Surface(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize()) {
                     content()
                 }
             }
@@ -113,7 +116,7 @@ class ShellScreenshotTest {
     private fun shoot(name: String, dark: Boolean, content: @Composable () -> Unit) {
         compose.setContent {
             WordVibeTheme(darkTheme = dark) {
-                androidx.compose.material3.Surface(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+                Surface(modifier = Modifier.fillMaxSize()) {
                     content()
                 }
             }
