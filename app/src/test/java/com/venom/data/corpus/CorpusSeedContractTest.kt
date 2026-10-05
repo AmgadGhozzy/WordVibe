@@ -27,7 +27,8 @@ class CorpusSeedContractTest {
         ): List<WordMaster> = emptyList()
         override suspend fun getLevelProgress(level: com.venom.domain.model.WordLevels): Float = 0f
         override suspend fun getLevelsProgress(): Map<String, Float> = emptyMap()
-        override suspend fun getWordCount(): Int = count
+        override suspend fun countWordsByCefr(level: com.venom.domain.model.CefrLevel): Int = 0
+    override suspend fun getWordCount(): Int = count
         override suspend fun insertWords(words: List<WordMaster>) {
             inserted += words
             count += words.size

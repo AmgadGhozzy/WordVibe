@@ -6,7 +6,7 @@ import com.venom.analytics.CrashlyticsManager
 import com.venom.analytics.ext.logApiError
 import com.venom.analytics.ext.logUserAction
 import com.venom.data.local.dao.UserProfileDao
-import com.venom.data.repo.UserIdentityRepository
+import com.venom.domain.repo.IUserIdentityRepository
 import com.venom.domain.model.LevelScore
 import com.venom.domain.model.PlacementLevels
 import com.venom.domain.model.PlacementResult
@@ -36,7 +36,7 @@ import kotlin.random.Random
 class PlacementViewModel @Inject constructor(
     private val wordRepository: IWordMasterRepository,
     private val userProfileDao: UserProfileDao,
-    private val identityRepository: UserIdentityRepository,
+    private val identityRepository: IUserIdentityRepository,
     private val crashlyticsManager: CrashlyticsManager
 ) : ViewModel() {
 
@@ -62,9 +62,22 @@ class PlacementViewModel @Inject constructor(
     }
 
     private val allLevels = PlacementLevels.levels()
-    private val questionSequence = allLevels.flatMap { level ->
-        List(getQuestionsForLevel(level.id)) { level }
+
+    /**
+     * ADR-0010: the ladder starts at the lowest level that actually has words in
+     * the seeded corpus (floor), so placement never degenerates into a
+     * zero-question result on a level with no content.
+     */
+    private suspend fun buildQuestionSequence(): List<WordLevels> {
+        val floorIndex = allLevels.indexOfFirst { level ->
+            wordRepository.countWordsByCefr(level.cefrLevel) > 0
+        }.coerceAtLeast(0)
+        val levels = allLevels.drop(floorIndex)
+        return levels.flatMap { level ->
+            List(getQuestionsForLevel(level.id)) { level }
+        }
     }
+    private var questionSequence: List<WordLevels> = emptyList()
 
     private val levelResults = mutableMapOf<String, Boolean>()
     private val usedWordIds = mutableSetOf<Int>()
@@ -80,7 +93,14 @@ class PlacementViewModel @Inject constructor(
         levelResults.clear()
         usedWordIds.clear()
         _result.value = null
-        viewModelScope.launch { loadQuestionForLevel(questionSequence[currentQuestionIndex]) }
+        viewModelScope.launch {
+            questionSequence = buildQuestionSequence()
+            if (questionSequence.isEmpty()) {
+                finalize()
+            } else {
+                loadQuestionForLevel(questionSequence[currentQuestionIndex])
+            }
+        }
     }
 
     fun selectOption(option: String) {

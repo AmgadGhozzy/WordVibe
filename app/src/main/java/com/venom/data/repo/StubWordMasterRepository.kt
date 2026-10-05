@@ -36,6 +36,9 @@ class StubWordMasterRepository @Inject constructor(
 
     override suspend fun getWordCount(): Int = wordMasterDao.getWordCount()
 
+    override suspend fun countWordsByCefr(level: CefrLevel): Int =
+        wordMasterDao.getCountByCefr(level.name)
+
     override suspend fun insertWords(words: List<WordMaster>) {
         wordMasterDao.insertAll(words.map { WordMasterEntityMapper.toEntity(it) })
     }

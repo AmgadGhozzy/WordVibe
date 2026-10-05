@@ -21,6 +21,9 @@ interface IWordMasterRepository {
 
     suspend fun getWordCount(): Int
 
+    /** Words available at a CEFR level (placement floor, ADR-0010). */
+    suspend fun countWordsByCefr(level: CefrLevel): Int
+
     suspend fun insertWords(words: List<WordMaster>)
 
     /** Get random words (for fallback / topic-based loading). */
