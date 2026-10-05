@@ -175,7 +175,7 @@ class FakeWordDao(
 }
 
 class FakeQuizAttemptDao : QuizAttemptDao {
-    val events = mutableListOf<QuizAttemptEntity>()
+    val events = java.util.concurrent.CopyOnWriteArrayList<QuizAttemptEntity>()
     override suspend fun insert(attempt: QuizAttemptEntity) {
         if (attempt.idempotencyKey != null &&
             events.any { it.idempotencyKey == attempt.idempotencyKey }
