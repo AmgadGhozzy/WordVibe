@@ -33,6 +33,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
@@ -416,7 +417,7 @@ class VmSessionHarness(
     )
 
     private val dataStoreScope = CoroutineScope(
-        SupervisorJob() + kotlinx.coroutines.Dispatchers.IO.limitedParallelism(1)
+        kotlinx.coroutines.test.UnconfinedTestDispatcher()
     )
     val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.create(scope = dataStoreScope) {
         File.createTempFile("vm_harness", ".preferences_pb").apply { deleteOnExit() }
