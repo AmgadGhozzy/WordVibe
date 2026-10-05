@@ -214,9 +214,11 @@ class UserActivityRepository @Inject constructor(
         // Milestones reward real continuity only: a bridged count must never mint
         // milestone XP for a day with no study behind it. The same honesty gates
         // the freeze grant (ADR-0010): earned at exact 7-day marks, capped at 2,
-        // never from a bridged day.
+        // never from a bridged day. The pre-update profile streak is the
+        // last-granted marker, so a multiple cannot be granted twice.
         if (!bridged) {
-            if (streak > 0 && streak % 7 == 0 && profile.streakFreezes < 2) {
+            val grant = StreakEngine.freezeGrant(streak, profile.streakFreezes, profile.currentStreak)
+            if (grant > profile.streakFreezes) {
                 profileDao.grantStreakFreeze(userId, now)
             }
             StreakEngine.checkMilestone(streak)?.let { milestone ->
