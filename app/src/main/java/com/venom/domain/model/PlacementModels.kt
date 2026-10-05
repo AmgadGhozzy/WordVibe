@@ -32,6 +32,8 @@ object PlacementLevels {
      *
      * Strategy: The highest level where the user answered correctly,
      * capped at B2 (index 3). If the user fails all questions, they get A1.
+     * Levels never attempted (below the corpus-floor ladder start, ADR-0010) are
+     * skipped: only an attempted failure cuts the adaptive scan.
      *
      * Returns a pair of (WordLevels, CEFR string).
      */
@@ -39,11 +41,13 @@ object PlacementLevels {
         // Find the highest level passed (last correct answer in ordered list)
         var highestPassedIndex = -1
         for ((index, level) in ordered.withIndex()) {
-            if (levelResults[level.id] == true) {
-                highestPassedIndex = index
-            } else {
+            val result = levelResults[level.id]
+            when {
+                // Unattempted level (below the ladder start): not evidence either way.
+                result == null -> continue
+                result -> highestPassedIndex = index
                 // Stop at first failure — adaptive cutoff
-                break
+                else -> break
             }
         }
 
