@@ -406,26 +406,33 @@ class FakeActivityDao : UserActivityDao {
     }
     override suspend fun migrateUserId(fromUserId: String, toUserId: String) {}
     override suspend fun deleteByUserId(userId: String) {}
-    // Deliberately LEFT non-atomic (PM round-11): the read→write gap between
-    // `current` and the put below is the lost-update window under investigation
-    // — do NOT "fix" it to compute/merge until a failure snapshot confirms the
-    // hypothesis and PM approves. `source` is only forensic attribution for the
-    // rowWriteLog.
+    // ATOMIC since ticket-11 confirmation (PM standing approval): the old shape
+    // read `rows[key]` and then wrote `rows[key] = f(current)` — a non-atomic
+    // read-modify-write whose interleaved gap was CAPTURED red-handed
+    // (.scratch/ticket11-diag/r11-losupdate-confirmed/: row-write #11
+    // incrementRecallSuccess wrote back a stale full-row copy over #10's
+    // sessionCount=1, so getTotalSessionCount never saw the session land).
+    // compute fuses read→transform→write into one step under the CHM bin lock.
+    // Row-absent stays a no-op (no insert), counted by bumpNoRowCalls inside
+    // the mapping function; all counters, rowWriteLog and diagDump shapes are
+    // unchanged. `source` is only forensic attribution for the rowWriteLog,
+    // recorded after the put exactly as before.
     private fun bump(
         userId: String,
         dateKey: String,
         source: String,
         f: (UserActivityEntity) -> UserActivityEntity
     ) {
-        val current = rows[userId to dateKey]
-        if (current == null) {
-            bumpNoRowCalls.incrementAndGet()
-            return
-        }
         val key = userId to dateKey
-        val written = f(current)
-        rows[key] = written
-        recordRowWrite(source, key, written)
+        var written: UserActivityEntity? = null
+        rows.compute(key) { _, current ->
+            if (current == null) {
+                bumpNoRowCalls.incrementAndGet()
+                return@compute null
+            }
+            f(current).also { written = it }
+        }
+        written?.let { recordRowWrite(source, key, it) }
     }
 }
 
