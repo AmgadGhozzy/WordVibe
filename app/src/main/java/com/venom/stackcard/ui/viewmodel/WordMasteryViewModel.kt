@@ -144,8 +144,6 @@ sealed class WordMasteryEvent {
 }
 
 private sealed class DbOperation {
-    data class RecordRecallFail(val userId: String, val wordId: Int, val idempotencyKey: String, val sessionId: String) : DbOperation()
-    data class RecordRecallSuccess(val userId: String, val wordId: Int, val idempotencyKey: String, val sessionId: String) : DbOperation()
     data class RecordView(val userId: String, val wordId: Int) : DbOperation()
     data class ToggleBookmark(val userId: String, val wordId: Int, val bookmarked: Boolean) :
         DbOperation()
@@ -256,41 +254,6 @@ class WordMasteryViewModel @Inject constructor(
             dbOperationChannel.receiveAsFlow().collect { operation ->
                 try {
                     when (operation) {
-                        is DbOperation.RecordRecallFail -> {
-                            progressRepository.recordRecallFail(
-                                operation.userId,
-                                operation.wordId,
-                                operation.idempotencyKey,
-                                operation.sessionId
-                            )
-                        }
-
-                        is DbOperation.RecordRecallSuccess -> {
-                            progressRepository.recordRecallSuccess(
-                                operation.userId,
-                                operation.wordId,
-                                operation.idempotencyKey,
-                                operation.sessionId
-                            )
-
-                            val progress = progressRepository.getDisplayProgress(
-                                operation.userId,
-                                operation.wordId
-                            )
-                            when (progress.knownState) {
-                                KnownState.MASTERED, KnownState.KNOWN -> {
-                                    sessionMasteredCount.incrementAndGet()
-                                }
-
-                                KnownState.LEARNING -> {
-                                    sessionLearningCount.incrementAndGet()
-                                }
-
-                                else -> {}
-                            }
-                            updateSessionStatsInUI()
-                        }
-
                         is DbOperation.RecordView -> {
                             progressRepository.recordView(operation.userId, operation.wordId)
                         }
@@ -313,6 +276,27 @@ class WordMasteryViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Session counters after a durable recall-success write (ticket 13): moved
+     * verbatim from the old channel consumer — the mastered/learning counts
+     * read the persisted state right after the write lands.
+     */
+    private suspend fun applyRecallCounters(userId: String, wordId: Int) {
+        val progress = progressRepository.getDisplayProgress(userId, wordId)
+        when (progress.knownState) {
+            KnownState.MASTERED, KnownState.KNOWN -> {
+                sessionMasteredCount.incrementAndGet()
+            }
+
+            KnownState.LEARNING -> {
+                sessionLearningCount.incrementAndGet()
+            }
+
+            else -> {}
+        }
+        updateSessionStatsInUI()
     }
 
     override fun onCleared() {
@@ -462,14 +446,23 @@ class WordMasteryViewModel @Inject constructor(
 
             val decision = sessionEngine!!.swipeRemembered(word, nowMs = System.currentTimeMillis())
 
+            // Durable-first (ticket 13): the tap's own coroutine performs the
+            // durable write (insert + projection, one repo transaction) — the
+            // channel is no longer on the durable path. Failure logging keeps
+            // the old consumer's swallow-and-report semantics.
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                val userId = identityRepository.getCurrentUserId()
-                dbOperationChannel.send(
-                    DbOperation.RecordRecallSuccess(
+                try {
+                    val userId = identityRepository.getCurrentUserId()
+                    progressRepository.recordRecallSuccess(
                         userId, decision.recall.wordId, decision.recall.idempotencyKey,
                         decision.recall.sessionId
                     )
-                )
+                    applyRecallCounters(userId, decision.recall.wordId)
+                } catch (e: Exception) {
+                    if (e !is CancellationException) {
+                        crashlyticsManager.logNonFatalException(e, "Recall success persist failed")
+                    }
+                }
             }
 
             val isSessionFinished = decision.sessionFinished
@@ -505,16 +498,21 @@ class WordMasteryViewModel @Inject constructor(
 
             updateSessionStatsInUI()
 
-            // Durable at tap time: a forgotten tap is a stored failure even if the
-            // session is abandoned before finalization.
+            // Durable-first (ticket 13): a forgotten tap is a stored failure
+            // written directly by the tap's own coroutine, even if the session
+            // is abandoned before finalization.
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                val userId = identityRepository.getCurrentUserId()
-                dbOperationChannel.send(
-                    DbOperation.RecordRecallFail(
+                try {
+                    val userId = identityRepository.getCurrentUserId()
+                    progressRepository.recordRecallFail(
                         userId, decision.recall.wordId, decision.recall.idempotencyKey,
                         decision.recall.sessionId
                     )
-                )
+                } catch (e: Exception) {
+                    if (e !is CancellationException) {
+                        crashlyticsManager.logNonFatalException(e, "Recall fail persist failed")
+                    }
+                }
             }
 
             _uiState.update { state ->
