@@ -483,21 +483,24 @@ class VmSessionHarness(
     private val diagSeq = diagSequence.incrementAndGet()
 
     /**
-     * Appends one snapshot line (call counters) to the shared temp log. Called at
-     * close() — @AfterEach always runs, even after a failed test — and at
-     * await-exhaustion, so a failing test's counters survive for forensics
-     * (ticket 11 / round-8 item 2). Append-only, seq-tagged per harness instance.
+     * Writes one per-harness snapshot file (call counters) under
+     * build/harness-counters/. Called at close() — @AfterEach always runs, even
+     * after a failed test — and at await-exhaustion, so a failing test's
+     * counters survive for forensics (ticket 11 / round-8 item 2).
      */
     fun diagDump(tag: String) {
         runCatching {
-            java.io.File(System.getProperty("java.io.tmpdir"), "wv-fake-dao-counters.log")
-                .appendText(
-                    "WV-DIAG seq=$diagSeq ts=${System.nanoTime()} " +
-                        "thread=${Thread.currentThread().name} tag=$tag " +
-                        "insertCalls=${quizDao.insertCalls.get()} " +
-                        "getByIdCalls=${quizDao.getByIdCalls.get()} " +
-                        "markAppliedCalls=${quizDao.markAppliedCalls.get()}\n"
-                )
+            val dir = java.io.File("build/harness-counters")
+            dir.mkdirs()
+            val stamp = System.currentTimeMillis().toString() + "-" +
+                (System.nanoTime() % 1_000_000_000L).toString()
+            java.io.File(dir, "$stamp.txt").writeText(
+                "WV-DIAG seq=$diagSeq ts=${System.nanoTime()} " +
+                    "thread=${Thread.currentThread().name} tag=$tag " +
+                    "insertCalls=${quizDao.insertCalls.get()} " +
+                    "getByIdCalls=${quizDao.getByIdCalls.get()} " +
+                    "markAppliedCalls=${quizDao.markAppliedCalls.get()}\n"
+            )
         }
     }
 
