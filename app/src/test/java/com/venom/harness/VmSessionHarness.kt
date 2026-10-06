@@ -239,13 +239,50 @@ class FakeQuizAttemptDao : QuizAttemptDao {
 
 class FakeActivityDao : UserActivityDao {
     val rows = java.util.concurrent.ConcurrentHashMap<Pair<String, String>, UserActivityEntity>()
+
+    // Diagnostic counters + exception ledger (PM round-10, ticket-11 forensics):
+    // the activity path behind ensureTodayExists and the finalize waits.
+    // ensureTodayExists is repository-level; its DAO footprint is
+    // getActivityForDate + upsert, which is what these counters observe.
+    // bumpNoRow: bump() silently no-ops when the day row is missing — the exact
+    // silent shape that would keep a getTotalSessionCount condition from ever
+    // materializing.
+    val upsertCalls = java.util.concurrent.atomic.AtomicInteger()
+    val getActivityForDateCalls = java.util.concurrent.atomic.AtomicInteger()
+    val incrementSessionCountCalls = java.util.concurrent.atomic.AtomicInteger()
+    val getTotalSessionCountCalls = java.util.concurrent.atomic.AtomicInteger()
+    val bumpNoRowCalls = java.util.concurrent.atomic.AtomicInteger()
+    val diagExceptionCount = java.util.concurrent.atomic.AtomicInteger()
+    val diagExceptions = java.util.concurrent.CopyOnWriteArrayList<String>()
+
+    private fun recordDiagException(method: String, t: Throwable) {
+        diagExceptionCount.incrementAndGet()
+        if (diagExceptions.size < 16) {
+            diagExceptions.add("$method: ${t::class.simpleName}: ${t.message}")
+        }
+    }
+
     override suspend fun upsert(entity: UserActivityEntity) {
-        rows[entity.userId to entity.dateKey] = entity
+        upsertCalls.incrementAndGet()
+        try {
+            rows[entity.userId to entity.dateKey] = entity
+        } catch (t: Throwable) {
+            recordDiagException("upsert", t)
+            throw t
+        }
     }
     override suspend fun getActivityForDate(
         userId: String,
         dateKey: String
-    ): UserActivityEntity? = rows[userId to dateKey]
+    ): UserActivityEntity? {
+        getActivityForDateCalls.incrementAndGet()
+        return try {
+            rows[userId to dateKey]
+        } catch (t: Throwable) {
+            recordDiagException("getActivityForDate", t)
+            throw t
+        }
+    }
     override suspend fun getAllActivities(userId: String): List<UserActivityEntity> =
         rows.values.filter { it.userId == userId }
     override suspend fun getRecentActivities(
@@ -260,8 +297,15 @@ class FakeActivityDao : UserActivityDao {
         rows.values.filter { it.userId == userId }.sumOf { it.totalXpEarned }
     override suspend fun getTotalWordsViewed(userId: String): Int =
         rows.values.filter { it.userId == userId }.sumOf { it.wordsViewed }
-    override suspend fun getTotalSessionCount(userId: String): Int =
-        rows.values.filter { it.userId == userId }.sumOf { it.sessionCount }
+    override suspend fun getTotalSessionCount(userId: String): Int {
+        getTotalSessionCountCalls.incrementAndGet()
+        return try {
+            rows.values.filter { it.userId == userId }.sumOf { it.sessionCount }
+        } catch (t: Throwable) {
+            recordDiagException("getTotalSessionCount", t)
+            throw t
+        }
+    }
     override suspend fun getTotalTimeMs(userId: String): Long =
         rows.values.filter { it.userId == userId }.sumOf { it.totalTimeMs }
     override suspend fun incrementWordsViewed(userId: String, dateKey: String, now: Long) {
@@ -311,7 +355,13 @@ class FakeActivityDao : UserActivityDao {
         bump(userId, dateKey) { it.copy(totalTimeMs = it.totalTimeMs + durationMs) }
     }
     override suspend fun incrementSessionCount(userId: String, dateKey: String, now: Long) {
-        bump(userId, dateKey) { it.copy(sessionCount = it.sessionCount + 1) }
+        incrementSessionCountCalls.incrementAndGet()
+        try {
+            bump(userId, dateKey) { it.copy(sessionCount = it.sessionCount + 1) }
+        } catch (t: Throwable) {
+            recordDiagException("incrementSessionCount", t)
+            throw t
+        }
     }
     override suspend fun markDailyGoalMet(
         userId: String,
@@ -330,7 +380,11 @@ class FakeActivityDao : UserActivityDao {
         dateKey: String,
         f: (UserActivityEntity) -> UserActivityEntity
     ) {
-        val current = rows[userId to dateKey] ?: return
+        val current = rows[userId to dateKey]
+        if (current == null) {
+            bumpNoRowCalls.incrementAndGet()
+            return
+        }
         rows[userId to dateKey] = f(current)
     }
 }
@@ -497,9 +551,17 @@ class VmSessionHarness(
             java.io.File(dir, "$stamp.txt").writeText(
                 "WV-DIAG seq=$diagSeq ts=${System.nanoTime()} " +
                     "thread=${Thread.currentThread().name} tag=$tag " +
-                    "insertCalls=${quizDao.insertCalls.get()} " +
-                    "getByIdCalls=${quizDao.getByIdCalls.get()} " +
-                    "markAppliedCalls=${quizDao.markAppliedCalls.get()}\n"
+                        "insertCalls=${quizDao.insertCalls.get()} " +
+                        "getByIdCalls=${quizDao.getByIdCalls.get()} " +
+                        "markAppliedCalls=${quizDao.markAppliedCalls.get()} " +
+                        "actUpsert=${activityDao.upsertCalls.get()} " +
+                        "actGetForDate=${activityDao.getActivityForDateCalls.get()} " +
+                        "actIncSession=${activityDao.incrementSessionCountCalls.get()} " +
+                        "actGetTotalSession=${activityDao.getTotalSessionCountCalls.get()} " +
+                        "actBumpNoRow=${activityDao.bumpNoRowCalls.get()} " +
+                        "actExceptions=${activityDao.diagExceptionCount.get()}" +
+                        (if (activityDao.diagExceptions.isEmpty()) ""
+                         else " exc=${activityDao.diagExceptions.joinToString("; ")}") + "\n"
             )
         }
     }
