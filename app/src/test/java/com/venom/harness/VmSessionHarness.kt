@@ -480,7 +480,29 @@ class VmSessionHarness(
         dataStoreFile
     }
 
+    private val diagSeq = diagSequence.incrementAndGet()
+
+    /**
+     * Appends one snapshot line (call counters) to the shared temp log. Called at
+     * close() — @AfterEach always runs, even after a failed test — and at
+     * await-exhaustion, so a failing test's counters survive for forensics
+     * (ticket 11 / round-8 item 2). Append-only, seq-tagged per harness instance.
+     */
+    fun diagDump(tag: String) {
+        runCatching {
+            java.io.File(System.getProperty("java.io.tmpdir"), "wv-fake-dao-counters.log")
+                .appendText(
+                    "WV-DIAG seq=$diagSeq ts=${System.nanoTime()} " +
+                        "thread=${Thread.currentThread().name} tag=$tag " +
+                        "insertCalls=${quizDao.insertCalls.get()} " +
+                        "getByIdCalls=${quizDao.getByIdCalls.get()} " +
+                        "markAppliedCalls=${quizDao.markAppliedCalls.get()}\n"
+                )
+        }
+    }
+
     fun close() {
+        diagDump("close")
         // Drain first: give the actor a quiescent point so an in-flight write is never
         // cut mid-rename by the cancellation below.
         runCatching {
@@ -512,6 +534,7 @@ class VmSessionHarness(
             if (cond()) break
             idlePolls++
             if (idlePolls >= MAX_IDLE_POLLS) {
+                diagDump("AWAIT-EXHAUSTED: condition not met after $MAX_IDLE_POLLS idle polls")
                 throw AssertionError(
                     "condition not met: scheduler drained on all $MAX_IDLE_POLLS consecutive idle polls"
                 )
@@ -522,6 +545,8 @@ class VmSessionHarness(
 }
 
 private const val MAX_IDLE_POLLS = 3_000
+
+private val diagSequence = java.util.concurrent.atomic.AtomicLong()
 
 fun testWordEntity(id: Int): WordMasterEntity = WordMasterEntity(
     id = id,
