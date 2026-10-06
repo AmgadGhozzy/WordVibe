@@ -255,6 +255,34 @@ class FakeActivityDao : UserActivityDao {
     val diagExceptionCount = java.util.concurrent.atomic.AtomicInteger()
     val diagExceptions = java.util.concurrent.CopyOnWriteArrayList<String>()
 
+    // PM round-11 forensics: (1) lastTotalSessionValue — the last value
+    // getTotalSessionCount actually RETURNED (increment included or not), so an
+    // await-exhausted dump answers directly whether the awaited read kept seeing
+    // 0, 2, or something else. (2) rowWriteLog — the row-write sequence: one
+    // entry per PUT on rows (bump writes and upserts), recording an increasing
+    // seq, the caller identity passed down to bump, the written sessionCount,
+    // the writer thread, and a field fingerprint (totalTimeMs / recallSuccess /
+    // totalXpEarned) that distinguishes incrementSessionCount vs addSessionTime
+    // vs incrementRecallSuccess vs addXp. This is the lost-update witness: if
+    // two coroutines interleave bump's read→write gap, the log shows a later
+    // seq writing back a STALE sessionCount over an earlier larger one.
+    val lastTotalSessionValue = java.util.concurrent.atomic.AtomicReference<Int?>(null)
+    val rowWriteSeq = java.util.concurrent.atomic.AtomicInteger()
+    val rowWriteLog = java.util.concurrent.CopyOnWriteArrayList<String>()
+
+    private fun recordRowWrite(source: String, key: Pair<String, String>, written: UserActivityEntity) {
+        val seq = rowWriteSeq.incrementAndGet()
+        rowWriteLog.add(
+            "#$seq $source key=${key.first}|${key.second} " +
+                "thread=${Thread.currentThread().name} " +
+                "sc=${written.sessionCount} tm=${written.totalTimeMs} " +
+                "rs=${written.recallSuccess} xp=${written.totalXpEarned}"
+        )
+        // Keep only the LAST 64 entries (bounded forensic window); per-op atomic
+        // on CopyOnWriteArrayList, so no corruption under concurrent writers.
+        while (rowWriteLog.size > 64) rowWriteLog.removeAt(0)
+    }
+
     private fun recordDiagException(method: String, t: Throwable) {
         diagExceptionCount.incrementAndGet()
         if (diagExceptions.size < 16) {
@@ -265,7 +293,9 @@ class FakeActivityDao : UserActivityDao {
     override suspend fun upsert(entity: UserActivityEntity) {
         upsertCalls.incrementAndGet()
         try {
-            rows[entity.userId to entity.dateKey] = entity
+            val key = entity.userId to entity.dateKey
+            rows[key] = entity
+            recordRowWrite("upsert", key, entity)
         } catch (t: Throwable) {
             recordDiagException("upsert", t)
             throw t
@@ -301,6 +331,7 @@ class FakeActivityDao : UserActivityDao {
         getTotalSessionCountCalls.incrementAndGet()
         return try {
             rows.values.filter { it.userId == userId }.sumOf { it.sessionCount }
+                .also { lastTotalSessionValue.set(it) }
         } catch (t: Throwable) {
             recordDiagException("getTotalSessionCount", t)
             throw t
@@ -309,7 +340,7 @@ class FakeActivityDao : UserActivityDao {
     override suspend fun getTotalTimeMs(userId: String): Long =
         rows.values.filter { it.userId == userId }.sumOf { it.totalTimeMs }
     override suspend fun incrementWordsViewed(userId: String, dateKey: String, now: Long) {
-        bump(userId, dateKey) { it.copy(wordsViewed = it.wordsViewed + 1) }
+        bump(userId, dateKey, "incrementWordsViewed") { it.copy(wordsViewed = it.wordsViewed + 1) }
     }
     override suspend fun incrementRecallSuccess(
         userId: String,
@@ -317,12 +348,12 @@ class FakeActivityDao : UserActivityDao {
         xp: Int,
         now: Long
     ) {
-        bump(userId, dateKey) {
+        bump(userId, dateKey, "incrementRecallSuccess") {
             it.copy(recallSuccess = it.recallSuccess + 1, totalXpEarned = it.totalXpEarned + xp)
         }
     }
     override suspend fun incrementRecallFail(userId: String, dateKey: String, now: Long) {
-        bump(userId, dateKey) { it.copy(recallFail = it.recallFail + 1) }
+        bump(userId, dateKey, "incrementRecallFail") { it.copy(recallFail = it.recallFail + 1) }
     }
     override suspend fun incrementPracticeSuccess(
         userId: String,
@@ -330,7 +361,7 @@ class FakeActivityDao : UserActivityDao {
         xp: Int,
         now: Long
     ) {
-        bump(userId, dateKey) {
+        bump(userId, dateKey, "incrementPracticeSuccess") {
             it.copy(
                 productionSuccess = it.productionSuccess + 1,
                 wordsPracticed = it.wordsPracticed + 1,
@@ -339,12 +370,12 @@ class FakeActivityDao : UserActivityDao {
         }
     }
     override suspend fun incrementMastered(userId: String, dateKey: String, xp: Int, now: Long) {
-        bump(userId, dateKey) {
+        bump(userId, dateKey, "incrementMastered") {
             it.copy(masteredCount = it.masteredCount + 1, totalXpEarned = it.totalXpEarned + xp)
         }
     }
     override suspend fun addXp(userId: String, dateKey: String, xp: Int, now: Long) {
-        bump(userId, dateKey) { it.copy(totalXpEarned = it.totalXpEarned + xp) }
+        bump(userId, dateKey, "addXp") { it.copy(totalXpEarned = it.totalXpEarned + xp) }
     }
     override suspend fun addSessionTime(
         userId: String,
@@ -352,12 +383,12 @@ class FakeActivityDao : UserActivityDao {
         durationMs: Long,
         now: Long
     ) {
-        bump(userId, dateKey) { it.copy(totalTimeMs = it.totalTimeMs + durationMs) }
+        bump(userId, dateKey, "addSessionTime") { it.copy(totalTimeMs = it.totalTimeMs + durationMs) }
     }
     override suspend fun incrementSessionCount(userId: String, dateKey: String, now: Long) {
         incrementSessionCountCalls.incrementAndGet()
         try {
-            bump(userId, dateKey) { it.copy(sessionCount = it.sessionCount + 1) }
+            bump(userId, dateKey, "incrementSessionCount") { it.copy(sessionCount = it.sessionCount + 1) }
         } catch (t: Throwable) {
             recordDiagException("incrementSessionCount", t)
             throw t
@@ -369,15 +400,21 @@ class FakeActivityDao : UserActivityDao {
         bonusXp: Int,
         now: Long
     ) {
-        bump(userId, dateKey) {
+        bump(userId, dateKey, "markDailyGoalMet") {
             it.copy(dailyGoalMet = true, totalXpEarned = it.totalXpEarned + bonusXp)
         }
     }
     override suspend fun migrateUserId(fromUserId: String, toUserId: String) {}
     override suspend fun deleteByUserId(userId: String) {}
+    // Deliberately LEFT non-atomic (PM round-11): the read→write gap between
+    // `current` and the put below is the lost-update window under investigation
+    // — do NOT "fix" it to compute/merge until a failure snapshot confirms the
+    // hypothesis and PM approves. `source` is only forensic attribution for the
+    // rowWriteLog.
     private fun bump(
         userId: String,
         dateKey: String,
+        source: String,
         f: (UserActivityEntity) -> UserActivityEntity
     ) {
         val current = rows[userId to dateKey]
@@ -385,7 +422,10 @@ class FakeActivityDao : UserActivityDao {
             bumpNoRowCalls.incrementAndGet()
             return
         }
-        rows[userId to dateKey] = f(current)
+        val key = userId to dateKey
+        val written = f(current)
+        rows[key] = written
+        recordRowWrite(source, key, written)
     }
 }
 
@@ -548,9 +588,10 @@ class VmSessionHarness(
             dir.mkdirs()
             val stamp = System.currentTimeMillis().toString() + "-" +
                 (System.nanoTime() % 1_000_000_000L).toString()
-            java.io.File(dir, "$stamp.txt").writeText(
-                "WV-DIAG seq=$diagSeq ts=${System.nanoTime()} " +
-                    "thread=${Thread.currentThread().name} tag=$tag " +
+            val body = buildString {
+                append(
+                    "WV-DIAG seq=$diagSeq ts=${System.nanoTime()} " +
+                        "thread=${Thread.currentThread().name} tag=$tag " +
                         "insertCalls=${quizDao.insertCalls.get()} " +
                         "getByIdCalls=${quizDao.getByIdCalls.get()} " +
                         "markAppliedCalls=${quizDao.markAppliedCalls.get()} " +
@@ -559,10 +600,21 @@ class VmSessionHarness(
                         "actIncSession=${activityDao.incrementSessionCountCalls.get()} " +
                         "actGetTotalSession=${activityDao.getTotalSessionCountCalls.get()} " +
                         "actBumpNoRow=${activityDao.bumpNoRowCalls.get()} " +
-                        "actExceptions=${activityDao.diagExceptionCount.get()}" +
+                        "actExceptions=${activityDao.diagExceptionCount.get()} " +
+                        "actLastTotal=${activityDao.lastTotalSessionValue.get()}" +
                         (if (activityDao.diagExceptions.isEmpty()) ""
                          else " exc=${activityDao.diagExceptions.joinToString("; ")}") + "\n"
-            )
+                )
+                val writes = activityDao.rowWriteLog
+                if (writes.isNotEmpty()) {
+                    append(
+                        "ROW-WRITES total=${activityDao.rowWriteSeq.get()} " +
+                            "captured=${writes.size}\n"
+                    )
+                    writes.forEach { append("  $it\n") }
+                }
+            }
+            java.io.File(dir, "$stamp.txt").writeText(body)
         }
     }
 
