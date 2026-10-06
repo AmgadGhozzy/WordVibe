@@ -186,7 +186,12 @@ class FakeWordDao(
 
 class FakeQuizAttemptDao : QuizAttemptDao {
     val events = java.util.concurrent.CopyOnWriteArrayList<QuizAttemptEntity>()
+    // Diagnostic counters (round-8 item 2): call counts for the durable-tap persist path.
+    val insertCalls = java.util.concurrent.atomic.AtomicInteger()
+    val getByIdCalls = java.util.concurrent.atomic.AtomicInteger()
+    val markAppliedCalls = java.util.concurrent.atomic.AtomicInteger()
     override suspend fun insert(attempt: QuizAttemptEntity) {
+        insertCalls.incrementAndGet()
         if (attempt.idempotencyKey != null &&
             events.any { it.idempotencyKey == attempt.idempotencyKey }
         ) {
@@ -197,8 +202,10 @@ class FakeQuizAttemptDao : QuizAttemptDao {
     override suspend fun insertAll(attempts: List<QuizAttemptEntity>) {
         attempts.forEach { insert(it) }
     }
-    override suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity? =
-        events.firstOrNull { it.idempotencyKey == key }
+    override suspend fun getByIdempotencyKey(key: String): QuizAttemptEntity? {
+        getByIdCalls.incrementAndGet()
+        return events.firstOrNull { it.idempotencyKey == key }
+    }
     override suspend fun getProductionAttemptCounts(
         userId: String
     ): List<com.venom.data.local.dao.ProductionAttemptCount> =
@@ -211,6 +218,7 @@ class FakeQuizAttemptDao : QuizAttemptDao {
             !it.projectionApplied && it.idempotencyKey != null && it.userId == userId
         }.take(limit)
     override suspend fun markApplied(key: String) {
+        markAppliedCalls.incrementAndGet()
         events.replaceAll {
             if (it.idempotencyKey == key) it.copy(projectionApplied = true) else it
         }
