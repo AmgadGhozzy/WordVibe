@@ -42,6 +42,16 @@ import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
+ * PERMANENT CONTAINER RULE (ticket 11, PM round-7): the shared fakes below are
+ * written from repository consumers running on Dispatchers.IO and read back from
+ * test threads, so every mutable container in a fixture MUST be thread-safe:
+ * ConcurrentHashMap for maps and CopyOnWriteArrayList for lists. The unsanctioned
+ * mutable constructors (mutableMapOf / mutableListOf / raw ArrayList) are banned
+ * in this whole file, comment lines aside — HarnessContainerHygieneTest enforces
+ * the ban mechanically. Extend the fakes with those two thread-safe types only.
+ */
+
+/**
  * Phase 0 VM test harness: the real repositories over functional in-memory DAO fakes
  * (same style as LearningLoopIntegrationTest), plus an identity/config/analytics fake
  * set, so WordMasteryViewModel and SpellingGameViewModel run on the JVM.
@@ -318,7 +328,7 @@ class FakeActivityDao : UserActivityDao {
 }
 
 class FakeProfileDao : UserProfileDao {
-    val store = mutableMapOf<String, UserProfileEntity>()
+    val store = java.util.concurrent.ConcurrentHashMap<String, UserProfileEntity>()
     override suspend fun upsert(entity: UserProfileEntity) {
         store[entity.userId] = entity
     }
@@ -371,7 +381,7 @@ class FakeProfileDao : UserProfileDao {
 }
 
 class FakeXpEventDao : XpEventDao {
-    val events = mutableListOf<XpEventEntity>()
+    val events = java.util.concurrent.CopyOnWriteArrayList<XpEventEntity>()
     override suspend fun insert(event: XpEventEntity) {
         events += event
     }
@@ -446,7 +456,7 @@ class VmSessionHarness(
     private val dataStoreFile: File = File.createTempFile("vm_harness", ".preferences_pb")
         .apply { deleteOnExit(); delete() }
 
-    private val dataStoreFailures = mutableListOf<Throwable>()
+    private val dataStoreFailures = java.util.concurrent.CopyOnWriteArrayList<Throwable>()
 
     // A late actor failure is captured here and rethrown by close(), so it fails the
     // OWNING test instead of leaking as a process-level uncaught exception that
