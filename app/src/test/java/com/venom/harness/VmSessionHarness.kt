@@ -301,6 +301,26 @@ class FakeActivityDao : UserActivityDao {
             throw t
         }
     }
+
+    override suspend fun insertOrIgnore(entity: UserActivityEntity): Long {
+        upsertCalls.incrementAndGet()
+        return try {
+            val key = entity.userId to entity.dateKey
+            // Atomic putIfAbsent: mirrors Room's INSERT OR IGNORE. A naive
+            // containsKey+put here re-introduced the ticket-11 lost-update
+            // race between concurrent day-start callers.
+            val previous = rows.putIfAbsent(key, entity)
+            if (previous == null) {
+                recordRowWrite("insertOrIgnore", key, entity)
+                1L
+            } else {
+                -1L
+            }
+        } catch (t: Throwable) {
+            recordDiagException("insertOrIgnore", t)
+            throw t
+        }
+    }
     override suspend fun getActivityForDate(
         userId: String,
         dateKey: String

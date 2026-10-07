@@ -152,6 +152,7 @@ class StateSemanticsContractTest {
     }
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun insertOrIgnore(entity: UserActivityEntity): Long = -1L
         override suspend fun upsert(entity: UserActivityEntity) {}
         override suspend fun getActivityForDate(
             userId: String,

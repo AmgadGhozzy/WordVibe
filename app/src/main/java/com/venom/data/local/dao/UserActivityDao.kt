@@ -1,6 +1,8 @@
 package com.venom.data.local.dao
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
 import com.venom.data.local.entity.UserActivityEntity
@@ -10,6 +12,14 @@ interface UserActivityDao {
 
     @Upsert
     suspend fun upsert(entity: UserActivityEntity)
+
+    /**
+     * Ticket 14: atomic day-row creation on the composite (userId, dateKey)
+     * key. Returns the inserted rowId, or -1 when the row already exists
+     * (concurrent creator wins) — callers gate day-start side effects on it.
+     */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertOrIgnore(entity: UserActivityEntity): Long
 
     @Query("SELECT * FROM userActivity WHERE userId = :userId AND dateKey = :dateKey")
     suspend fun getActivityForDate(userId: String, dateKey: String): UserActivityEntity?

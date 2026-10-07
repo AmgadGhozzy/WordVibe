@@ -33,6 +33,10 @@ class StreakProgressContractTest {
         LocalDate.now().plusDays(offsetDays).format(fmt)
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun insertOrIgnore(entity: UserActivityEntity): Long {
+            val key = entity.userId to entity.dateKey
+            return if (rows.containsKey(key)) -1L else { rows[key] = entity; 1L }
+        }
         val rows = mutableMapOf<Pair<String, String>, UserActivityEntity>()
         override suspend fun upsert(entity: UserActivityEntity) {
             rows[entity.userId to entity.dateKey] = entity

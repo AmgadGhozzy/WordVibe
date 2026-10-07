@@ -174,6 +174,7 @@ class LearningLoopIntegrationTest {
     }
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun insertOrIgnore(entity: UserActivityEntity): Long = -1L
         val rows = mutableMapOf<Pair<String, String>, UserActivityEntity>()
         override suspend fun upsert(entity: UserActivityEntity) {
             rows[entity.userId to entity.dateKey] = entity

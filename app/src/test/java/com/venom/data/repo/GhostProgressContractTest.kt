@@ -169,6 +169,7 @@ class GhostProgressContractTest {
     }
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun insertOrIgnore(entity: UserActivityEntity): Long = -1L
         private val store = mutableMapOf<Pair<String, String>, UserActivityEntity>()
         override suspend fun upsert(entity: UserActivityEntity) {
             store[entity.userId to entity.dateKey] = entity

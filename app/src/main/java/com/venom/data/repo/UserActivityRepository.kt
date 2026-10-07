@@ -48,18 +48,28 @@ class UserActivityRepository @Inject constructor(
             ).also { profileDao.upsert(it) }
         }
 
+    /**
+     * Ticket 14: idempotent under concurrency. The day row is created with
+     * INSERT OR IGNORE (atomic on the composite (userId, dateKey) key), and
+     * `updateStreakOnNewDay` runs ONLY in the coroutine that actually created
+     * the row — a second concurrent caller's insert is ignored (rowId = -1),
+     * so milestone/first-session XP can no longer be doubled by the
+     * consumer-vs-finalizeSession interleaving.
+     */
     suspend fun ensureTodayExists(userId: String) {
         val todayKey = today()
         if (activityDao.getActivityForDate(userId, todayKey) == null) {
             val profile = getOrCreateProfile(userId)
-            activityDao.upsert(
+            val created = activityDao.insertOrIgnore(
                 UserActivityEntity(
                     userId = userId,
                     dateKey = todayKey,
                     dailyGoalTarget = profile.dailyGoalXp
                 )
             )
-            updateStreakOnNewDay(userId)
+            if (created != -1L) {
+                updateStreakOnNewDay(userId)
+            }
         }
     }
 
