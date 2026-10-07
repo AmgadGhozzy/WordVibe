@@ -37,6 +37,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
 import java.util.concurrent.atomic.AtomicInteger
@@ -72,7 +74,18 @@ class FakeRemoteConfig : IRemoteConfig {
 }
 
 class FakeTransactions : TransactionRunner {
-    override suspend fun <T> withTransaction(block: suspend () -> T): T = block()
+    private val mutex = Mutex()
+
+    /**
+     * Serialized (PM round-13 item 3): production Room runs withTransaction blocks
+     * atomically, so the fake must not let concurrent transactional blocks interleave
+     * either — otherwise the same read-modify-write lost-update family fixed in
+     * ticket 11 could reproduce in the test lens only. Fair (FIFO) Mutex = blocks
+     * execute one at a time in acquisition order. Non-reentrant is safe: no
+     * withTransaction site ever nests another one.
+     */
+    override suspend fun <T> withTransaction(block: suspend () -> T): T =
+        mutex.withLock { block() }
 }
 
 class FakeProgressDao : UserWordProgressDao {
