@@ -25,9 +25,11 @@ local.properties
 # Playwright MCP tool artifacts (snapshots, logs)
 /.playwright-mcp/
 
-# Local agent working files (tracker, specs, domain notes) — never committed
+# Local agent working files (tracker, specs, domain notes) — never committed,
+# except docs/adr/ which is tracked per PM ruling (B's docs clearance on record)
 /.scratch/
-/docs/
+/docs/*
+!/docs/adr/
 CONTEXT.md
 AGENTS.md
 
