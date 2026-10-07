@@ -37,6 +37,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -175,6 +177,13 @@ class WordMasteryViewModel @Inject constructor(
     private var sessionEngine: WordSessionEngine? = null
 
     private val dbOperationChannel = Channel<DbOperation>(Channel.BUFFERED)
+
+    /**
+     * Ticket 13: serializes the per-swipe durable writes so two consecutive
+     * taps persist in call order (SRS is order-sensitive). IO pool ordering
+     * is not contractual, hence the explicit mutex.
+     */
+    private val durableWriteMutex = Mutex()
     private val wordProgressCache = ConcurrentHashMap<Int, CurrentWordProgress>()
     private val dbSupervisorJob = SupervisorJob()
 
@@ -453,11 +462,13 @@ class WordMasteryViewModel @Inject constructor(
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
                     val userId = identityRepository.getCurrentUserId()
-                    progressRepository.recordRecallSuccess(
-                        userId, decision.recall.wordId, decision.recall.idempotencyKey,
-                        decision.recall.sessionId
-                    )
-                    applyRecallCounters(userId, decision.recall.wordId)
+                    durableWriteMutex.withLock {
+                        progressRepository.recordRecallSuccess(
+                            userId, decision.recall.wordId, decision.recall.idempotencyKey,
+                            decision.recall.sessionId
+                        )
+                        applyRecallCounters(userId, decision.recall.wordId)
+                    }
                 } catch (e: Exception) {
                     if (e !is CancellationException) {
                         crashlyticsManager.logNonFatalException(e, "Recall success persist failed")
@@ -504,10 +515,12 @@ class WordMasteryViewModel @Inject constructor(
             viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
                 try {
                     val userId = identityRepository.getCurrentUserId()
-                    progressRepository.recordRecallFail(
-                        userId, decision.recall.wordId, decision.recall.idempotencyKey,
-                        decision.recall.sessionId
-                    )
+                    durableWriteMutex.withLock {
+                        progressRepository.recordRecallFail(
+                            userId, decision.recall.wordId, decision.recall.idempotencyKey,
+                            decision.recall.sessionId
+                        )
+                    }
                 } catch (e: Exception) {
                     if (e !is CancellationException) {
                         crashlyticsManager.logNonFatalException(e, "Recall fail persist failed")

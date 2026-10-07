@@ -142,6 +142,24 @@ class DurableFirstTapPersistenceTest {
     }
 
     @Test
+    fun `T3 - forgotten-then-remembered taps persist in call order (AGAIN then GOOD)`() {
+        kotlinx.coroutines.runBlocking {
+            val vm = viewModel()
+
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = false))
+            vm.onEvent(WordMasteryEvent.SwipeCard(testWord(7), isRemembered = true))
+            harness.await(scheduler) { harness.quizDao.events.size == 2 }
+            scheduler.advanceUntilIdle()
+
+            val order = harness.quizDao.events.map { if (it.isCorrect) "GOOD" else "AGAIN" }
+            assertEquals(
+                listOf("AGAIN", "GOOD"), order,
+                "durable writes must land in tap order (SRS is order-sensitive)"
+            )
+        }
+    }
+
+    @Test
     fun `T2 - process death after insert before projection - fresh VM replays projection exactly once`() {
         kotlinx.coroutines.runBlocking {
             // Simulate what a process death after the durable insert leaves on
