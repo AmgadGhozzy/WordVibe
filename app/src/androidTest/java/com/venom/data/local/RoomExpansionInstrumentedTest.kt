@@ -7,6 +7,9 @@ import com.venom.data.corpus.CorpusSeeder
 import com.venom.data.local.entity.UserWordProgressEntity
 import com.venom.data.local.entity.WordMasterEntity
 import com.venom.data.repo.StubWordMasterRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -118,5 +121,57 @@ class RoomExpansionInstrumentedTest {
         
         // 8. Verify the total word count is exactly 2
         assertEquals(2, wordDao.getWordCount())
+    }
+
+    @Test
+    fun testExpansionBatchConcurrentStressTest() = runBlocking {
+        val wordDao = database.wordMasterDao()
+        
+        // Setup Seeder
+        class FakeSeedFlagStore(var version: Int = 0) : com.venom.data.corpus.SeedFlagStore {
+            override suspend fun isSeeded(): Boolean = version > 0
+            override suspend fun setSeeded() { version = 1 }
+            override suspend fun getCorpusVersion(): Int = version
+            override suspend fun setCorpusVersion(newVersion: Int) { version = newVersion }
+        }
+        val repo = StubWordMasterRepository(wordDao)
+        val flags = FakeSeedFlagStore(0) // Start unseeded
+        val seeder = CorpusSeeder(repo, flags)
+        
+        val batchJson = """
+            {"words": [
+                {
+                    "id": 1001, "wordEn": "concurrency", "pos": "noun",
+                    "cefrLevel": "B2", "rank": 6001, "frequency": 3,
+                    "phoneticUs": "kənˈkɜːrənsi", "phoneticAr": "كونكورنسي", "translit": "kankwrnsy",
+                    "definitionEn": "The property of executing multiple parts.",
+                    "arabicAr": "تزامن", "examples": {"B2": "The concurrency of the system."},
+                    "wordFamily": {"noun": "concurrency"}, "checklist": ["lemma"],
+                    "collocations": ["high concurrency"], "synonyms": ["simultaneity"],
+                    "recallTarget": "The ______ of the system.", "productionExpected": "concurrency",
+                    "productionVariants": [], "sourceRef": "stress-test", "ieltsTopic": "Technology",
+                    "ieltsRelevance": "Relevant.", "reviewer": "pilot", "reviewedAt": "2026-10-09"
+                }
+            ]}
+        """.trimIndent()
+
+        // Launch 100 concurrent seed operations
+        val jobs = (1..100).map {
+            kotlinx.coroutines.GlobalScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                try {
+                    seeder.applyExpansionBatch(batchJson, 2)
+                } catch (e: Exception) {
+                    // It's possible some throw due to locking or validation, which we will record.
+                    // Actually, if it's safe, they should just no-op or succeed identically.
+                }
+            }
+        }
+        
+        jobs.forEach { it.join() }
+        
+        // Verify exactly one word was inserted and the DB isn't corrupted
+        assertEquals(1, wordDao.getWordCount())
+        assertEquals("concurrency", wordDao.getWordById(1001)?.wordEn)
+        assertEquals(2, flags.getCorpusVersion())
     }
 }
