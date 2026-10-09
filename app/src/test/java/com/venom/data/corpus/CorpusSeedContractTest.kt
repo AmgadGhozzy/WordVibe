@@ -198,12 +198,36 @@ class CorpusSeedContractTest {
 
         seeder.applyExpansionBatch(expansionBatchJson, 2)
         assertEquals(1, repo.inserted.size)
+        val originalWordEn = repo.inserted.first().wordEn
+        assertEquals("expansion", originalWordEn)
         
+        // Simulating the scenario where the version was reset or another batch with same id arrives
         flags.version = 1
-        val duplicateInsert = seeder.applyExpansionBatch(expansionBatchJson, 2)
+        
+        // Modify the JSON but keep the same ID to verify it ignores instead of replacing
+        val modifiedBatchJson = """
+        {"words": [{
+            "id": 1001, "wordEn": "growth", "pos": "noun",
+            "cefrLevel": "B2", "rank": 6001, "frequency": 3,
+            "phoneticUs": "ɡroʊθ", "phoneticAr": "جروث", "translit": "Numuw",
+            "definitionEn": "The process of increasing.",
+            "arabicAr": "نمو", "examples": {"B2": "The growth of the company."},
+            "wordFamily": {"noun": "growth"},
+            "checklist": ["lemma"],
+            "collocations": ["rapid growth"], "synonyms": ["expansion"],
+            "recallTarget": "The ______ of the company.",
+            "productionExpected": "growth", "productionVariants": [],
+            "sourceRef": "expansion-batch-1", "ieltsTopic": "Economy",
+            "ieltsRelevance": "Relevant.",
+            "reviewer": "pilot", "reviewedAt": "2026-10-09"
+        }]}
+    """.trimIndent()
+        
+        val duplicateInsert = seeder.applyExpansionBatch(modifiedBatchJson, 2)
         
         assertEquals(1, duplicateInsert)
         assertEquals(1, repo.inserted.size, "Duplicate ID was ignored, not appended")
+        assertEquals("expansion", repo.inserted.first().wordEn, "Original content is untouched, proving IGNORE semantics")
     }
 
     @Test
@@ -216,7 +240,50 @@ class CorpusSeedContractTest {
         assertEquals(0, pilotResult, "Pilot seeding is skipped because seeded=true")
 
         val expansionResult = seeder.applyExpansionBatch(expansionBatchJson, 2)
-        assertEquals(1, expansionResult, "Expansion batch is applied regardless of seeded state")
+        assertEquals(1, expansionResult, "Expansion batch is applied regardless of seeded state (version 1 implies pilot)")
         assertEquals(2, flags.version)
+    }
+    
+    @Test
+    fun `atomic failure test - crash between insert and version bump allows safe replay`() = runTest {
+        val repo = FakeWordRepo()
+        val flags = FakeFlagStore(version = 1)
+        val seeder = CorpusSeeder(repo, flags)
+        
+        // Simulate a crash during the first application
+        // We will directly inject the word into the repo (as if DAO succeeded but process died before version bump)
+        val words = parseCorpus(expansionBatchJson)
+        repo.insertWordsOrIgnore(words)
+        
+        // The version is STILL 1 due to the crash.
+        assertEquals(1, flags.version)
+        assertEquals(1, repo.inserted.size)
+        
+        // Process restarts and re-runs the seeder with version 2
+        val replayResult = seeder.applyExpansionBatch(expansionBatchJson, 2)
+        
+        // Insert runs again but IGNORE handles it. 
+        assertEquals(1, replayResult) 
+        assertEquals(1, repo.inserted.size, "Repo size should not increase on replay")
+        assertEquals(2, flags.version, "Version successfully bumps on replay")
+    }
+    
+    @Test
+    fun `upgrade test - structural isolation ensures progress data cannot be touched`() = runTest {
+        // This is a design verification test requested by the PM: 
+        // We prove that CorpusSeeder physically cannot modify userWordProgress because it 
+        // accepts strictly IWordMasterRepository and SeedFlagStore as dependencies. 
+        // It has no reference to UserWordProgressRepository.
+        val repo = FakeWordRepo()
+        val flags = FakeFlagStore(version = 1)
+        val seeder = CorpusSeeder(repo, flags)
+        
+        val fields = seeder::class.java.declaredFields
+        val hasProgressDep = fields.any { it.type.name.contains("Progress") }
+        
+        assertTrue(
+            !hasProgressDep, 
+            "CorpusSeeder must not hold a dependency on progress tracking, guaranteeing isolation during upgrades"
+        )
     }
 }

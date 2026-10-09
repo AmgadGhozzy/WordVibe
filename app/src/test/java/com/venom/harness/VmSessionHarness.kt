@@ -560,6 +560,7 @@ class FakeWordMasterRepository(private val wordDao: FakeWordDao) : IWordMasterRe
     override suspend fun getWordCount(): Int = wordDao.getWordCount()
     override suspend fun countWordsByCefr(level: CefrLevel): Int = wordDao.getCountByCefr(level.name)
     override suspend fun insertWords(words: List<WordMaster>) {}
+    override suspend fun insertWordsOrIgnore(words: List<WordMaster>) {}
     override suspend fun getRandomWords(limit: Int): List<WordMaster> =
         wordDao.getRandomWords(limit)
             .map { com.venom.data.mapper.WordMasterEntityMapper.toDomain(it) }
