@@ -10,6 +10,7 @@ object PreferencesKeys {
     val PLACEMENT_COMPLETED: Preferences.Key<Boolean> = booleanPreferencesKey("placement_completed")
     val ASSIGNED_UNIT: Preferences.Key<Int> = intPreferencesKey("assigned_unit")
     val SEED_COMPLETED: Preferences.Key<Boolean> = booleanPreferencesKey("corpus_seed_completed")
+    val CORPUS_VERSION: Preferences.Key<Int> = intPreferencesKey("corpus_version")
     val ONBOARDING_DONE: Preferences.Key<Boolean> = booleanPreferencesKey("onboarding_done")
 
     // Spelling hint budget (ADR-0009)

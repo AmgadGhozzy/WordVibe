@@ -43,6 +43,10 @@ class StubWordMasterRepository @Inject constructor(
         wordMasterDao.insertAll(words.map { WordMasterEntityMapper.toEntity(it) })
     }
 
+    override suspend fun insertWordsOrIgnore(words: List<WordMaster>) {
+        wordMasterDao.insertAllOrIgnore(words.map { WordMasterEntityMapper.toEntity(it) })
+    }
+
     override suspend fun getRandomWords(limit: Int): List<WordMaster> {
         return wordMasterDao.getRandomWords(limit).map { WordMasterEntityMapper.toDomain(it) }
     }

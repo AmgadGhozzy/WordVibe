@@ -26,6 +26,16 @@ interface IWordMasterRepository {
 
     suspend fun insertWords(words: List<WordMaster>)
 
+    /**
+     * Ticket 15 (versioned seeding): INSERT OR IGNORE semantics — an existing
+     * word (reviewed pilot row or previously-seeded expansion row) is never
+     * replaced. Default delegates to [insertWords] for legacy implementations;
+     * production implementations override with IGNORE on their DAO.
+     */
+    suspend fun insertWordsOrIgnore(words: List<WordMaster>) {
+        insertWords(words)
+    }
+
     /** Get random words (for fallback / topic-based loading). */
     suspend fun getRandomWords(limit: Int = 15): List<WordMaster>
 }

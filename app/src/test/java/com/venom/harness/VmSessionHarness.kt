@@ -192,6 +192,9 @@ class FakeWordDao(
     override suspend fun insertAll(words: List<WordMasterEntity>) {
         words.forEach { insert(it) }
     }
+    override suspend fun insertAllOrIgnore(words: List<WordMasterEntity>) {
+        words.forEach { if (store[it.id] == null) insert(it) }
+    }
     override suspend fun insert(word: WordMasterEntity) {
         store[word.id] = word
     }

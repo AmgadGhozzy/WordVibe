@@ -93,6 +93,9 @@ interface WordMasterDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(words: List<WordMasterEntity>)
 
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertAllOrIgnore(words: List<WordMasterEntity>)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(word: WordMasterEntity)
 }

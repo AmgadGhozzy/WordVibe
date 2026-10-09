@@ -66,6 +66,7 @@ class GhostProgressContractTest {
             limit: Int
         ): List<WordMasterEntity> = emptyList()
         override suspend fun insertAll(words: List<WordMasterEntity>) {}
+        override suspend fun insertAllOrIgnore(words: List<WordMasterEntity>) {}
 
         override suspend fun insert(word: WordMasterEntity) {}
     }

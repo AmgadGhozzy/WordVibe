@@ -261,10 +261,12 @@ fun parseCorpus(json: String): List<WordMaster> {
     }
 }
 
-/** Persisted first-launch flag, abstracted for tests. */
+/** Persisted first-launch flag and corpus version, abstracted for tests. */
 interface SeedFlagStore {
     suspend fun isSeeded(): Boolean
     suspend fun setSeeded()
+    suspend fun getCorpusVersion(): Int
+    suspend fun setCorpusVersion(version: Int)
 }
 
 class DataStoreSeedFlag(private val dataStore: DataStore<Preferences>) : SeedFlagStore {
@@ -273,6 +275,13 @@ class DataStoreSeedFlag(private val dataStore: DataStore<Preferences>) : SeedFla
 
     override suspend fun setSeeded() {
         dataStore.edit { it[PreferencesKeys.SEED_COMPLETED] = true }
+    }
+
+    override suspend fun getCorpusVersion(): Int =
+        dataStore.data.map { it[PreferencesKeys.CORPUS_VERSION] ?: 1 }.first()
+
+    override suspend fun setCorpusVersion(version: Int) {
+        dataStore.edit { it[PreferencesKeys.CORPUS_VERSION] = version }
     }
 }
 
@@ -293,6 +302,25 @@ class CorpusSeeder(
         val words = parseCorpus(json)
         wordRepo.insertWords(words)
         flags.setSeeded()
+        words.size
+    }
+
+    /**
+     * Applies a corpus expansion batch. Validates the package, ensures all ids >= 1001,
+     * uses INSERT OR IGNORE semantics so it is idempotent, and updates the corpusVersion.
+     * Throws CorpusValidationException on any violation, rejecting the entire batch.
+     */
+    suspend fun applyExpansionBatch(json: String, batchVersion: Int): Int = withContext(Dispatchers.IO) {
+        if (flags.getCorpusVersion() >= batchVersion) return@withContext 0
+        
+        val words = parseCorpus(json)
+        val invalidIds = words.filter { it.id < 1001 }.map { it.id }
+        if (invalidIds.isNotEmpty()) {
+            throw CorpusValidationException(listOf("Expansion batch contains ids < 1001: $invalidIds"))
+        }
+        
+        wordRepo.insertWordsOrIgnore(words)
+        flags.setCorpusVersion(batchVersion)
         words.size
     }
 }
