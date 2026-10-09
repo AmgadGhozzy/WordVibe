@@ -79,10 +79,6 @@ fun OverviewTab(
         derivedStateOf { word.semanticTags.isNotEmpty() }
     }
 
-    val isOxfordCore by remember(word.fromOxford) {
-        derivedStateOf { word.fromOxford == 1 }
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -100,11 +96,6 @@ fun OverviewTab(
 
         // 2. Frequency widget
         FrequencyWidget(frequency = word.frequency)
-
-        // 3. Oxford Core badge
-        if (isOxfordCore) {
-            OxfordCoreBadge()
-        }
 
         // 4. Semantic Cloud
         if (hasSemanticTags) {
@@ -240,48 +231,6 @@ private fun YourProgressCard(
     }
 }
 
-
-@Composable
-private fun OxfordCoreBadge(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.adp))
-            .background(MaterialTheme.colorScheme.primary.copy(0.1f))
-            .border(
-                1.adp,
-                MaterialTheme.colorScheme.primary.copy(0.2f),
-                RoundedCornerShape(16.adp)
-            )
-            .padding(16.adp),
-        horizontalArrangement = Arrangement.spacedBy(12.adp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_seal_check),
-            contentDescription = null,
-            modifier = Modifier
-                .padding(top = 4.adp)
-                .size(20.adp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(4.adp)) {
-            Text(
-                text = stringResource(R.string.mastery_oxford_core).uppercase(),
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.asp
-                ),
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = stringResource(R.string.mastery_oxford_description),
-                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.asp),
-                color = MaterialTheme.colorScheme.primary.copy(0.7f)
-            )
-        }
-    }
-}
 
 @Composable
 private fun SemanticCloudSection(

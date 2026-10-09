@@ -158,18 +158,8 @@ fun CardFront(
                         modifier = Modifier.padding(end = 8.adp)
                     )
 
-                    // Oxford badge + Rank
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(2.adp)
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_seal_check),
-                            contentDescription = stringResource(R.string.mastery_oxford_badge),
-                            modifier = Modifier.size(22.adp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
+                    // Rank (Oxford seal removed - provenance unverified per ADR-0012)
+                    Text(
                             text = "#${word.rank}",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontSize = 9.asp,
@@ -177,7 +167,6 @@ fun CardFront(
                             ),
                             color = difficultyTheme.text
                         )
-                    }
                 }
 
                 // Syllables

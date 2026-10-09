@@ -140,9 +140,6 @@
     <string name="mastery_insights">رؤى</string>
     <string name="mastery_meaning">المعنى</string>
     <string name="mastery_next_review">المراجعة القادمة</string>
-    <string name="mastery_oxford_badge">مفردات أوكسفورد الأساسية</string>
-    <string name="mastery_oxford_core">أوكسفورد الأساسية</string>
-    <string name="mastery_oxford_description">هذه الكلمة جزء من مفردات أوكسفورد 3000™ الأساسية، الضرورية لمتعلمي الإنجليزية.</string>
     <string name="mastery_pin">ثبّت اللغة</string>
     <string name="mastery_pin_language_hint">اضغط على لغة لتثبيتها على وجه البطاقة. اضغط مجدداً لإلغاء التثبيت.</string>
     <string name="mastery_power">القوة</string>
