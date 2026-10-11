@@ -77,16 +77,15 @@ interface WordMasterDao {
 
     @Query("""
         SELECT w.* FROM wordsMaster w
-        LEFT JOIN userWordProgress p
-          ON p.wordId = w.id AND p.userId = :userId
-        WHERE (p.wordId IS NULL OR p.knownState != 'MASTERED')
-          AND w.id NOT IN (:excludeIds)
+        WHERE NOT EXISTS (
+          SELECT 1 FROM userWordProgress p
+          WHERE p.wordId = w.id AND p.userId = :userId AND p.knownState = 'MASTERED'
+        )
         ORDER BY RANDOM()
         LIMIT :limit
     """)
     suspend fun getRandomNotMasteredWordsForUser(
         userId: String,
-        excludeIds: List<Int>,
         limit: Int
     ): List<WordMasterEntity>
 

@@ -186,9 +186,10 @@ class FakeWordDao(
     ): List<WordMasterEntity> = store.values.take(limit)
     override suspend fun getRandomNotMasteredWordsForUser(
         userId: String,
-        excludeIds: List<Int>,
         limit: Int
-    ): List<WordMasterEntity> = store.values.filter { it.id !in excludeIds }.take(limit)
+    ): List<WordMasterEntity> = store.values.filter { w ->
+        progress?.rows?.get(userId to w.id)?.knownState != "MASTERED"
+    }.take(limit)
     override suspend fun insertAll(words: List<WordMasterEntity>) {
         words.forEach { insert(it) }
     }

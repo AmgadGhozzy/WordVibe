@@ -62,7 +62,6 @@ class GhostProgressContractTest {
         ): List<WordMasterEntity> = emptyList()
         override suspend fun getRandomNotMasteredWordsForUser(
             userId: String,
-            excludeIds: List<Int>,
             limit: Int
         ): List<WordMasterEntity> = emptyList()
         override suspend fun insertAll(words: List<WordMasterEntity>) {}

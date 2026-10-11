@@ -44,6 +44,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+        override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_wordsMaster_cefrLevel` ON `wordsMaster` (`cefrLevel`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_wordsMaster_rank` ON `wordsMaster` (`rank`)")
+        }
+    }
+
     /**
      * Migration policy (frozen, pre-production): no migrations ship for existing users
      * because there are none — version 1 with exported schema in `schemas/` is the
@@ -58,7 +65,8 @@ object AppModule {
             context,
             WordVibeDatabase::class.java,
             "wordvibe.db"
-        ).build()
+        ).addMigrations(MIGRATION_1_2)
+         .build()
     }
 
     @Provides

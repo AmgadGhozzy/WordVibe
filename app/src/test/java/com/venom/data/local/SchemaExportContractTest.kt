@@ -20,4 +20,14 @@ class SchemaExportContractTest {
                 "every future version bump starts from this file"
         )
     }
+
+    @Test
+    fun `v2 schema is exported`() {
+        val schema = File("schemas/com.venom.data.local.WordVibeDatabase/2.json")
+
+        assertTrue(
+            schema.isFile,
+            "Room schema v2 must be exported (exportSchema + schemaLocation)"
+        )
+    }
 }

@@ -3,7 +3,13 @@ package com.venom.data.local.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "wordsMaster")
+@Entity(
+    tableName = "wordsMaster",
+    indices = [
+        androidx.room.Index(value = ["cefrLevel"]),
+        androidx.room.Index(value = ["rank"])
+    ]
+)
 data class WordMasterEntity(
     @PrimaryKey val id: Int,
     val wordEn: String? = null,

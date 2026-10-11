@@ -100,6 +100,7 @@ converter-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.r
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+androidx-room-testing = { module = "androidx.room:room-testing", version.ref = "roomRuntime" }
 
 # Compose
 compose-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "composeAnimation" }

@@ -30,7 +30,7 @@ import com.venom.data.local.entity.XpEventEntity
         QuizAttemptEntity::class,
         UsageDailyEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class WordVibeDatabase : RoomDatabase() {
