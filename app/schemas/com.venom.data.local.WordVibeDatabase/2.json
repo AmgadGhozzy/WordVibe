@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "087e01b136f9fae2ed122a55991ed671",
+    "identityHash": "31dc57b6a8d02c74d7ebe3e4d4ec3e8d",
     "entities": [
       {
         "tableName": "userIdentity",
@@ -602,13 +602,14 @@
         },
         "indices": [
           {
-            "name": "index_wordsMaster_cefrLevel",
+            "name": "index_wordsMaster_cefrLevel_rank",
             "unique": false,
             "columnNames": [
-              "cefrLevel"
+              "cefrLevel",
+              "rank"
             ],
             "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_wordsMaster_cefrLevel` ON `${TABLE_NAME}` (`cefrLevel`)"
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_wordsMaster_cefrLevel_rank` ON `${TABLE_NAME}` (`cefrLevel`, `rank`)"
           },
           {
             "name": "index_wordsMaster_rank",
@@ -918,7 +919,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '087e01b136f9fae2ed122a55991ed671')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '31dc57b6a8d02c74d7ebe3e4d4ec3e8d')"
     ]
   }
 }

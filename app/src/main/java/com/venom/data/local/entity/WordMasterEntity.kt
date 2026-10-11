@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(
     tableName = "wordsMaster",
     indices = [
-        androidx.room.Index(value = ["cefrLevel"]),
+        androidx.room.Index(value = ["cefrLevel", "rank"]),
         androidx.room.Index(value = ["rank"])
     ]
 )

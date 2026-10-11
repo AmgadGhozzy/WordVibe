@@ -80,7 +80,7 @@ class RoomMigrationInstrumentedTest {
 
         // Verify indexes exist in sqlite_master
         db.query(
-            "SELECT name FROM sqlite_master WHERE type='index' AND (name='index_wordsMaster_cefrLevel' OR name='index_wordsMaster_rank')"
+            "SELECT name FROM sqlite_master WHERE type='index' AND (name='index_wordsMaster_cefrLevel_rank' OR name='index_wordsMaster_rank')"
         ).use { indexCursor ->
             var count = 0
             while (indexCursor.moveToNext()) {

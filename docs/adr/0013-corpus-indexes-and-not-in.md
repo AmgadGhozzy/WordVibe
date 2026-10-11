@@ -1,9 +1,8 @@
 # ADR-0013 — Corpus indexes (migration #2) and the end of the NOT IN binder risk
 
 Date: 2026-10-06
-Status: Proposed — written to disk per PM round-16; tracked in a commit only
-after PM approval (docs/adr/ is now repo-tracked, so this file sits untracked
-until then).
+Status: Proposed — tracked on branch ticket16/indexes-and-migration per
+PM round-16; pending final merge approval.
 Related: ADR-0012 (corpus expansion to 4,777 candidates), db-audit REPORT.md
 §8, tickets 15/16, the frozen new/due definitions and P-01 state semantics.
 
@@ -22,8 +21,10 @@ Related: ADR-0012 (corpus expansion to 4,777 candidates), db-audit REPORT.md
 ## Decision
 
 1. **Migration #2 (version 1 → 2), additive only**: `CREATE INDEX IF NOT
-   EXISTS index_wordsMaster_cefrLevel ON wordsMaster(cefrLevel)` and the same
-   for `rank`; `@Entity` indices mirrored so Room emits them itself. No table
+   EXISTS index_wordsMaster_cefrLevel_rank ON wordsMaster(cefrLevel, rank)`
+   (composite index replacing single level index) and `CREATE INDEX IF NOT
+   EXISTS index_wordsMaster_rank ON wordsMaster(rank)` (serving rank order);
+   `@Entity` indices mirrored so Room emits them itself. No table
    rebuild, no column change, **no destructive fallback** — the migration is
    idempotent CREATE INDEX statements and nothing else.
 2. **NOT EXISTS query**: Added to `WordMasterDao` as `getRandomNotMasteredWordsForUser`:
@@ -45,17 +46,26 @@ Related: ADR-0012 (corpus expansion to 4,777 candidates), db-audit REPORT.md
    rather than an in-place replacement of an existing production call,
    correctness is verified via dedicated Room instrumented tests on an actual
    database fixture covering all progress states (unseen/no-progress, NEW,
-   LEARNING, KNOWN, and MASTERED).
+   LEARNING, KNOWN, and MASTERED) and user isolation.
 
 ## Consequences
 
-- `app/schemas/…/2.json` exported and committed with the migration; schema
-  `1.json` untouched. `SchemaExportContractTest` updated and green.
+- `app/schemas/…/2.json` exported and tracked with the migration; schema
+  `1.json` untouched. `SchemaExportContractTest` updated and strictly
+  validates v2 schema structure against v1 baseline.
 - The migration test (1→2 on a DB carrying userWordProgress rows) verifies
-  both indexes exist in `sqlite_master`, all rows intact (count + checksum),
-  and the identity hash valid for v2 — instrumented (Room MigrationTestHelper),
-  device-gated.
-- Placement rungs and rank-ordered serving stop scanning; the latent 999-binder
-  crash class is eliminated by construction.
-- B's files untouched (CorpusSeeder, Application); the seeder remains
-  schema-version-1-compatible until ticket 15's versioned packages land.
+  both indexes exist in `sqlite_master`, sample rows survive intact from each
+  table, and the identity hash is valid for v2 — instrumented (Room
+  MigrationTestHelper), device-gated.
+- Placement rungs (`getWordsByLevel`) use the composite index `(cefrLevel, rank)`
+  eliminating `USE TEMP B-TREE FOR ORDER BY`; rank-ordered new-word serving
+  (`getNewWordsForUser`) uses `index_wordsMaster_rank` avoiding whole-corpus sort;
+  `getRandomNotMasteredWordsForUser` scans `wordsMaster` and orders with `RANDOM()`
+  by definition, while searching `userWordProgress` via its primary index without
+  full progress table scans; the latent 999-binder crash class is eliminated by construction.
+- **EXPLAIN QUERY PLAN evidence captured on**: SQLite 3.32.2 / Android API 33 (SM-A715F),
+  with a realistic 4,800-row `wordsMaster` corpus. API 24 (SQLite 3.9.x) verification is
+  deferred to the pre-launch gate (Phase 7). The migration is additive indexes only; the
+  worst-case outcome on an older query planner is a slower-but-correct plan, not incorrect
+  results or a crash.
+

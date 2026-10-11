@@ -46,7 +46,7 @@ object AppModule {
 
     val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
         override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
-            db.execSQL("CREATE INDEX IF NOT EXISTS `index_wordsMaster_cefrLevel` ON `wordsMaster` (`cefrLevel`)")
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_wordsMaster_cefrLevel_rank` ON `wordsMaster` (`cefrLevel`, `rank`)")
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_wordsMaster_rank` ON `wordsMaster` (`rank`)")
         }
     }
