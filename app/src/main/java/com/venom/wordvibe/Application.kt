@@ -5,6 +5,7 @@ import android.os.StrictMode
 import com.venom.data.corpus.CorpusSeeder
 import com.venom.data.corpus.CorpusSeederEntryPoint
 import com.venom.data.corpus.DataStoreSeedFlag
+import com.venom.data.corpus.ExpansionBootstrap
 import dagger.hilt.EntryPoints
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -35,11 +36,13 @@ class Application : Application() {
                     this@Application,
                     CorpusSeederEntryPoint::class.java
                 )
-                val json = assets.open("words_pilot.json").bufferedReader().use { it.readText() }
-                val inserted = CorpusSeeder(
+                val pilotJson = assets.open("words_pilot.json").bufferedReader().use { it.readText() }
+                val expansionJson = assets.open("words_expansion_v2.json").bufferedReader().use { it.readText() }
+                val seeder = CorpusSeeder(
                     entry.wordRepository(),
                     DataStoreSeedFlag(entry.dataStore())
-                ).seedIfNeeded(json)
+                )
+                val inserted = ExpansionBootstrap.seedAndExpand(seeder, pilotJson, expansionJson)
                 println("Corpus seed complete, inserted=$inserted")
             } catch (e: Exception) {
                 println("Corpus seed failed: ${e.message}")
