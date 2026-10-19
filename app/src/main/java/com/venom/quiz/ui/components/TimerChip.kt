@@ -71,7 +71,7 @@ fun TimerChip(timeRemaining: Int) {
                 modifier = Modifier.size(14.adp)
             )
             Text(
-                text = "${timeRemaining}s",
+                text = stringResource(R.string.duration_seconds, timeRemaining),
                 color = contentColor,
                 fontSize = 13.asp,
                 fontWeight = FontWeight.SemiBold

@@ -246,4 +246,21 @@
     <string name="cd_google_logo">شعار Google</string>
     <string name="onboarding_continue_google">متابعة باستخدام Google</string>
     <string name="placeholder_coming_soon">قريبًا</string>
+    <!-- Hardcoded text migration (batch 2b) -->
+    <string name="duration_seconds">%1$d ثانية</string>
+    <string name="duration_minutes">%1$d دقيقة</string>
+    <string name="duration_hours_minutes">%1$d ساعة %2$d دقيقة</string>
+    <string name="duration_less_than_minute">أقل من دقيقة</string>
+    <string name="score_correct_of_total">%1$d/%2$d</string>
+    <string name="quiz_question_index">%1$d / %2$d</string>
+    <string name="level_number_label">المستوى %1$d</string>
+    <string name="percent_value">%1$d%%</string>
+    <string name="format_label_value">%1$s: %2$s</string>
+    <string name="format_dot_value">%1$s · %2$s</string>
+    <string name="session_words_reviewed">المراجَع: %1$d كلمة</string>
+    <string name="session_words_reviewed_hm">المراجَع: %1$d كلمة · %2$d دقيقة %3$d ثانية</string>
+    <string name="session_words_reviewed_s">المراجَع: %1$d كلمة · %2$d ثانية</string>
+    <string name="cd_option">الخيار %1$s: %2$s</string>
+    <string name="progress_best_streak">أطول سلسلة: %1$d (يوم)</string>
+    <string name="progress_of_total">من %1$d</string>
 </resources>

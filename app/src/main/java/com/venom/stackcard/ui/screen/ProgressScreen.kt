@@ -210,7 +210,7 @@ private fun LevelCard(
                     color = themeColor
                 )
                 Text(
-                    text = "Level ${UserLevel.levelNumber(totalXp)}",
+                    text = stringResource(R.string.level_number_label, UserLevel.levelNumber(totalXp)),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -241,7 +241,7 @@ Text(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "${(animatedProgress * 100).toInt()}%",
+                    text = stringResource(R.string.percent_value, (animatedProgress * 100).toInt()),
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                     color = themeColor
                 )
@@ -299,7 +299,7 @@ private fun StreakCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Best: $bestStreak days",
+                    text = stringResource(R.string.progress_best_streak, bestStreak),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                 )
@@ -314,9 +314,9 @@ private fun TimeCard(totalTimeMs: Long, modifier: Modifier = Modifier) {
     val hours = (totalTimeMs / 3600000).toInt()
     val minutes = ((totalTimeMs % 3600000) / 60000).toInt()
     val timeText = when {
-        hours > 0 -> "${hours}h ${minutes}m"
-        minutes > 0 -> "${minutes}m"
-        else -> "<1m"
+        hours > 0 -> stringResource(R.string.duration_hours_minutes, hours, minutes)
+        minutes > 0 -> stringResource(R.string.duration_minutes, minutes)
+        else -> stringResource(R.string.duration_less_than_minute)
     }
 
     GlassSurface(modifier = modifier.fillMaxWidth()) {

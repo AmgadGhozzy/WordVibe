@@ -76,6 +76,8 @@ fun OptionItem(
         else -> colorScheme.onSurfaceVariant
     }
 
+    val optionDescription = stringResource(R.string.cd_option, label, option)
+
     val labelContent = when {
         isCorrectOption -> stringResource(R.string.correct_symbol)
         isIncorrectSelected -> stringResource(R.string.incorrect_symbol)
@@ -96,7 +98,7 @@ fun OptionItem(
             .semantics {
                 role = Role.RadioButton
                 selected = isSelected
-                contentDescription = "Option $label: $option"
+                contentDescription = optionDescription
                 stateDescription = stateDescriptionText
             },
         shape = RoundedCornerShape(16.adp),

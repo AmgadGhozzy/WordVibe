@@ -92,7 +92,7 @@ fun ProgressContent(
                         modifier = Modifier.padding(end = Spacing.lg),
                     ) {
                         Text(
-                            text = "${(dashboard.levelProgress * 100).toInt()}%",
+                            text = stringResource(R.string.percent_value, (dashboard.levelProgress * 100).toInt()),
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
@@ -102,13 +102,20 @@ fun ProgressContent(
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            text = stringResource(R.string.stat_best) + ": ${dashboard.bestStreak}",
+                            text = stringResource(
+                                R.string.format_label_value,
+                                stringResource(R.string.stat_best),
+                                dashboard.bestStreak,
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                         )
                         Text(
-                            text = stringResource(R.string.stat_daily_goal) + ": " +
+                            text = stringResource(
+                                R.string.format_label_value,
+                                stringResource(R.string.stat_daily_goal),
                                 stringResource(R.string.stat_xp_progress, dashboard.dailyGoalProgress, dashboard.dailyGoalTarget),
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                         )
@@ -199,8 +206,10 @@ fun ProgressContent(
         item(span = { GridItemSpan(2) }) {
             Text(
                 text = stringResource(
-                    R.string.stat_today_xp, dashboard.todayXp,
-                ) + " · " + stringResource(R.string.stat_total_xp_value, dashboard.totalXp),
+                    R.string.format_dot_value,
+                    stringResource(R.string.stat_today_xp, dashboard.todayXp),
+                    stringResource(R.string.stat_total_xp_value, dashboard.totalXp),
+                ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = Spacing.sm),

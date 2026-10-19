@@ -72,13 +72,15 @@ fun SessionProgressCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = buildString {
-                            append("${state.completed} words reviewed")
-                            if (state.sessionDurationMs > 0) {
-                                val mins = (state.sessionDurationMs / 60000).toInt()
-                                val secs = ((state.sessionDurationMs % 60000) / 1000).toInt()
-                                if (mins > 0) append(" · ${mins}m ${secs}s")
-                                else append(" · ${secs}s")
+                        text = if (state.sessionDurationMs <= 0) {
+                            stringResource(R.string.session_words_reviewed, state.completed)
+                        } else {
+                            val mins = (state.sessionDurationMs / 60000).toInt()
+                            val secs = ((state.sessionDurationMs % 60000) / 1000).toInt()
+                            if (mins > 0) {
+                                stringResource(R.string.session_words_reviewed_hm, state.completed, mins, secs)
+                            } else {
+                                stringResource(R.string.session_words_reviewed_s, state.completed, secs)
                             }
                         },
                         style = MaterialTheme.typography.bodySmall,

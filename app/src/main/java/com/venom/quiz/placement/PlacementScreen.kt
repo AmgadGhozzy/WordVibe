@@ -186,13 +186,13 @@ private fun PlacementResultScreen(
             StatCard(
                 icon = Icons.Rounded.CheckCircle,
                 label = stringResource(R.string.placement_result_correct_label),
-                value = "${result.totalCorrect}/${result.totalQuestions}",
+                value = stringResource(R.string.score_correct_of_total, result.totalCorrect, result.totalQuestions),
                 modifier = Modifier.weight(1f)
             )
             StatCard(
                 icon = Icons.Rounded.TrendingUp,
                 label = stringResource(R.string.placement_result_duration_label),
-                value = "${result.durationMs / 1000}s",
+                value = stringResource(R.string.duration_seconds, result.durationMs / 1000),
                 modifier = Modifier.weight(1f)
             )
         }

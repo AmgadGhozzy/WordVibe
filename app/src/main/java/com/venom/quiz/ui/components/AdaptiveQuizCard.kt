@@ -209,7 +209,7 @@ private fun PlacementHeader(state: QuizUiState, onBack: () -> Unit) {
             }
 
             Text(
-                text = "${state.correctCount}/${state.totalQuestions}",
+                text = stringResource(R.string.score_correct_of_total, state.correctCount, state.totalQuestions),
                 color = colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall,
                 fontWeight = FontWeight.Medium
@@ -283,7 +283,7 @@ private fun FullHeader(state: QuizUiState, onBack: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${state.currentIndex + 1} / ${state.totalQuestions}",
+                    text = stringResource(R.string.quiz_question_index, state.currentIndex + 1, state.totalQuestions),
                     color = colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium

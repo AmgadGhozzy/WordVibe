@@ -246,4 +246,21 @@
     <string name="cd_google_logo">Google Logo</string>
     <string name="onboarding_continue_google">Continue with Google</string>
     <string name="placeholder_coming_soon">Coming soon</string>
+    <!-- Hardcoded text migration (batch 2b) -->
+    <string name="duration_seconds">%1$ds</string>
+    <string name="duration_minutes">%1$dm</string>
+    <string name="duration_hours_minutes">%1$dh %2$dm</string>
+    <string name="duration_less_than_minute">&lt;1m</string>
+    <string name="score_correct_of_total">%1$d/%2$d</string>
+    <string name="quiz_question_index">%1$d / %2$d</string>
+    <string name="level_number_label">Level %1$d</string>
+    <string name="percent_value">%1$d%%</string>
+    <string name="format_label_value">%1$s: %2$s</string>
+    <string name="format_dot_value">%1$s · %2$s</string>
+    <string name="session_words_reviewed">%1$d words reviewed</string>
+    <string name="session_words_reviewed_hm">%1$d words reviewed · %2$dm %3$ds</string>
+    <string name="session_words_reviewed_s">%1$d words reviewed · %2$ds</string>
+    <string name="cd_option">Option %1$s: %2$s</string>
+    <string name="progress_best_streak">Best: %1$d days</string>
+    <string name="progress_of_total">of %1$d</string>
 </resources>
