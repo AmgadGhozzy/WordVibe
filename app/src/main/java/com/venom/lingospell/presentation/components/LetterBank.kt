@@ -105,7 +105,7 @@ fun LetterBank(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.icon_rotate),
-                    contentDescription = "Reset",
+                    contentDescription = stringResource(R.string.cd_reset_icon),
                     modifier = Modifier
                         .size(14.adp)
                         .rotate(rotation),

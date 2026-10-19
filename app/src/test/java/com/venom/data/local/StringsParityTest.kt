@@ -58,8 +58,8 @@ class StringsParityTest {
     fun `P1 same key set and count`() {
         val en = entries(enPath)
         val ar = entries(arPath)
-        assertEquals(193, en.size, "English base must hold 193 keys")
-        assertEquals(193, ar.size, "Arabic must hold 193 keys")
+        assertEquals(221, en.size, "English base must hold 221 keys")
+        assertEquals(221, ar.size, "Arabic must hold 221 keys")
         assertEquals(
             en.map { it.first }.toSet(),
             ar.map { it.first }.toSet(),

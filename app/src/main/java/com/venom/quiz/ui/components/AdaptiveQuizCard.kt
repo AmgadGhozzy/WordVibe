@@ -30,8 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import com.venom.wordvibe.R
 import com.venom.domain.model.CefrLevel
 import com.venom.domain.model.QuizMode
 import com.venom.domain.model.QuizQuestionUi
@@ -161,7 +163,7 @@ private fun MiniHeader(cefrColors: com.venom.wordvibe.core.theme.tokens.CefrColo
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "Quick Quiz",
+            text = stringResource(R.string.quiz_quick_quiz_title),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = cefrColors.content

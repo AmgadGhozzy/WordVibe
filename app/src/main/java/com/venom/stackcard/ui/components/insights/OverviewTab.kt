@@ -243,7 +243,7 @@ private fun SemanticCloudSection(
         verticalArrangement = Arrangement.spacedBy(12.adp)
     ) {
         SectionHeader(
-            title = "Semantic Cloud",
+            title = stringResource(R.string.insights_semantic_cloud_title),
             icon = painterResource(id = R.drawable.ic_cloud)
         )
 

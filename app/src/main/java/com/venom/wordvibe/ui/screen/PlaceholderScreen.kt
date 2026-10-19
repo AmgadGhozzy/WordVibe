@@ -9,6 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.venom.wordvibe.R
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -26,7 +28,7 @@ fun PlaceholderScreen(title: String) {
             color = MaterialTheme.colorScheme.onBackground,
         )
         Text(
-            text = "Coming soon",
+            text = stringResource(R.string.placeholder_coming_soon),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp),

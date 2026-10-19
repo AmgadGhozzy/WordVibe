@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
@@ -38,6 +39,7 @@ import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
 import com.venom.ui.components.other.BiDiFormatter
 import com.venom.domain.model.AppTheme
+import com.venom.wordvibe.R
 import com.venom.wordvibe.core.theme.PlaypenSans
 import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import kotlin.random.Random
@@ -171,7 +173,7 @@ fun StickyNoteCard(
                 verticalArrangement = Arrangement.spacedBy(8.adp)
             ) {
                 Text(
-                    text = "MEMORY HOOK",
+                    text = stringResource(R.string.mnemonic_memory_hook_label),
                     fontSize = 10.asp,
                     fontWeight = FontWeight.Black,
                     color = colorScheme.label,

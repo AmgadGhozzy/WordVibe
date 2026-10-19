@@ -134,13 +134,13 @@ fun SessionFinishedView(
             Spacer(modifier = Modifier.height(4.adp))
 
             GradientActionButton(
-                text = "Continue Learning",
+                text = stringResource(R.string.session_finished_continue),
                 onClick = onBackToWelcome,
                 leadingIcon = R.drawable.icon_play
             )
 
             GlassOutlinedButton(
-                text = "View Progress",
+                text = stringResource(R.string.session_finished_view_progress),
                 onClick = onViewProgress,
                 leadingIcon = R.drawable.ic_trend_up
             )

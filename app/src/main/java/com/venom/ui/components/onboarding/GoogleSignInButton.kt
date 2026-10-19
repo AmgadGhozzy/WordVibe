@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
@@ -48,12 +49,12 @@ fun GoogleSignInButton(
         ) {
             Image(
                 painter = painterResource(id = R.drawable.icon_google),
-                contentDescription = "Google Logo",
+                contentDescription = stringResource(R.string.cd_google_logo),
                 modifier = Modifier.size(24.adp)
             )
             Spacer(modifier = Modifier.width(12.adp))
             Text(
-                text = "Continue with Google",
+                text = stringResource(R.string.onboarding_continue_google),
                 fontSize = 16.asp,
                 fontWeight = FontWeight.SemiBold
             )

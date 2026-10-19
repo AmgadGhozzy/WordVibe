@@ -32,6 +32,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.venom.wordvibe.R
@@ -82,7 +83,7 @@ fun MasteryDialog(
             Spacer(Modifier.height(16.adp))
 
             Text(
-                text = "MASTERED!",
+                text = stringResource(R.string.mastery_dialog_title),
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 36.asp,
@@ -94,7 +95,7 @@ fun MasteryDialog(
             Spacer(Modifier.height(8.adp))
 
             Text(
-                text = "You've spelled this word correctly 3 times!",
+                text = stringResource(R.string.mastery_dialog_body),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -137,7 +138,7 @@ fun MasteryDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Continue to Next Word",
+                        text = stringResource(R.string.mastery_dialog_continue),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Icon(

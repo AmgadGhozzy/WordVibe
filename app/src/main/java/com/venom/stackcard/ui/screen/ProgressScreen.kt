@@ -90,7 +90,7 @@ private fun ProgressScreenContent(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Your Progress",
+                text = stringResource(R.string.progress_screen_title),
                 style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -294,7 +294,7 @@ private fun StreakCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.adp)) {
                 Text(
-                    text = "Current Streak",
+                    text = stringResource(R.string.progress_current_streak_label),
                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -326,7 +326,7 @@ private fun TimeCard(totalTimeMs: Long, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Total Study Time",
+                text = stringResource(R.string.progress_total_study_time_label),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

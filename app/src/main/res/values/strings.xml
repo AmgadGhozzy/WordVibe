@@ -217,4 +217,33 @@
     <string name="next_review_in_days">In %1$d day(s)</string>
     <string name="next_review_in_weeks">In %1$d week(s)</string>
     <string name="next_review_in_months">In %1$d month(s)</string>
+    <!-- Hardcoded text migration (batch 2a) -->
+    <string name="cd_hint_icon">Hint</string>
+    <string name="cd_reset_icon">Reset</string>
+    <string name="mastery_dialog_title">MASTERED!</string>
+    <string name="mastery_dialog_body">You\'ve spelled this word correctly 3 times!</string>
+    <string name="mastery_dialog_continue">Continue to Next Word</string>
+    <string name="spelling_streak_label">MASTERY</string>
+    <string name="placement_result_title">Placement Complete!</string>
+    <string name="placement_result_subtitle">We\'ve analyzed your vocabulary knowledge</string>
+    <string name="placement_result_level_label">Your Level</string>
+    <string name="placement_result_correct_label">Correct</string>
+    <string name="placement_result_duration_label">Duration</string>
+    <string name="placement_result_cta">Start Learning</string>
+    <string name="quiz_quick_quiz_title">Quick Quiz</string>
+    <string name="cd_swipe_forgot">Forgot</string>
+    <string name="cd_swipe_remember">Remember</string>
+    <string name="insights_semantic_cloud_title">Semantic Cloud</string>
+    <string name="insights_your_level_label">YOUR LEVEL</string>
+    <string name="session_progress_title">Session Complete</string>
+    <string name="mnemonic_memory_hook_label">MEMORY HOOK</string>
+    <string name="progress_screen_title">Your Progress</string>
+    <string name="progress_current_streak_label">Current Streak</string>
+    <string name="progress_total_study_time_label">Total Study Time</string>
+    <string name="session_finished_continue">Continue Learning</string>
+    <string name="session_finished_view_progress">View Progress</string>
+    <string name="welcome_topic_placeholder">Choose a topic (optional)</string>
+    <string name="cd_google_logo">Google Logo</string>
+    <string name="onboarding_continue_google">Continue with Google</string>
+    <string name="placeholder_coming_soon">Coming soon</string>
 </resources>

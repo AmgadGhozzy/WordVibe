@@ -389,7 +389,7 @@ private fun ExampleAccordionItem(
                             .padding(horizontal = 6.adp, vertical = 2.adp)
                     ) {
                         Text(
-                            text = "YOUR LEVEL",
+                            text = stringResource(R.string.insights_your_level_label),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 8.asp,

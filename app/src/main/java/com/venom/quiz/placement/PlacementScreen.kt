@@ -36,10 +36,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.venom.wordvibe.R
 import com.venom.domain.model.PlacementResult
 import com.venom.quiz.ui.components.AdaptiveQuizCard
 import com.venom.ui.components.common.adp
@@ -124,7 +126,7 @@ private fun PlacementResultScreen(
         Spacer(Modifier.height(20.adp))
 
         Text(
-            text = "Placement Complete!",
+            text = stringResource(R.string.placement_result_title),
             fontSize = 26.asp,
             fontWeight = FontWeight.Bold,
             color = colorScheme.onSurface
@@ -133,7 +135,7 @@ private fun PlacementResultScreen(
         Spacer(Modifier.height(8.adp))
 
         Text(
-            text = "We've analyzed your vocabulary knowledge",
+            text = stringResource(R.string.placement_result_subtitle),
             fontSize = 14.asp,
             color = colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -152,7 +154,7 @@ private fun PlacementResultScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Your Level",
+                    text = stringResource(R.string.placement_result_level_label),
                     fontSize = 14.asp,
                     color = colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
                     fontWeight = FontWeight.Medium
@@ -183,13 +185,13 @@ private fun PlacementResultScreen(
         ) {
             StatCard(
                 icon = Icons.Rounded.CheckCircle,
-                label = "Correct",
+                label = stringResource(R.string.placement_result_correct_label),
                 value = "${result.totalCorrect}/${result.totalQuestions}",
                 modifier = Modifier.weight(1f)
             )
             StatCard(
                 icon = Icons.Rounded.TrendingUp,
-                label = "Duration",
+                label = stringResource(R.string.placement_result_duration_label),
                 value = "${result.durationMs / 1000}s",
                 modifier = Modifier.weight(1f)
             )
@@ -209,7 +211,7 @@ private fun PlacementResultScreen(
             )
         ) {
             Text(
-                text = "Start Learning",
+                text = stringResource(R.string.placement_result_cta),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 16.asp
             )

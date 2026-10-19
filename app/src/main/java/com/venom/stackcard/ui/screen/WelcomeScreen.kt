@@ -243,7 +243,7 @@ private fun TopicInput(
             .clip(RoundedCornerShape(16.adp)),
         placeholder = {
             Text(
-                text = "Choose a topic (optional)",
+                text = stringResource(R.string.welcome_topic_placeholder),
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(0.6f)
             )
         },

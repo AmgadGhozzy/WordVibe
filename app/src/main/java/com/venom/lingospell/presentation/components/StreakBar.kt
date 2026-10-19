@@ -27,7 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.venom.wordvibe.R
 import com.venom.domain.model.AppTheme
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
@@ -49,7 +51,7 @@ fun StreakBar(
         horizontalArrangement = Arrangement.spacedBy(16.adp)
     ) {
         Text(
-            text = "MASTERY",
+            text = stringResource(R.string.spelling_streak_label),
             style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 2.asp),
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )

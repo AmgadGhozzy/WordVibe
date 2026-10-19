@@ -217,4 +217,33 @@
     <string name="next_review_in_days">بعد %1$d أيام</string>
     <string name="next_review_in_weeks">بعد %1$d أسبوع</string>
     <string name="next_review_in_months">بعد %1$d شهر</string>
+    <!-- Hardcoded text migration (batch 2a) -->
+    <string name="cd_hint_icon">تلميح</string>
+    <string name="cd_reset_icon">إعادة</string>
+    <string name="mastery_dialog_title">أتقنت!</string>
+    <string name="mastery_dialog_body">لقد تهجّيت هذه الكلمة بشكل صحيح 3 مرات!</string>
+    <string name="mastery_dialog_continue">متابعة إلى الكلمة التالية</string>
+    <string name="spelling_streak_label">إتقان</string>
+    <string name="placement_result_title">اكتمل اختبار تحديد المستوى!</string>
+    <string name="placement_result_subtitle">حلّلنا معرفتك بالمفردات</string>
+    <string name="placement_result_level_label">مستواك</string>
+    <string name="placement_result_correct_label">الصحيحة</string>
+    <string name="placement_result_duration_label">المدة</string>
+    <string name="placement_result_cta">ابدأ التعلّم</string>
+    <string name="quiz_quick_quiz_title">اختبار سريع</string>
+    <string name="cd_swipe_forgot">نسيت</string>
+    <string name="cd_swipe_remember">تذكّرت</string>
+    <string name="insights_semantic_cloud_title">السحابة الدلالية</string>
+    <string name="insights_your_level_label">مستواك</string>
+    <string name="session_progress_title">اكتملت الجلسة</string>
+    <string name="mnemonic_memory_hook_label">حيلة التذكر</string>
+    <string name="progress_screen_title">تقدّمك</string>
+    <string name="progress_current_streak_label">السلسلة الحالية</string>
+    <string name="progress_total_study_time_label">إجمالي وقت الدراسة</string>
+    <string name="session_finished_continue">متابعة التعلّم</string>
+    <string name="session_finished_view_progress">عرض التقدّم</string>
+    <string name="welcome_topic_placeholder">اختر موضوعًا (اختياري)</string>
+    <string name="cd_google_logo">شعار Google</string>
+    <string name="onboarding_continue_google">متابعة باستخدام Google</string>
+    <string name="placeholder_coming_soon">قريبًا</string>
 </resources>

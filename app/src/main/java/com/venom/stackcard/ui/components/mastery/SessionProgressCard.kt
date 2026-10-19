@@ -67,7 +67,7 @@ fun SessionProgressCard(
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(2.adp)) {
                     Text(
-                        text = "Session Complete",
+                        text = stringResource(R.string.session_progress_title),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface
                     )

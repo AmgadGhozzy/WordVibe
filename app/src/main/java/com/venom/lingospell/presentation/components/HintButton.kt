@@ -58,7 +58,7 @@ fun HintButton(
     ) {
         Icon(
             painter = painterResource(R.drawable.icon_lightbulb),
-            contentDescription = "Hint",
+            contentDescription = stringResource(R.string.cd_hint_icon),
             tint = MaterialTheme.colorScheme.onPrimaryContainer,
             modifier = Modifier.size(16.adp)
         )

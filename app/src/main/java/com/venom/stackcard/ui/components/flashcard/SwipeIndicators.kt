@@ -19,6 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
+import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
 import androidx.compose.ui.graphics.Color
 import com.venom.designsystem.theme.synapse
@@ -57,7 +59,7 @@ fun SwipeIndicators(
         ) {
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Forgot",
+                contentDescription = stringResource(R.string.cd_swipe_forgot),
                 tint = Color.White,
                 modifier = Modifier.size(32.adp)
             )
@@ -85,7 +87,7 @@ fun SwipeIndicators(
         ) {
             Icon(
                 imageVector = Icons.Default.Check,
-                contentDescription = "Remember",
+                contentDescription = stringResource(R.string.cd_swipe_remember),
                 tint = Color.White,
                 modifier = Modifier.size(32.adp)
             )
