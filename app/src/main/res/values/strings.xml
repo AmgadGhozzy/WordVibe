@@ -272,4 +272,14 @@
     <string name="cd_streak">Streak</string>
     <string name="cd_again">Again</string>
     <string name="cd_good">Good</string>
+
+    <!-- Domain-derived text (batch 2c-2) -->
+    <string name="difficulty_beginner">Beginner</string>
+    <string name="difficulty_intermediate">Intermediate</string>
+    <string name="difficulty_advanced">Advanced</string>
+    <string name="insights_tab_overview">Overview</string>
+    <string name="insights_tab_relations">Relations</string>
+    <string name="insights_tab_usage">Usage</string>
+    <string name="insights_tab_languages">Languages</string>
+    <string name="placement_band_label">Level %1$d — %2$s</string>
 </resources>

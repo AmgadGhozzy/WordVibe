@@ -23,6 +23,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import com.venom.wordvibe.R
+import androidx.compose.ui.res.stringResource
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
 
@@ -103,7 +105,12 @@ private fun TabItem(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = tab.title,
+                text = when (tab) {
+                    InsightsTab.OVERVIEW -> stringResource(R.string.insights_tab_overview)
+                    InsightsTab.RELATIONS -> stringResource(R.string.insights_tab_relations)
+                    InsightsTab.USAGE -> stringResource(R.string.insights_tab_usage)
+                    InsightsTab.LANGUAGES -> stringResource(R.string.insights_tab_languages)
+                },
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
                     fontSize = 11.asp
@@ -115,9 +122,9 @@ private fun TabItem(
     }
 }
 
-enum class InsightsTab(val title: String) {
-    OVERVIEW("Overview"),
-    RELATIONS("Relations"),
-    USAGE("Usage"),
-    LANGUAGES("Languages")
+enum class InsightsTab {
+    OVERVIEW,
+    RELATIONS,
+    USAGE,
+    LANGUAGES
 }

@@ -272,4 +272,14 @@
     <string name="cd_streak">السلسلة</string>
     <string name="cd_again">مرة أخرى</string>
     <string name="cd_good">جيد</string>
+
+    <!-- Domain-derived text (batch 2c-2) -->
+    <string name="difficulty_beginner">مبتدئ</string>
+    <string name="difficulty_intermediate">متوسط</string>
+    <string name="difficulty_advanced">متقدم</string>
+    <string name="insights_tab_overview">نظرة عامة</string>
+    <string name="insights_tab_relations">العلاقات</string>
+    <string name="insights_tab_usage">الاستخدام</string>
+    <string name="insights_tab_languages">اللغات</string>
+    <string name="placement_band_label">المستوى %1$d — %2$s</string>
 </resources>

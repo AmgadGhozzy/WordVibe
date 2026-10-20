@@ -37,7 +37,6 @@ import com.venom.data.mock.MockWordData
 import com.venom.domain.model.AppTheme
 import com.venom.domain.model.CefrLevel
 import com.venom.domain.model.WordMaster
-import com.venom.domain.model.getDifficulty
 import com.venom.wordvibe.R
 import com.venom.stackcard.ui.components.mastery.FrequencyWidget
 import com.venom.stackcard.ui.components.mastery.InteractiveText
@@ -107,7 +106,14 @@ fun OverviewTab(
 
         // 5. Stats Grid
         StatsGrid(
-            difficulty = word.cefrLevel.getDifficulty(),
+            difficulty = when (word.cefrLevel) {
+                CefrLevel.A1,
+                CefrLevel.A2 -> stringResource(R.string.difficulty_beginner)
+                CefrLevel.B1,
+                CefrLevel.B2 -> stringResource(R.string.difficulty_intermediate)
+                CefrLevel.C1,
+                CefrLevel.C2 -> stringResource(R.string.difficulty_advanced)
+            },
             cefrLevel = word.cefrLevel.displayName,
             cefrColors = cefrColors,
             category = word.category,

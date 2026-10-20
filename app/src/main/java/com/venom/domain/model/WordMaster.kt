@@ -79,12 +79,6 @@ enum class CefrLevel(val displayName: String) {
     C2("C2")
 }
 
-fun CefrLevel.getDifficulty(): String = when (this) {
-    A1, A2 -> "Beginner"
-    B1, B2 -> "Intermediate"
-    C1, C2 -> "Advanced"
-}
-
 @Immutable
 data class WordFamily(
     val noun: String? = null,

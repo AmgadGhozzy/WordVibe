@@ -199,8 +199,16 @@ private fun PlacementHeader(state: QuizUiState, onBack: () -> Unit) {
                 shape = RoundedCornerShape(20.adp),
                 color = colorScheme.primaryContainer
             ) {
+                val label = state.placementBandLabel
+                val cefr = label.substringAfterLast(" — ", missingDelimiterValue = "")
+                val band = state.placementBand
+                val text = if (band > 0 && cefr.isNotEmpty()) {
+                    stringResource(R.string.placement_band_label, band, cefr)
+                } else {
+                    label
+                }
                 Text(
-                    text = state.placementBandLabel,
+                    text = text,
                     modifier = Modifier.padding(horizontal = 14.adp, vertical = 6.adp),
                     color = colorScheme.onPrimaryContainer,
                     fontSize = 13.asp,
