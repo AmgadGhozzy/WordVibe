@@ -189,7 +189,7 @@ private fun PlacementHeader(state: QuizUiState, onBack: () -> Unit) {
             IconButton(onClick = onBack, modifier = Modifier.size(40.adp)) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.cd_back),
                     tint = colorScheme.onSurface,
                     modifier = Modifier.size(18.adp)
                 )
@@ -257,7 +257,7 @@ private fun FullHeader(state: QuizUiState, onBack: () -> Unit) {
             IconButton(onClick = onBack, modifier = Modifier.size(40.adp)) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
-                    contentDescription = "Back",
+                    contentDescription = stringResource(R.string.cd_back),
                     tint = colorScheme.onSurface,
                     modifier = Modifier.size(18.adp)
                 )

@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,34 +41,40 @@ fun HintButton(
 
     Row(
         modifier = modifier
-            .shadow(4.adp, RoundedCornerShape(24.adp))
-            .clip(RoundedCornerShape(24.adp))
-            .background(MaterialTheme.colorScheme.primaryContainer)
-            .border(
-                width = 0.5.adp,
-                color = MaterialTheme.colorScheme.primary.copy(0.2f),
-                shape = RoundedCornerShape(24.adp)
-            )
+            .heightIn(min = 48.adp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onHintClick
-            )
-            .padding(horizontal = 16.adp, vertical = 8.adp),
+            ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(R.drawable.icon_lightbulb),
-            contentDescription = stringResource(R.string.cd_hint_icon),
-            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            modifier = Modifier.size(16.adp)
-        )
-        Spacer(modifier = Modifier.width(8.adp))
-        Text(
-            text = stringResource(com.venom.wordvibe.R.string.spelling_get_hint, 3 - hintLevel.ordinal),
-            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onPrimaryContainer
-        )
+        Row(
+            modifier = Modifier
+                .shadow(4.adp, RoundedCornerShape(24.adp))
+                .clip(RoundedCornerShape(24.adp))
+                .background(MaterialTheme.colorScheme.primaryContainer)
+                .border(
+                    width = 0.5.adp,
+                    color = MaterialTheme.colorScheme.primary.copy(0.2f),
+                    shape = RoundedCornerShape(24.adp)
+                )
+                .padding(horizontal = 16.adp, vertical = 8.adp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.icon_lightbulb),
+                contentDescription = stringResource(R.string.cd_hint_icon),
+                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.size(16.adp)
+            )
+            Spacer(modifier = Modifier.width(8.adp))
+            Text(
+                text = stringResource(com.venom.wordvibe.R.string.spelling_get_hint, 3 - hintLevel.ordinal),
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
+        }
     }
 }
 

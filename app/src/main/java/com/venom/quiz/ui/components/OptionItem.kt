@@ -84,10 +84,10 @@ fun OptionItem(
         else -> label
     }
     val stateDescriptionText = when {
-        isCorrectOption -> "Correct answer"
-        isIncorrectSelected -> "Incorrect answer"
-        isSelected -> "Selected"
-        else -> "Not selected"
+        isCorrectOption -> stringResource(R.string.cd_state_correct)
+        isIncorrectSelected -> stringResource(R.string.cd_state_incorrect)
+        isSelected -> stringResource(R.string.cd_state_selected)
+        else -> stringResource(R.string.cd_state_not_selected)
     }
 
     Surface(

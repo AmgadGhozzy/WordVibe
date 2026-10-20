@@ -14,9 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
+import com.venom.wordvibe.R
 
 @Composable
 fun StreakDisplay(streak: Int) {
@@ -33,7 +35,7 @@ fun StreakDisplay(streak: Int) {
         ) {
             Icon(
                 imageVector = Icons.Rounded.Whatshot,
-                contentDescription = "Streak",
+                contentDescription = stringResource(R.string.cd_streak),
                 tint = colorScheme.onSecondaryContainer,
                 modifier = Modifier.size(14.adp)
             )

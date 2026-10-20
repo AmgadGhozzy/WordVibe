@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -86,25 +87,31 @@ private fun TabItem(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.adp))
-            .background(backgroundColor)
+            .height(48.adp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = onClick
-            )
-            .padding(vertical = 12.adp, horizontal = 10.adp),
+            ),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = tab.title,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
-                fontSize = 11.asp
-            ),
-            color = textColor,
-            maxLines = 1
-        )
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.adp))
+                .background(backgroundColor)
+                .padding(vertical = 12.adp, horizontal = 10.adp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = tab.title,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 11.asp
+                ),
+                color = textColor,
+                maxLines = 1
+            )
+        }
     }
 }
 

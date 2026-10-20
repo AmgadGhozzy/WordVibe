@@ -81,7 +81,7 @@ fun ActionBar(
         } else {
             CircularButton(
                 icon = Icons.Default.Close,
-                contentDescription = "Again",
+                contentDescription = stringResource(R.string.cd_again),
                 onClick = onAgain,
                 tint = Color(0xFFEF4444) // Red-500
             )
@@ -91,7 +91,7 @@ fun ActionBar(
             )
             CircularButton(
                 icon = Icons.Default.Check,
-                contentDescription = "Good",
+                contentDescription = stringResource(R.string.cd_good),
                 onClick = onKnown,
                 tint = Color(0xFF22C55E) // Green-500
             )

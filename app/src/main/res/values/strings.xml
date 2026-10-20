@@ -263,4 +263,13 @@
     <string name="cd_option">Option %1$s: %2$s</string>
     <string name="progress_best_streak">Best: %1$d days</string>
     <string name="progress_of_total">of %1$d</string>
+    <!-- Accessibility and touch (batch 2c-1) -->
+    <string name="cd_state_correct">Correct answer</string>
+    <string name="cd_state_incorrect">Incorrect answer</string>
+    <string name="cd_state_selected">Selected</string>
+    <string name="cd_state_not_selected">Not selected</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_streak">Streak</string>
+    <string name="cd_again">Again</string>
+    <string name="cd_good">Good</string>
 </resources>

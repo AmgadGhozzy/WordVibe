@@ -263,4 +263,13 @@
     <string name="cd_option">الخيار %1$s: %2$s</string>
     <string name="progress_best_streak">أطول سلسلة: %1$d (يوم)</string>
     <string name="progress_of_total">من %1$d</string>
+    <!-- Accessibility and touch (batch 2c-1) -->
+    <string name="cd_state_correct">الإجابة صحيحة</string>
+    <string name="cd_state_incorrect">الإجابة خاطئة</string>
+    <string name="cd_state_selected">محدَّد</string>
+    <string name="cd_state_not_selected">غير محدَّد</string>
+    <string name="cd_back">رجوع</string>
+    <string name="cd_streak">السلسلة</string>
+    <string name="cd_again">مرة أخرى</string>
+    <string name="cd_good">جيد</string>
 </resources>

@@ -46,19 +46,25 @@ fun SynapseTopBar(
     ) {
         Box(
             modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary)
+                .size(48.dp)
                 .clickable(onClick = onProfileClick),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = userInitial.take(1).uppercase(),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                ),
-            )
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = userInitial.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                    ),
+                )
+            }
         }
 
         Spacer(Modifier.width(12.dp))
