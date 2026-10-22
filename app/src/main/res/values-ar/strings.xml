@@ -3,30 +3,16 @@
 
     <!-- Navigation -->
     <string name="synapse_nav_home">الرئيسية</string>
-    <string name="synapse_nav_library">المكتبة</string>
-    <string name="synapse_nav_marketplace">المتجر</string>
-    <string name="synapse_nav_stats">الإحصائيات</string>
-    <string name="synapse_nav_flashcards">البطاقات</string>
-    <string name="synapse_nav_spelling">الإملاء</string>
     <string name="nav_learn">تعلّم</string>
     <string name="nav_write">الكتابة</string>
     <string name="nav_progress">تقدّمي</string>
 
     <!-- Screen titles -->
     <string name="synapse_screen_dashboard">WordVibe</string>
-    <string name="synapse_screen_library">المكتبة</string>
-    <string name="synapse_screen_stats">الإحصائيات</string>
-    <string name="synapse_screen_quiz">اختبار</string>
-    <string name="synapse_screen_profile">الملف الشخصي</string>
     <string name="synapse_screen_onboarding">مرحباً</string>
     <string name="synapse_screen_stackcard">البطاقات</string>
-    <string name="synapse_screen_lingospell">الإملاء</string>
 
     <!-- Screen subtitles -->
-    <string name="synapse_subtitle_library">مجموعتك التعليمية</string>
-    <string name="synapse_subtitle_stats">تقدمك</string>
-    <string name="synapse_subtitle_quiz">اختبر معرفتك</string>
-    <string name="synapse_subtitle_profile">الحساب</string>
     <string name="synapse_subtitle_onboarding">لنبدأ</string>
 
     <!-- Onboarding -->
@@ -74,9 +60,6 @@
     <string name="placement_cta_skip">تخطّي</string>
 
     <!-- Theme -->
-    <string name="profile_dark_mode">داكن</string>
-    <string name="profile_light_mode">فاتح</string>
-    <string name="profile_follow_system">حسب النظام</string>
 
     <!-- Levels -->
     <string name="desc_advanced">مفردات احترافية وأكاديمية</string>
@@ -173,7 +156,6 @@
     <string name="state_known">معروفة</string>
     <string name="state_mastered">متقنة</string>
     <string name="state_due">مستحقة</string>
-    <string name="write_title">الكتابة</string>
     <string name="write_due_section">مستحقة الآن</string>
     <string name="write_weak_section">ضعيفة في الإنتاج</string>
     <string name="write_queue_title">طابور الكتابة — الأضعف إنتاجًا أولًا</string>
@@ -184,9 +166,7 @@
     <string name="write_queue_empty_title">لا كلمات تنتظر التدريب</string>
     <string name="write_queue_empty_body">أنهِ جلسة بطاقات أولًا، وستجد هنا الكلمات التي تحتاج ترسيخ الإملاء.</string>
     <string name="write_count_label">%1$d كلمة</string>
-    <string name="progress_title">تقدّمي</string>
     <string name="progress_words_by_state">كلماتك حسب الحالة</string>
-    <string name="progress_total_label">من %1$d كلمة</string>
     <string name="spelling_translate_hint">ترجم إلى الإنجليزية</string>
     <string name="spelling_perfect">ممتاز!</string>
     <string name="spelling_reveal_answer">أظهر الإجابة</string>

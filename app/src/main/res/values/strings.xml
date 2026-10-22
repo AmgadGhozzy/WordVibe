@@ -3,30 +3,16 @@
 
     <!-- Navigation -->
     <string name="synapse_nav_home">Home</string>
-    <string name="synapse_nav_library">Library</string>
-    <string name="synapse_nav_marketplace">Marketplace</string>
-    <string name="synapse_nav_stats">Stats</string>
-    <string name="synapse_nav_flashcards">Flashcards</string>
-    <string name="synapse_nav_spelling">Spelling</string>
     <string name="nav_learn">Learn</string>
     <string name="nav_write">Write</string>
     <string name="nav_progress">My Progress</string>
 
     <!-- Screen titles -->
     <string name="synapse_screen_dashboard">WordVibe</string>
-    <string name="synapse_screen_library">Library</string>
-    <string name="synapse_screen_stats">Stats</string>
-    <string name="synapse_screen_quiz">Quiz</string>
-    <string name="synapse_screen_profile">Profile</string>
     <string name="synapse_screen_onboarding">Welcome</string>
     <string name="synapse_screen_stackcard">Flashcards</string>
-    <string name="synapse_screen_lingospell">Spelling</string>
 
     <!-- Screen subtitles -->
-    <string name="synapse_subtitle_library">Your learning collection</string>
-    <string name="synapse_subtitle_stats">Your progress</string>
-    <string name="synapse_subtitle_quiz">Test your knowledge</string>
-    <string name="synapse_subtitle_profile">Account</string>
     <string name="synapse_subtitle_onboarding">Let\'s begin</string>
 
     <!-- Onboarding -->
@@ -74,9 +60,6 @@
     <string name="placement_cta_skip">Skip</string>
 
     <!-- Theme -->
-    <string name="profile_dark_mode">Dark</string>
-    <string name="profile_light_mode">Light</string>
-    <string name="profile_follow_system">Follow system</string>
 
     <!-- Levels -->
     <string name="desc_advanced">Professional and academic vocabulary</string>
@@ -173,7 +156,6 @@
     <string name="state_known">Known</string>
     <string name="state_mastered">Mastered</string>
     <string name="state_due">Due</string>
-    <string name="write_title">Writing</string>
     <string name="write_due_section">Due now</string>
     <string name="write_weak_section">Weak in production</string>
     <string name="write_queue_title">Writing queue — weakest in production first</string>
@@ -184,9 +166,7 @@
     <string name="write_queue_empty_title">No words waiting for practice</string>
     <string name="write_queue_empty_body">Finish a flashcard session first, and the words that need spelling reinforcement will show up here.</string>
     <string name="write_count_label">Words: %1$d</string>
-    <string name="progress_title">My Progress</string>
     <string name="progress_words_by_state">Your words by state</string>
-    <string name="progress_total_label">of %1$d words</string>
     <string name="spelling_translate_hint">Translate to English</string>
     <string name="spelling_perfect">Excellent!</string>
     <string name="spelling_reveal_answer">Show answer</string>
