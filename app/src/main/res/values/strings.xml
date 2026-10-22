@@ -59,8 +59,6 @@
     <string name="placement_cta_beginner_hint">Start from the beginner level (A1)</string>
     <string name="placement_cta_skip">Skip</string>
 
-    <!-- Theme -->
-
     <!-- Levels -->
     <string name="desc_advanced">Professional and academic vocabulary</string>
     <string name="desc_beginner">The most commonly used words in everyday life</string>

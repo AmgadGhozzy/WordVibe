@@ -59,8 +59,6 @@
     <string name="placement_cta_beginner_hint">ابدأ من المستوى المبتدئ (A1)</string>
     <string name="placement_cta_skip">تخطّي</string>
 
-    <!-- Theme -->
-
     <!-- Levels -->
     <string name="desc_advanced">مفردات احترافية وأكاديمية</string>
     <string name="desc_beginner">أكثر الكلمات استخداماً في الحياة اليومية</string>
