@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plurals (batch 2c-3) -->
+    <plurals name="home_streak_value">
+        <item quantity="one">Streak: %1$d day</item>
+        <item quantity="other">Streak: %1$d days</item>
+    </plurals>
+    <plurals name="home_due_label">
+        <item quantity="one">Due for review: %1$d word</item>
+        <item quantity="other">Due for review: %1$d words</item>
+    </plurals>
+    <plurals name="home_new_label">
+        <item quantity="one">New word: %1$d</item>
+        <item quantity="other">New words: %1$d</item>
+    </plurals>
+    <plurals name="progress_best_streak">
+        <item quantity="one">Best: %1$d day</item>
+        <item quantity="other">Best: %1$d days</item>
+    </plurals>
+    <plurals name="next_review_in_days">
+        <item quantity="one">In %1$d day</item>
+        <item quantity="other">In %1$d days</item>
+    </plurals>
+    <plurals name="next_review_in_weeks">
+        <item quantity="one">In %1$d week</item>
+        <item quantity="other">In %1$d weeks</item>
+    </plurals>
+    <plurals name="next_review_in_months">
+        <item quantity="one">In %1$d month</item>
+        <item quantity="other">In %1$d months</item>
+    </plurals>
+    <plurals name="session_words_reviewed">
+        <item quantity="one">%1$d word reviewed</item>
+        <item quantity="other">%1$d words reviewed</item>
+    </plurals>
+</resources>

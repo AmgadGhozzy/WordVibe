@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -98,7 +99,7 @@ fun ProgressContent(
                     }
                     Column {
                         Text(
-                            text = stringResource(R.string.home_streak_value, dashboard.currentStreak),
+                            text = pluralStringResource(R.plurals.home_streak_value, dashboard.currentStreak, dashboard.currentStreak),
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(

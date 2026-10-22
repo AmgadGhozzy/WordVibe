@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,15 +73,19 @@ fun SessionProgressCard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (state.sessionDurationMs <= 0) {
-                            stringResource(R.string.session_words_reviewed, state.completed)
-                        } else {
-                            val mins = (state.sessionDurationMs / 60000).toInt()
-                            val secs = ((state.sessionDurationMs % 60000) / 1000).toInt()
-                            if (mins > 0) {
-                                stringResource(R.string.session_words_reviewed_hm, state.completed, mins, secs)
+                        text = run {
+                            val words = pluralStringResource(R.plurals.session_words_reviewed, state.completed, state.completed)
+                            if (state.sessionDurationMs <= 0) {
+                                words
                             } else {
-                                stringResource(R.string.session_words_reviewed_s, state.completed, secs)
+                                val mins = (state.sessionDurationMs / 60000).toInt()
+                                val secs = ((state.sessionDurationMs % 60000) / 1000).toInt()
+                                val duration = if (mins > 0) {
+                                    stringResource(R.string.duration_min_sec_short, mins, secs)
+                                } else {
+                                    stringResource(R.string.duration_sec_short, secs)
+                                }
+                                stringResource(R.string.format_dot_value, words, duration)
                             }
                         },
                         style = MaterialTheme.typography.bodySmall,

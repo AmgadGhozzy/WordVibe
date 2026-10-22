@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Plurals (batch 2c-3) -->
+    <plurals name="home_streak_value">
+        <item quantity="zero">السلسلة: %1$d يوم</item>
+        <item quantity="one">السلسلة: %1$d يوم</item>
+        <item quantity="two">السلسلة: %1$d يوم</item>
+        <item quantity="few">السلسلة: %1$d أيام</item>
+        <item quantity="many">السلسلة: %1$d يومًا</item>
+        <item quantity="other">السلسلة: %1$d يومًا</item>
+    </plurals>
+    <plurals name="home_due_label">
+        <item quantity="zero">%1$d كلمة مستحقة للمراجعة</item>
+        <item quantity="one">%1$d كلمة مستحقة للمراجعة</item>
+        <item quantity="two">%1$d كلمة مستحقة للمراجعة</item>
+        <item quantity="few">%1$d كلمات مستحقة للمراجعة</item>
+        <item quantity="many">%1$d كلمةً مستحقة للمراجعة</item>
+        <item quantity="other">%1$d كلمةً مستحقة للمراجعة</item>
+    </plurals>
+    <plurals name="home_new_label">
+        <item quantity="zero">%1$d كلمة جديدة</item>
+        <item quantity="one">%1$d كلمة جديدة</item>
+        <item quantity="two">%1$d كلمة جديدة</item>
+        <item quantity="few">%1$d كلمات جديدة</item>
+        <item quantity="many">%1$d كلمةً جديدة</item>
+        <item quantity="other">%1$d كلمةً جديدة</item>
+    </plurals>
+    <plurals name="progress_best_streak">
+        <item quantity="zero">أطول سلسلة: %1$d يوم</item>
+        <item quantity="one">أطول سلسلة: %1$d يوم</item>
+        <item quantity="two">أطول سلسلة: %1$d يوم</item>
+        <item quantity="few">أطول سلسلة: %1$d أيام</item>
+        <item quantity="many">أطول سلسلة: %1$d يومًا</item>
+        <item quantity="other">أطول سلسلة: %1$d يومًا</item>
+    </plurals>
+    <plurals name="next_review_in_days">
+        <item quantity="zero">بعد %1$d يوم</item>
+        <item quantity="one">بعد %1$d يوم</item>
+        <item quantity="two">بعد %1$d يوم</item>
+        <item quantity="few">بعد %1$d أيام</item>
+        <item quantity="many">بعد %1$d يومًا</item>
+        <item quantity="other">بعد %1$d يومًا</item>
+    </plurals>
+    <plurals name="next_review_in_weeks">
+        <item quantity="zero">بعد %1$d أسبوع</item>
+        <item quantity="one">بعد %1$d أسبوع</item>
+        <item quantity="two">بعد %1$d أسبوع</item>
+        <item quantity="few">بعد %1$d أسابيع</item>
+        <item quantity="many">بعد %1$d أسبوعًا</item>
+        <item quantity="other">بعد %1$d أسبوعًا</item>
+    </plurals>
+    <plurals name="next_review_in_months">
+        <item quantity="zero">بعد %1$d شهر</item>
+        <item quantity="one">بعد %1$d شهر</item>
+        <item quantity="two">بعد %1$d شهر</item>
+        <item quantity="few">بعد %1$d أشهر</item>
+        <item quantity="many">بعد %1$d شهرًا</item>
+        <item quantity="other">بعد %1$d شهرًا</item>
+    </plurals>
+    <plurals name="session_words_reviewed">
+        <item quantity="zero">المراجَع: %1$d كلمة</item>
+        <item quantity="one">المراجَع: %1$d كلمة</item>
+        <item quantity="two">المراجَع: %1$d كلمة</item>
+        <item quantity="few">المراجَع: %1$d كلمات</item>
+        <item quantity="many">المراجَع: %1$d كلمةً</item>
+        <item quantity="other">المراجَع: %1$d كلمةً</item>
+    </plurals>
+</resources>

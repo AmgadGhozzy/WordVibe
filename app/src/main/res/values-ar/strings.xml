@@ -160,12 +160,9 @@
 
     <!-- Phase 1: shell & design system (Arabic-first, nothing hardcoded) -->
     <string name="home_greeting">أهلًا بك مجددًا 👋</string>
-    <string name="home_streak_value">السلسلة: %1$d أيام</string>
     <string name="home_freeze_balance">رصيد التجميدات: %1$d</string>
     <string name="home_freeze_hint">تجميد يُكتسب كل ٧ أيام متتالية (حتى اثنين) ويحمي سلسلتك يومًا فائتًا واحدًا</string>
     <string name="home_today_session">جلسة اليوم</string>
-    <string name="home_due_label">%1$d كلمة مستحقة للمراجعة</string>
-    <string name="home_new_label">%1$d كلمة جديدة</string>
     <string name="home_estimated_time">حوالي %1$d دقيقة</string>
     <string name="home_attention_title">كلمات تحتاج انتباهك</string>
     <string name="home_attention_empty">لا كلمات متعثرة — واصل التقدم!</string>
@@ -214,9 +211,6 @@
     <string name="next_review_soon">قريبًا</string>
     <string name="next_review_today">اليوم</string>
     <string name="next_review_tomorrow">غدًا</string>
-    <string name="next_review_in_days">بعد %1$d أيام</string>
-    <string name="next_review_in_weeks">بعد %1$d أسبوع</string>
-    <string name="next_review_in_months">بعد %1$d شهر</string>
     <!-- Hardcoded text migration (batch 2a) -->
     <string name="cd_hint_icon">تلميح</string>
     <string name="cd_reset_icon">إعادة</string>
@@ -257,11 +251,7 @@
     <string name="percent_value">%1$d%%</string>
     <string name="format_label_value">%1$s: %2$s</string>
     <string name="format_dot_value">%1$s · %2$s</string>
-    <string name="session_words_reviewed">المراجَع: %1$d كلمة</string>
-    <string name="session_words_reviewed_hm">المراجَع: %1$d كلمة · %2$d دقيقة %3$d ثانية</string>
-    <string name="session_words_reviewed_s">المراجَع: %1$d كلمة · %2$d ثانية</string>
     <string name="cd_option">الخيار %1$s: %2$s</string>
-    <string name="progress_best_streak">أطول سلسلة: %1$d (يوم)</string>
     <string name="progress_of_total">من %1$d</string>
     <!-- Accessibility and touch (batch 2c-1) -->
     <string name="cd_state_correct">الإجابة صحيحة</string>
@@ -282,4 +272,7 @@
     <string name="insights_tab_usage">الاستخدام</string>
     <string name="insights_tab_languages">اللغات</string>
     <string name="placement_band_label">المستوى %1$d — %2$s</string>
+    <!-- Durations (batch 2c-3) -->
+    <string name="duration_min_sec_short">%1$d د %2$d ث</string>
+    <string name="duration_sec_short">%1$d ث</string>
 </resources>

@@ -160,12 +160,9 @@
 
     <!-- Phase 1: shell & design system -->
     <string name="home_greeting">Welcome back 👋</string>
-    <string name="home_streak_value">Streak: %1$d day(s)</string>
     <string name="home_freeze_balance">Freeze balance: %1$d</string>
     <string name="home_freeze_hint">A freeze is earned every 7 consecutive days (up to two) and protects your streak for a single missed day</string>
     <string name="home_today_session">Today\'s session</string>
-    <string name="home_due_label">Due for review: %1$d</string>
-    <string name="home_new_label">New words: %1$d</string>
     <string name="home_estimated_time">About %1$d minutes</string>
     <string name="home_attention_title">Words that need your attention</string>
     <string name="home_attention_empty">No stumbling blocks — keep going!</string>
@@ -214,9 +211,6 @@
     <string name="next_review_soon">Soon</string>
     <string name="next_review_today">Today</string>
     <string name="next_review_tomorrow">Tomorrow</string>
-    <string name="next_review_in_days">In %1$d day(s)</string>
-    <string name="next_review_in_weeks">In %1$d week(s)</string>
-    <string name="next_review_in_months">In %1$d month(s)</string>
     <!-- Hardcoded text migration (batch 2a) -->
     <string name="cd_hint_icon">Hint</string>
     <string name="cd_reset_icon">Reset</string>
@@ -257,11 +251,7 @@
     <string name="percent_value">%1$d%%</string>
     <string name="format_label_value">%1$s: %2$s</string>
     <string name="format_dot_value">%1$s · %2$s</string>
-    <string name="session_words_reviewed">%1$d words reviewed</string>
-    <string name="session_words_reviewed_hm">%1$d words reviewed · %2$dm %3$ds</string>
-    <string name="session_words_reviewed_s">%1$d words reviewed · %2$ds</string>
     <string name="cd_option">Option %1$s: %2$s</string>
-    <string name="progress_best_streak">Best: %1$d days</string>
     <string name="progress_of_total">of %1$d</string>
     <!-- Accessibility and touch (batch 2c-1) -->
     <string name="cd_state_correct">Correct answer</string>
@@ -282,4 +272,7 @@
     <string name="insights_tab_usage">Usage</string>
     <string name="insights_tab_languages">Languages</string>
     <string name="placement_band_label">Level %1$d — %2$s</string>
+    <!-- Durations (batch 2c-3) -->
+    <string name="duration_min_sec_short">%1$dm %2$ds</string>
+    <string name="duration_sec_short">%1$ds</string>
 </resources>

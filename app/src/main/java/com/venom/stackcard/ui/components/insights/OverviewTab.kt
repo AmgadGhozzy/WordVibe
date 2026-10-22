@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -399,9 +400,9 @@ private fun NextReviewBucket.displayLabel(count: Int): String = when (this) {
     NextReviewBucket.SOON -> stringResource(ShellR.string.next_review_soon)
     NextReviewBucket.TODAY -> stringResource(ShellR.string.next_review_today)
     NextReviewBucket.TOMORROW -> stringResource(ShellR.string.next_review_tomorrow)
-    NextReviewBucket.IN_DAYS -> stringResource(ShellR.string.next_review_in_days, count)
-    NextReviewBucket.IN_WEEKS -> stringResource(ShellR.string.next_review_in_weeks, count)
-    NextReviewBucket.IN_MONTHS -> stringResource(ShellR.string.next_review_in_months, count)
+    NextReviewBucket.IN_DAYS -> pluralStringResource(ShellR.plurals.next_review_in_days, count, count)
+    NextReviewBucket.IN_WEEKS -> pluralStringResource(ShellR.plurals.next_review_in_weeks, count, count)
+    NextReviewBucket.IN_MONTHS -> pluralStringResource(ShellR.plurals.next_review_in_months, count, count)
 }
 
 // Keep your previews but update them:

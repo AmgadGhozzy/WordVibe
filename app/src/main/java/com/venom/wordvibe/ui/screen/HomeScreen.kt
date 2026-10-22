@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -116,7 +117,7 @@ fun HomeContent(
                                 modifier = Modifier.size(20.dp),
                             )
                             Text(
-                                text = stringResource(R.string.home_streak_value, data.currentStreak),
+                                text = pluralStringResource(R.plurals.home_streak_value, data.currentStreak, data.currentStreak),
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.tertiary,
                             )
@@ -164,11 +165,11 @@ fun HomeContent(
                             style = MaterialTheme.typography.titleLarge,
                         )
                         Text(
-                            text = stringResource(R.string.home_due_label, data.totalWordsNeedsReview),
+                            text = pluralStringResource(R.plurals.home_due_label, data.totalWordsNeedsReview, data.totalWordsNeedsReview),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Text(
-                            text = stringResource(R.string.home_new_label, newWordsCount),
+                            text = pluralStringResource(R.plurals.home_new_label, newWordsCount, newWordsCount),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                         Text(
