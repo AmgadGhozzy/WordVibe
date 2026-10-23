@@ -253,4 +253,10 @@
     <!-- Durations (batch 2c-3) -->
     <string name="duration_min_sec_short">%1$d د %2$d ث</string>
     <string name="duration_sec_short">%1$d ث</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_daily_goal_desc">اختر هدف نقاط الخبرة اليومي</string>
+    <string name="settings_goal_casual">خفيف — %1$d نقطة</string>
+    <string name="settings_goal_steady">منتظم — %1$d نقطة</string>
+    <string name="settings_goal_intense">مكثف — %1$d نقطة</string>
+    <string name="settings_close">إغلاق</string>
 </resources>

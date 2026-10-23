@@ -253,4 +253,10 @@
     <!-- Durations (batch 2c-3) -->
     <string name="duration_min_sec_short">%1$dm %2$ds</string>
     <string name="duration_sec_short">%1$ds</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_daily_goal_desc">Choose your daily XP target</string>
+    <string name="settings_goal_casual">Casual — %1$d XP</string>
+    <string name="settings_goal_steady">Steady — %1$d XP</string>
+    <string name="settings_goal_intense">Intense — %1$d XP</string>
+    <string name="settings_close">Close</string>
 </resources>

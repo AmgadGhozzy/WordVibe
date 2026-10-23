@@ -7,22 +7,37 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.venom.domain.model.DashboardData
@@ -49,6 +64,7 @@ fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
         dashboard = state.dashboard,
         newWordsCount = state.newWordsCount,
         knownWordsCount = state.knownWordsCount,
+        onUpdateDailyGoal = viewModel::updateDailyGoal,
     )
 }
 
@@ -59,6 +75,7 @@ fun ProgressContent(
     newWordsCount: Int,
     knownWordsCount: Int,
     modifier: Modifier = Modifier,
+    onUpdateDailyGoal: (Int) -> Unit = {},
 ) {
     if (isLoading || dashboard == null) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -66,6 +83,8 @@ fun ProgressContent(
         }
         return
     }
+
+    var showSettingsDialog by rememberSaveable { mutableStateOf(false) }
 
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -97,7 +116,7 @@ fun ProgressContent(
                             style = MaterialTheme.typography.titleMedium,
                         )
                     }
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = pluralStringResource(R.plurals.home_streak_value, dashboard.currentStreak, dashboard.currentStreak),
                             style = MaterialTheme.typography.titleMedium,
@@ -119,6 +138,15 @@ fun ProgressContent(
                             ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                        )
+                    }
+                    IconButton(
+                        onClick = { showSettingsDialog = true },
+                        modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Settings,
+                            contentDescription = stringResource(R.string.settings_title),
                         )
                     }
                 }
@@ -216,6 +244,60 @@ fun ProgressContent(
                 modifier = Modifier.padding(top = Spacing.sm),
             )
         }
+    }
+
+    if (showSettingsDialog) {
+        val options = listOf(
+            30 to R.string.settings_goal_casual,
+            50 to R.string.settings_goal_steady,
+            100 to R.string.settings_goal_intense,
+        )
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = { Text(text = stringResource(R.string.settings_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                    Text(
+                        text = stringResource(R.string.settings_daily_goal_desc),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    options.forEach { (goalXp, labelRes) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = dashboard.dailyGoalTarget == goalXp,
+                                    onClick = {
+                                        onUpdateDailyGoal(goalXp)
+                                        showSettingsDialog = false
+                                    },
+                                    role = Role.RadioButton,
+                                ),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = dashboard.dailyGoalTarget == goalXp,
+                                onClick = null,
+                            )
+                            Text(
+                                text = stringResource(labelRes, goalXp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = Spacing.sm),
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { showSettingsDialog = false },
+                    modifier = Modifier.heightIn(min = 48.dp),
+                ) {
+                    Text(stringResource(R.string.settings_close))
+                }
+            },
+        )
     }
 }
 

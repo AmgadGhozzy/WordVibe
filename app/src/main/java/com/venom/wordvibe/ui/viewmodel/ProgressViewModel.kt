@@ -56,4 +56,17 @@ class ProgressViewModel @Inject constructor(
             }
         }
     }
+
+    fun updateDailyGoal(goalXp: Int) {
+        viewModelScope.launch {
+            try {
+                val userId = identityRepository.getCurrentUserId()
+                activityRepository.updateDailyGoal(userId, goalXp)
+                load()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+            }
+        }
+    }
 }
