@@ -31,6 +31,9 @@ class RootViewModel @Inject constructor(
         MutableStateFlow<SubtitleOverrideState>(SubtitleOverrideState.Default)
     val subtitleOverride: StateFlow<SubtitleOverrideState> = _subtitleOverride.asStateFlow()
 
+    private val _appTheme = MutableStateFlow(com.venom.domain.model.AppTheme.SYSTEM)
+    val appTheme: StateFlow<com.venom.domain.model.AppTheme> = _appTheme.asStateFlow()
+
     private val _sharedUri = MutableStateFlow<String?>(null)
     val sharedUri: StateFlow<String?> = _sharedUri.asStateFlow()
 
@@ -52,6 +55,9 @@ class RootViewModel @Inject constructor(
         viewModelScope.launch {
             _onboardingDone.value = onboardingStore.onboardingDone.first()
             isLoadingOnboardingState = false
+        }
+        viewModelScope.launch {
+            onboardingStore.appTheme.collect { _appTheme.value = it }
         }
     }
 

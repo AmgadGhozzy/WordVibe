@@ -122,7 +122,8 @@ data class WordMasteryUiState(
     val quizInput: QuizInput? = null,
     val cardChangeCounter: Int = 0,
     val showPlacementModal: Boolean = false,
-    val graduatedCards: Int = 0
+    val graduatedCards: Int = 0,
+    val autoPronounce: Boolean = true
 )
 
 sealed class WordMasteryEvent {
@@ -215,6 +216,14 @@ class WordMasteryViewModel @Inject constructor(
         }
 
         startDbOperationProcessor()
+
+        viewModelScope.launch {
+            dataStore.data
+                .map { it[PreferencesKeys.AUTO_PRONOUNCE] ?: true }
+                .collect { enabled ->
+                    _uiState.update { it.copy(autoPronounce = enabled) }
+                }
+        }
     }
 
     private fun onPostLoginSync() {

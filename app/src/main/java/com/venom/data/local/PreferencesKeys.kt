@@ -12,6 +12,9 @@ object PreferencesKeys {
     val SEED_COMPLETED: Preferences.Key<Boolean> = booleanPreferencesKey("corpus_seed_completed")
     val CORPUS_VERSION: Preferences.Key<Int> = intPreferencesKey("corpus_version")
     val ONBOARDING_DONE: Preferences.Key<Boolean> = booleanPreferencesKey("onboarding_done")
+    val APP_THEME: Preferences.Key<String> =
+        androidx.datastore.preferences.core.stringPreferencesKey("app_theme")
+    val AUTO_PRONOUNCE: Preferences.Key<Boolean> = booleanPreferencesKey("auto_pronounce")
 
     // Spelling hint budget (ADR-0009)
     val HINTS_ENABLED: Preferences.Key<Boolean> = booleanPreferencesKey("spelling_hints_enabled")

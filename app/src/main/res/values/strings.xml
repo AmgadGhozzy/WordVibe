@@ -305,4 +305,6 @@
     <string name="pos_verb">Verb</string>
     <string name="pos_adj">Adj</string>
     <string name="pos_adv">Adv</string>
+    <string name="settings_theme_label">Theme</string>
+    <string name="settings_auto_pronounce">Auto-pronounce words</string>
 </resources>

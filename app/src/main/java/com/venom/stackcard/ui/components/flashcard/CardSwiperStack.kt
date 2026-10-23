@@ -56,7 +56,7 @@ fun CardSwiperStack(
 
     LaunchedEffect(topCard, cardChangeCounter) {
         cardAnimState.resetImmediate()
-        if (!showQuiz) {
+        if (!showQuiz && state.autoPronounce) {
             topCard?.let { onSpeak(it.wordEn) }
         }
     }

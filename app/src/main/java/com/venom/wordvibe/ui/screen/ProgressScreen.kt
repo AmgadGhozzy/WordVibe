@@ -14,16 +14,19 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.venom.domain.model.AppTheme
 import com.venom.domain.model.DashboardData
 import com.venom.wordvibe.R
 import com.venom.wordvibe.ui.designsystem.ProgressRing
@@ -64,7 +68,11 @@ fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
         dashboard = state.dashboard,
         newWordsCount = state.newWordsCount,
         knownWordsCount = state.knownWordsCount,
+        appTheme = state.appTheme,
+        autoPronounce = state.autoPronounce,
         onUpdateDailyGoal = viewModel::updateDailyGoal,
+        onUpdateAppTheme = viewModel::updateAppTheme,
+        onUpdateAutoPronounce = viewModel::updateAutoPronounce,
     )
 }
 
@@ -75,7 +83,11 @@ fun ProgressContent(
     newWordsCount: Int,
     knownWordsCount: Int,
     modifier: Modifier = Modifier,
+    appTheme: AppTheme = AppTheme.SYSTEM,
+    autoPronounce: Boolean = true,
     onUpdateDailyGoal: (Int) -> Unit = {},
+    onUpdateAppTheme: (AppTheme) -> Unit = {},
+    onUpdateAutoPronounce: (Boolean) -> Unit = {},
 ) {
     if (isLoading || dashboard == null) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -286,6 +298,59 @@ fun ProgressContent(
                                 modifier = Modifier.padding(start = Spacing.sm),
                             )
                         }
+                    }
+
+                    HorizontalDivider()
+
+                    Text(
+                        text = stringResource(R.string.settings_theme_label),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    listOf(AppTheme.SYSTEM, AppTheme.LIGHT, AppTheme.DARK).forEach { theme ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .selectable(
+                                    selected = appTheme == theme,
+                                    onClick = {
+                                        onUpdateAppTheme(theme)
+                                    },
+                                    role = Role.RadioButton,
+                                ),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RadioButton(
+                                selected = appTheme == theme,
+                                onClick = null,
+                            )
+                            Text(
+                                text = stringResource(theme.title),
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = Spacing.sm),
+                            )
+                        }
+                    }
+
+                    HorizontalDivider()
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .toggleable(
+                                value = autoPronounce,
+                                onValueChange = onUpdateAutoPronounce,
+                                role = Role.Switch,
+                            ),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_auto_pronounce),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Switch(checked = autoPronounce, onCheckedChange = null)
                     }
                 }
             },

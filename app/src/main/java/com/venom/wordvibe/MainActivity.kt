@@ -5,7 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.venom.domain.model.AppTheme
 import com.venom.wordvibe.ui.WordVibeApp
 import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.wordvibe.ui.viewmodel.RootViewModel
@@ -22,7 +25,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            WordVibeTheme {
+            val appTheme by rootViewModel.appTheme.collectAsStateWithLifecycle()
+            val darkTheme = when (appTheme) {
+                AppTheme.DARK -> true
+                AppTheme.LIGHT -> false
+                AppTheme.SYSTEM -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+            WordVibeTheme(darkTheme = darkTheme) {
                 WordVibeApp(rootViewModel = rootViewModel)
             }
         }

@@ -305,4 +305,6 @@
     <string name="pos_verb">فعل</string>
     <string name="pos_adj">صفة</string>
     <string name="pos_adv">ظرف</string>
+    <string name="settings_theme_label">المظهر</string>
+    <string name="settings_auto_pronounce">نطق الكلمات تلقائيًا</string>
 </resources>

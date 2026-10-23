@@ -15,6 +15,13 @@ class OnboardingStore(
     val onboardingDone: Flow<Boolean> =
         dataStore.data.map { it[PreferencesKeys.ONBOARDING_DONE] ?: false }
 
+    val appTheme: Flow<com.venom.domain.model.AppTheme> =
+        dataStore.data.map { prefs ->
+            val raw = prefs[PreferencesKeys.APP_THEME]
+            com.venom.domain.model.AppTheme.entries.find { it.name == raw }
+                ?: com.venom.domain.model.AppTheme.SYSTEM
+        }
+
     suspend fun complete() {
         dataStore.edit { it[PreferencesKeys.ONBOARDING_DONE] = true }
     }
