@@ -168,7 +168,7 @@ private fun PlacementResultScreen(
                 )
                 Spacer(Modifier.height(4.adp))
                 Text(
-                    text = result.assignedLevel.id.replaceFirstChar { it.uppercase() },
+                    text = stringResource(result.assignedLevel.titleRes),
                     fontSize = 16.asp,
                     color = colorScheme.onPrimaryContainer,
                     fontWeight = FontWeight.SemiBold

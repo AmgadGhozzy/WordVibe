@@ -404,7 +404,7 @@ private fun ExampleAccordionItem(
             // Chevron with smooth rotation
             Icon(
                 painter = painterResource(id = R.drawable.ic_caret_down),
-                contentDescription = if (isExpanded) "Collapse" else "Expand",
+                contentDescription = stringResource(if (isExpanded) R.string.cd_collapse else R.string.cd_expand),
                 modifier = Modifier
                     .size(16.adp)
                     .rotate(rotationAngle),

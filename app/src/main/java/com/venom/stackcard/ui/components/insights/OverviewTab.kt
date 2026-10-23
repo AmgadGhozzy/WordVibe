@@ -169,7 +169,7 @@ private fun YourProgressCard(
             CircularProgressRing(
                 progress = animatedProgress,
                 modifier = Modifier.size(80.adp),
-                label = "MASTERY"
+                label = stringResource(R.string.spelling_streak_label)
             )
 
             HorizontalDivider(

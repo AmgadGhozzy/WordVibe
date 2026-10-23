@@ -400,7 +400,13 @@ private fun WordFamilyCard(
                     .padding(horizontal = 8.adp, vertical = 3.adp)
             ) {
                 Text(
-                    text = partOfSpeech.uppercase(),
+                    text = when (partOfSpeech.lowercase()) {
+                        "noun" -> stringResource(R.string.pos_noun).uppercase()
+                        "verb" -> stringResource(R.string.pos_verb).uppercase()
+                        "adj", "adjective" -> stringResource(R.string.pos_adj).uppercase()
+                        "adv", "adverb" -> stringResource(R.string.pos_adv).uppercase()
+                        else -> partOfSpeech.uppercase()
+                    },
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         fontSize = 8.asp,

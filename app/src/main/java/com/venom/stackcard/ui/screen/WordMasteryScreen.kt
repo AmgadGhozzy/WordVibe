@@ -123,7 +123,7 @@ fun WordMasteryScreen(
 
             uiState.error != null -> {
                 ErrorView(
-                    message = uiState.error ?: "Unknown error",
+                    message = uiState.error?.takeIf { it != "Unknown error" } ?: stringResource(com.venom.wordvibe.R.string.error_something_wrong),
                     onRetry = { viewModel.onEvent(WordMasteryEvent.Initialize(uiState.isGenerativeMode)) }
                 )
             }

@@ -48,7 +48,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.venom.domain.model.AppTheme
-import com.venom.domain.model.getFrequencyLabel
 import com.venom.wordvibe.R
 import com.venom.ui.components.common.adp
 import com.venom.ui.components.common.asp
@@ -222,7 +221,15 @@ fun FrequencyWidget(
     frequency: Int,
     modifier: Modifier = Modifier
 ) {
-    val label = getFrequencyLabel(frequency)
+    val label = when (frequency) {
+        1, 2 -> stringResource(R.string.freq_very_common)
+        3 -> stringResource(R.string.freq_common)
+        4 -> stringResource(R.string.freq_average)
+        5 -> stringResource(R.string.freq_uncommon)
+        6 -> stringResource(R.string.freq_rare)
+        7 -> stringResource(R.string.freq_obscure)
+        else -> stringResource(R.string.freq_unknown)
+    }
 
     // Map frequency to bars filled (inverse relationship)
     val barsToFill = when (frequency) {
@@ -375,15 +382,6 @@ fun StatCell(
  * Returns a human-readable frequency band label and sublabel based on word rank.
  * Rank is 1-indexed (rank=1 is the most common word in the database).
  */
-private fun rankBand(rank: Int): Pair<String, String> = when {
-    rank <= 0    -> "Power Word" to "Essential vocabulary"
-    rank <= 1000 -> "Top 1000" to "Most essential words"
-    rank <= 2000 -> "Top 2000" to "Essential words"
-    rank <= 3000 -> "Top 3000" to "High-frequency words"
-    rank <= 5000 -> "Top 5000" to "Common vocabulary"
-    else         -> "Extended" to "Advanced vocabulary"
-}
-
 @Composable
 fun PowerCell(
     showPowerTip: Boolean,
@@ -392,7 +390,14 @@ fun PowerCell(
     wordRank: Int = 0
 ) {
     val semanticColors = MaterialTheme.synapse.semantic
-    val (bandLabel, bandSub) = remember(wordRank) { rankBand(wordRank) }
+    val (bandLabel, bandSub) = when {
+        wordRank <= 0 -> stringResource(R.string.rank_band_power) to stringResource(R.string.rank_sub_power)
+        wordRank <= 1000 -> stringResource(R.string.rank_band_top, 1000) to stringResource(R.string.rank_sub_1000)
+        wordRank <= 2000 -> stringResource(R.string.rank_band_top, 2000) to stringResource(R.string.rank_sub_2000)
+        wordRank <= 3000 -> stringResource(R.string.rank_band_top, 3000) to stringResource(R.string.rank_sub_3000)
+        wordRank <= 5000 -> stringResource(R.string.rank_band_top, 5000) to stringResource(R.string.rank_sub_5000)
+        else -> stringResource(R.string.rank_band_extended) to stringResource(R.string.rank_sub_extended)
+    }
 
     Box(
         modifier = modifier

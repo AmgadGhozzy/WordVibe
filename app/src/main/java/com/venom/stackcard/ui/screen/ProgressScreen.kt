@@ -206,7 +206,20 @@ private fun LevelCard(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(4.adp)) {
                 Text(
-                    text = level.displayName,
+                    text = when (level) {
+                        UserLevel.NEWCOMER -> stringResource(R.string.user_level_newcomer)
+                        UserLevel.EXPLORER -> stringResource(R.string.user_level_explorer)
+                        UserLevel.LEARNER -> stringResource(R.string.user_level_learner)
+                        UserLevel.APPRENTICE -> stringResource(R.string.user_level_apprentice)
+                        UserLevel.SCHOLAR -> stringResource(R.string.user_level_scholar)
+                        UserLevel.ADEPT -> stringResource(R.string.user_level_adept)
+                        UserLevel.EXPERT -> stringResource(R.string.user_level_expert)
+                        UserLevel.MASTER -> stringResource(R.string.user_level_master)
+                        UserLevel.CHAMPION -> stringResource(R.string.user_level_champion)
+                        UserLevel.LEGEND -> stringResource(R.string.user_level_legend)
+                        UserLevel.POLYGLOT -> stringResource(R.string.user_level_polyglot)
+                        UserLevel.SAGE -> stringResource(R.string.user_level_sage)
+                    },
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
                     color = themeColor
                 )

@@ -107,6 +107,25 @@ fun LanguagesTab(
 }
 
 /**
+ * Localized display name for language names coming from the data layer.
+ * Data keys stay English so pinning logic is untouched.
+ */
+@Composable
+private fun localizedLanguageName(langName: String): String = when (langName) {
+    "Arabic" -> stringResource(R.string.lang_arabic)
+    "French" -> stringResource(R.string.lang_french)
+    "German" -> stringResource(R.string.lang_german)
+    "Spanish" -> stringResource(R.string.lang_spanish)
+    "Chinese" -> stringResource(R.string.lang_chinese)
+    "Russian" -> stringResource(R.string.lang_russian)
+    "Portuguese" -> stringResource(R.string.lang_portuguese)
+    "Japanese" -> stringResource(R.string.lang_japanese)
+    "Italian" -> stringResource(R.string.lang_italian)
+    "Turkish" -> stringResource(R.string.lang_turkish)
+    else -> langName
+}
+
+/**
  * Language row with pinned state and glow effect
  */
 @Composable
@@ -180,7 +199,7 @@ private fun LanguageRow(
             Column(verticalArrangement = Arrangement.spacedBy(6.adp)) {
                 // Language name
                 Text(
-                    text = language.langName.uppercase(),
+                    text = localizedLanguageName(language.langName).uppercase(),
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.asp,
