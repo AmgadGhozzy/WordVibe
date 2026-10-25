@@ -214,6 +214,14 @@ fun SpellingGameScreen(
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    Text(
+                        text = stringResource(
+                            R.string.spelling_attempts_left,
+                            (3 - state.mistakes).coerceAtLeast(0)
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     if (!state.attemptWillCount) {
                         Text(
                             text = stringResource(R.string.spelling_attempt_not_counted),

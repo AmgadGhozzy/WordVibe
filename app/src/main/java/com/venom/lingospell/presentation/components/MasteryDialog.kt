@@ -83,7 +83,7 @@ fun MasteryDialog(
             Spacer(Modifier.height(16.adp))
 
             Text(
-                text = stringResource(R.string.mastery_dialog_title),
+                text = stringResource(R.string.spelling_celebration_title),
                 style = MaterialTheme.typography.displaySmall.copy(
                     fontWeight = FontWeight.Bold,
                     fontSize = 36.asp,

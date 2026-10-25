@@ -154,13 +154,8 @@
     <string name="state_known">Known</string>
     <string name="state_mastered">Mastered</string>
     <string name="state_due">Due</string>
-    <string name="write_due_section">Due now</string>
-    <string name="write_weak_section">Weak in production</string>
     <string name="write_queue_title">Writing queue — weakest in production first</string>
-    <string name="spelling_typed_label">Type the word in English</string>
-    <string name="spelling_check">Check</string>
     <string name="spelling_near_miss">So close! Try again</string>
-    <string name="spelling_enter_training">Training mode (letter bank)</string>
     <string name="write_queue_empty_title">No words waiting for practice</string>
     <string name="write_queue_empty_body">Finish a flashcard session first, and the words that need spelling reinforcement will show up here.</string>
     <string name="write_count_label">Words: %1$d</string>
@@ -192,7 +187,6 @@
     <!-- Hardcoded text migration (batch 2a) -->
     <string name="cd_hint_icon">Hint</string>
     <string name="cd_reset_icon">Reset</string>
-    <string name="mastery_dialog_title">MASTERED!</string>
     <string name="mastery_dialog_body">You\'ve spelled this word correctly 3 times!</string>
     <string name="mastery_dialog_continue">Continue to Next Word</string>
     <string name="spelling_streak_label">MASTERY</string>
