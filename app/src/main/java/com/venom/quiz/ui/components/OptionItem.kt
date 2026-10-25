@@ -97,7 +97,7 @@ fun OptionItem(
             .scale(scale)
             .semantics {
                 role = Role.RadioButton
-                selected = isSelected
+                selected = isSelected && !isAnswered
                 contentDescription = optionDescription
                 stateDescription = stateDescriptionText
             },

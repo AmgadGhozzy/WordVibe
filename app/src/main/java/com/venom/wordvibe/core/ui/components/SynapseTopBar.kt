@@ -21,8 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import com.venom.wordvibe.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -37,17 +42,18 @@ fun SynapseTopBar(
     profileAvatarUrl: String? = null,
     isPremium: Boolean = false,
 ) {
+    val profileDesc = stringResource(R.string.profile_photo_description)
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .semantics { heading() }
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clickable(onClick = onProfileClick),
+                .clickable(onClick = onProfileClick)
+                .semantics { contentDescription = profileDesc; role = Role.Button },
             contentAlignment = Alignment.Center,
         ) {
             Box(
@@ -79,6 +85,7 @@ fun SynapseTopBar(
             }
             Text(
                 text = title,
+                modifier = Modifier.semantics { heading() },
                 style = MaterialTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
                 ),

@@ -101,4 +101,5 @@ data class QuizUiState(
 ) {
     val currentQuestion: QuizQuestionUi? get() = questions.getOrNull(currentIndex)
     val progress: Float get() = if (totalQuestions == 0) 0f else (currentIndex + 1f) / totalQuestions
+    val cefr: String get() = placementBandLabel.substringAfterLast(" — ", missingDelimiterValue = "")
 }

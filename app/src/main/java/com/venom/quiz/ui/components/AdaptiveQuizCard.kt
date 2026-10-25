@@ -200,7 +200,7 @@ private fun PlacementHeader(state: QuizUiState, onBack: () -> Unit) {
                 color = colorScheme.primaryContainer
             ) {
                 val label = state.placementBandLabel
-                val cefr = label.substringAfterLast(" — ", missingDelimiterValue = "")
+                val cefr = state.cefr
                 val band = state.placementBand
                 val text = if (band > 0 && cefr.isNotEmpty()) {
                     stringResource(R.string.placement_band_label, band, cefr)
