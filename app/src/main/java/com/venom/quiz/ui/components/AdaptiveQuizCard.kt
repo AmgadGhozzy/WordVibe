@@ -57,6 +57,36 @@ fun AdaptiveQuizCard(
     modifier: Modifier = Modifier,
     embedded: Boolean = false
 ) {
+    if (state.error != null) {
+        Surface(
+            modifier = modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.adp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.error_something_wrong),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(16.adp))
+                androidx.compose.material3.TextButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(width = 120.adp, height = 48.adp)
+                ) {
+                    Text(text = stringResource(R.string.action_close))
+                }
+            }
+        }
+        return
+    }
     val question = state.currentQuestion ?: return
     val isMini = state.mode is QuizMode.Flashcard
     val isPlacement = state.mode is QuizMode.Placement
@@ -186,7 +216,7 @@ private fun PlacementHeader(state: QuizUiState, onBack: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(40.adp)) {
+            IconButton(onClick = onBack, modifier = Modifier.size(48.adp)) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.cd_back),
@@ -262,7 +292,7 @@ private fun FullHeader(state: QuizUiState, onBack: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onBack, modifier = Modifier.size(40.adp)) {
+            IconButton(onClick = onBack, modifier = Modifier.size(48.adp)) {
                 Icon(
                     imageVector = Icons.Rounded.Close,
                     contentDescription = stringResource(R.string.cd_back),

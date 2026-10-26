@@ -21,11 +21,11 @@
     <string name="onboarding_point_1">بطاقات ذكية تراجعك في الوقت المناسب</string>
     <string name="onboarding_point_2">تدريب إملائي مبني على كلماتك</string>
     <string name="onboarding_point_3">إحصائيات تعكس تقدمك بوضوح</string>
-    <string name="onboarding_cta">ابـدأ الآن</string>
+    <string name="onboarding_cta">ابدأ الآن</string>
 
     <!-- Home -->
     <string name="home_brand_name">WordVibe</string>
-    <string name="home_tagline">اتقن الإنجليزية ببطاقات ذكية ومراجعة على إيقاعك</string>
+    <string name="home_tagline">أتقن الإنجليزية ببطاقات ذكية ومراجعة على إيقاعك</string>
     <string name="home_start_learning">ابدأ التعلم</string>
     <string name="home_tap_to_view_details">اضغط لعرض التفاصيل</string>
     <string name="stat_words">الكلمات</string>
@@ -53,7 +53,7 @@
     <!-- Placement choice -->
     <string name="placement_welcome">أهلاً بك 🎓</string>
     <string name="placement_intro">كيف تريد أن تبدأ رحلتك التعليمية؟</string>
-    <string name="placement_cta_test">اجرِ اختبار تحديد المستوى</string>
+    <string name="placement_cta_test">أجرِ اختبار تحديد المستوى</string>
     <string name="placement_cta_test_hint">أجب عن 6 أسئلة سريعة لتحديد مستواك</string>
     <string name="placement_cta_beginner">ابدأ من البداية</string>
     <string name="placement_cta_beginner_hint">ابدأ من المستوى المبتدئ (A1)</string>
