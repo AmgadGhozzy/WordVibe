@@ -763,10 +763,21 @@ class WordMasteryViewModel @Inject constructor(
             val due = progressRepository.getWordsDueForReview(userId, limit)
             val newNeeded = limit - due.size
 
+            val persistedUnit = dataStore.data.firstOrNull()?.get(PreferencesKeys.OPEN_UNIT)
+            val (openUnit, hasTopicWords) = progressRepository.resolveOpenUnitForUser(
+                userId = userId,
+                persistedUnit = persistedUnit
+            )
+            if (openUnit != persistedUnit) {
+                dataStore.edit { prefs -> prefs[PreferencesKeys.OPEN_UNIT] = openUnit }
+            }
+
             val newWords = if (newNeeded > 0) {
                 progressRepository.getNewWordsForUser(
-                    userId, newNeeded,
-                    preferredCefr = activityRepository.getPlacementCefr(userId)
+                    userId = userId,
+                    limit = newNeeded,
+                    preferredCefr = activityRepository.getPlacementCefr(userId),
+                    unitTopic = if (hasTopicWords) openUnit else null
                 )
             } else {
                 emptyList()

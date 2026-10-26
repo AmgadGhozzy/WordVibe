@@ -53,11 +53,11 @@ Units are the content container on top of the corpus:
 
 ### Frozen-scope extension
 
-Persisting the currently-open unit (DataStore preference vs. `userProfile`
-column) is the one remaining design decision and is resolved inside the
-implementation ticket before wiring. The 60% gate itself lands first as a pure
-function with contract tests (`UnitGate`), mirroring how
-`StreakEngine.freezeGrant` landed in ADR-0010.
+Persisting the currently-open unit is resolved in favor of a DataStore
+preference (`PreferencesKeys.OPEN_UNIT`) rather than a `userProfile` column,
+preserving the frozen Room schema (`2.json`) without a database migration.
+The 60% gate (`UnitGate`) and `EDITORIAL_CHAIN` drive monotonic unit
+progression on new-word entry in `loadSrsWords`.
 
 ## Resolved questions (were open in the Proposed draft)
 

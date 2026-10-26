@@ -14,6 +14,61 @@ object UnitGate {
 
     const val OPEN_RATIO_PERCENT = 60
 
+    /**
+     * Fixed sequential chain over the ten canonical IELTS topics in the
+     * editorial order pinned by ADR-0011 Decision 4.
+     */
+    val EDITORIAL_CHAIN: List<String> = listOf(
+        "Education",
+        "Work",
+        "Health",
+        "Travel",
+        "Technology",
+        "Environment",
+        "Culture",
+        "Society",
+        "Economy",
+        "Science"
+    )
+
+    /**
+     * Resolves the currently-open unit along [EDITORIAL_CHAIN], starting from
+        * [persistedUnit] (or the first unit when null/unrecognized) and advancing
+        * monotonically while the current unit meets the 60% known gate.
+        *
+        * [unitCounts] returns `(knownCount, usableCount)` for a given topic.
+        */
+    fun resolveOpenUnit(
+        persistedUnit: String?,
+        unitCounts: (String) -> Pair<Int, Int>
+    ): String {
+        var idx = persistedUnit
+            ?.let { unit -> EDITORIAL_CHAIN.indexOfFirst { it.equals(unit, ignoreCase = true) } }
+            ?.takeIf { it >= 0 }
+            ?: 0
+
+        while (idx < EDITORIAL_CHAIN.lastIndex) {
+            val (known, usable) = unitCounts(EDITORIAL_CHAIN[idx])
+            if (usable > 0) {
+                if (shouldUnlockNext(known, usable)) {
+                    idx++
+                } else {
+                    break
+                }
+            } else {
+                val hasLaterUsable = ((idx + 1)..EDITORIAL_CHAIN.lastIndex).any { laterIdx ->
+                    unitCounts(EDITORIAL_CHAIN[laterIdx]).second > 0
+                }
+                if (hasLaterUsable && shouldUnlockNext(known, usable)) {
+                    idx++
+                } else {
+                    break
+                }
+            }
+        }
+        return EDITORIAL_CHAIN[idx]
+    }
+
     /** Words that must be known before the next unit opens (rounded up). */
     fun requiredKnownCount(unitSize: Int): Int =
         ((unitSize.toLong() * OPEN_RATIO_PERCENT + 99) / 100).toInt()

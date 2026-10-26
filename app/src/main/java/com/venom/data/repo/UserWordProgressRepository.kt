@@ -15,8 +15,10 @@ import com.venom.data.mapper.WordMasterEntityMapper
 import com.venom.domain.model.KnownState
 import com.venom.domain.model.UserWordProgress
 import com.venom.domain.srs.SrsEngine
+import com.venom.stackcard.session.UnitGate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -71,14 +73,25 @@ class UserWordProgressRepository @Inject constructor(
     suspend fun getNewWordsForUser(
         userId: String,
         limit: Int = 15,
-        preferredCefr: String? = null
+        preferredCefr: String? = null,
+        unitTopic: String? = null
     ): List<com.venom.domain.model.WordMaster> =
         withContext(Dispatchers.IO) {
             // Pure-rank serving keeps the exact limit passthrough (frozen contract);
-            // band-first serving widens the window for band selection.
-            val window = if (preferredCefr.isNullOrBlank()) limit else limit * 2
-            val pool = wordMasterDao.getNewWordsForUser(userId, window).map {
+            // band-first serving widens the window for band selection;
+            // unit-gated serving scans the unseen rank-ordered pool for the open unit.
+            val window = when {
+                !unitTopic.isNullOrBlank() -> Int.MAX_VALUE
+                preferredCefr.isNullOrBlank() -> limit
+                else -> limit * 2
+            }
+            val rawPool = wordMasterDao.getNewWordsForUser(userId, window).map {
                 WordMasterEntityMapper.toDomain(it)
+            }
+            val pool = if (unitTopic.isNullOrBlank()) {
+                rawPool
+            } else {
+                rawPool.filter { it.ieltsTopic.equals(unitTopic, ignoreCase = true) }
             }
             if (preferredCefr.isNullOrBlank()) {
                 pool.take(limit)
@@ -89,6 +102,40 @@ class UserWordProgressRepository @Inject constructor(
                 (band + rest).take(limit)
             }
         }
+
+    /**
+     * Resolves the user's currently-open unit across [UnitGate.EDITORIAL_CHAIN]
+     * using usable words (non-blank definitionEn and arabicAr) and KNOWN/MASTERED
+     * progress counts. Returns `(openUnit, hasTopicTaggedCorpus)`.
+     */
+    suspend fun resolveOpenUnitForUser(
+        userId: String,
+        persistedUnit: String?
+    ): Pair<String, Boolean> = withContext(Dispatchers.IO) {
+        val allWords = wordMasterDao.getAllWords().first()
+        val hasTopicWords = allWords.any { !it.ieltsTopic.isNullOrBlank() }
+        if (!hasTopicWords) {
+            val fallback = persistedUnit
+                ?.takeIf { u -> UnitGate.EDITORIAL_CHAIN.any { it.equals(u, ignoreCase = true) } }
+                ?: UnitGate.EDITORIAL_CHAIN.first()
+            return@withContext fallback to false
+        }
+        val progressByWordId = progressDao.getAllProgressSnapshot(userId)
+            .associateBy { it.wordId }
+        val openUnit = UnitGate.resolveOpenUnit(persistedUnit) { topic ->
+            val usable = allWords.filter { w ->
+                w.ieltsTopic.equals(topic, ignoreCase = true) &&
+                    !w.definitionEn.isNullOrBlank() &&
+                    !w.arabicAr.isNullOrBlank()
+            }
+            val known = usable.count { w ->
+                val state = progressByWordId[w.id]?.knownState
+                state == KnownState.KNOWN.name || state == KnownState.MASTERED.name
+            }
+            known to usable.size
+        }
+        openUnit to true
+    }
 
     /** Count of the frozen new-word definition (LEFT JOIN no-progress-row). */
     suspend fun countNewWordsForUser(userId: String): Int =
