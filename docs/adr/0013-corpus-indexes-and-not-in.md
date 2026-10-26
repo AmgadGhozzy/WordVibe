@@ -1,8 +1,7 @@
 # ADR-0013 — Corpus indexes (migration #2) and the end of the NOT IN binder risk
 
 Date: 2026-10-06
-Status: Proposed — tracked on branch ticket16/indexes-and-migration per
-PM round-16; pending final merge approval.
+Status: Accepted — merged to main and verified on device (21/21 connectedDebugAndroidTest).
 Related: ADR-0012 (corpus expansion to 4,777 candidates), db-audit REPORT.md
 §8, tickets 15/16, the frozen new/due definitions and P-01 state semantics.
 

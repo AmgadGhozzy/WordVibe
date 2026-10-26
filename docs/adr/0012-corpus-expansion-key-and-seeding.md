@@ -1,9 +1,8 @@
 # ADR-0012 — Corpus expansion from WordsMaster.db: key, identifiers, seeding, and review policy
 
 Date: 2026-10-07
-Status: **Proposed → accepted as PM default (PM round-15)** — disk-only until the
-PM approves it for tracking; review policy is **option (ب) as the PM's stated
-default** and is recorded as an explicit exception (see Decision 8).
+Status: Accepted — merged to main; review policy is **option (ب) as the PM's
+stated default** and is recorded as an explicit exception (see Decision 8).
 Related: ADR-0005 (explicit machine-checkable production targets), ADR-0010
 (placement anchor / rank semantics), ADR-0011 (units are the ten IELTS topics),
 `.scratch/db-audit/REPORT.md` (full read-only audit this decision builds on).
