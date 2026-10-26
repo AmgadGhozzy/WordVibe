@@ -1,5 +1,7 @@
 package com.venom.wordvibe.ui.screen
 
+import androidx.annotation.StringRes
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.venom.data.repo.UserWordProgressRepository
 import com.venom.domain.model.CefrLevel
 import com.venom.domain.model.DashboardData
 import com.venom.domain.model.RelatedWords
@@ -66,6 +71,7 @@ fun HomeRoute(
         dashboard = state.dashboard,
         newWordsCount = state.newWordsCount,
         attentionWords = state.attentionWords,
+        units = state.units,
         estimatedMinutes = viewModel.estimatedMinutes(
             due = state.dashboard?.totalWordsNeedsReview ?: 0,
             new = state.newWordsCount,
@@ -85,6 +91,7 @@ fun HomeContent(
     onStartSession: () -> Unit,
     onPractice: () -> Unit,
     modifier: Modifier = Modifier,
+    units: List<UserWordProgressRepository.UnitStatus> = emptyList(),
 ) {
     if (isLoading) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -195,6 +202,19 @@ fun HomeContent(
             )
         }
 
+        if (units.isNotEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.home_units_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            items(units, key = { it.topic }) { unit ->
+                UnitRow(unit = unit)
+            }
+        }
+
         if (attentionWords.isNotEmpty()) {
             item {
                 Text(
@@ -215,6 +235,91 @@ fun HomeContent(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
+            }
+        }
+    }
+}
+
+@StringRes
+fun unitTopicTitleRes(topic: String): Int = when (topic.lowercase()) {
+    "education" -> R.string.unit_topic_education
+    "work" -> R.string.unit_topic_work
+    "health" -> R.string.unit_topic_health
+    "travel" -> R.string.unit_topic_travel
+    "technology" -> R.string.unit_topic_technology
+    "environment" -> R.string.unit_topic_environment
+    "culture" -> R.string.unit_topic_culture
+    "society" -> R.string.unit_topic_society
+    "economy" -> R.string.unit_topic_economy
+    "science" -> R.string.unit_topic_science
+    else -> R.string.unit_topic_education
+}
+
+@Composable
+private fun UnitRow(unit: UserWordProgressRepository.UnitStatus) {
+    val topicTitle = stringResource(unitTopicTitleRes(unit.topic))
+    Card(
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = if (unit.isOpen) {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+            },
+        ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { /* Safe tap */ },
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
+                .heightIn(min = MinTouchTarget),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = Spacing.sm),
+            ) {
+                Text(
+                    text = topicTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                if (!unit.isOpen && unit.lockReason != null) {
+                    Text(
+                        text = stringResource(
+                            R.string.unit_lock_reason,
+                            unit.lockReason.remaining,
+                            topicTitle,
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            if (unit.isOpen) {
+                WordStateChip(
+                    style = WordStateChipStyle.KNOWN,
+                    label = stringResource(R.string.unit_status_open),
+                )
+            } else {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    WordStateChip(
+                        style = WordStateChipStyle.LEARNING,
+                        label = stringResource(R.string.unit_status_locked),
+                    )
+                }
             }
         }
     }

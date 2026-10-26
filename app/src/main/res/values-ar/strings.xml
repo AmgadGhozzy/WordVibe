@@ -301,4 +301,20 @@
     <string name="pos_adv">ظرف</string>
     <string name="settings_theme_label">المظهر</string>
     <string name="settings_auto_pronounce">نطق الكلمات تلقائيًا</string>
+
+    <!-- Units surface (ADR-0011, ticket 03) -->
+    <string name="home_units_title">وحدات التعلّم</string>
+    <string name="unit_status_open">مفتوحة</string>
+    <string name="unit_status_locked">مقفلة</string>
+    <string name="unit_lock_reason">اعرف %1$d كلمات أخرى لتفتح وحدة %2$s</string>
+    <string name="unit_topic_education">التعليم</string>
+    <string name="unit_topic_work">العمل</string>
+    <string name="unit_topic_health">الصحة</string>
+    <string name="unit_topic_travel">السفر</string>
+    <string name="unit_topic_technology">التقنية</string>
+    <string name="unit_topic_environment">البيئة</string>
+    <string name="unit_topic_culture">الثقافة</string>
+    <string name="unit_topic_society">المجتمع</string>
+    <string name="unit_topic_economy">الاقتصاد</string>
+    <string name="unit_topic_science">العلوم</string>
 </resources>

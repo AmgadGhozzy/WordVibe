@@ -301,4 +301,20 @@
     <string name="pos_adv">Adv</string>
     <string name="settings_theme_label">Theme</string>
     <string name="settings_auto_pronounce">Auto-pronounce words</string>
+
+    <!-- Units surface (ADR-0011, ticket 03) -->
+    <string name="home_units_title">Learning Units</string>
+    <string name="unit_status_open">Open</string>
+    <string name="unit_status_locked">Locked</string>
+    <string name="unit_lock_reason">Learn %1$d more words to unlock the %2$s unit</string>
+    <string name="unit_topic_education">Education</string>
+    <string name="unit_topic_work">Work</string>
+    <string name="unit_topic_health">Health</string>
+    <string name="unit_topic_travel">Travel</string>
+    <string name="unit_topic_technology">Technology</string>
+    <string name="unit_topic_environment">Environment</string>
+    <string name="unit_topic_culture">Culture</string>
+    <string name="unit_topic_society">Society</string>
+    <string name="unit_topic_economy">Economy</string>
+    <string name="unit_topic_science">Science</string>
 </resources>

@@ -1,7 +1,10 @@
 package com.venom.wordvibe.ui.viewmodel
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.venom.data.local.PreferencesKeys
 import com.venom.data.repo.UserActivityRepository
 import com.venom.data.repo.UserWordProgressRepository
 import com.venom.domain.model.DashboardData
@@ -12,6 +15,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,6 +28,7 @@ class HomeViewModel @Inject constructor(
     private val identityRepository: IUserIdentityRepository,
     private val activityRepository: UserActivityRepository,
     private val progressRepository: UserWordProgressRepository,
+    private val dataStore: DataStore<Preferences>? = null,
 ) : ViewModel() {
 
     data class HomeUiState(
@@ -31,6 +36,7 @@ class HomeViewModel @Inject constructor(
         val dashboard: DashboardData? = null,
         val newWordsCount: Int = 0,
         val attentionWords: List<WordMaster> = emptyList(),
+        val units: List<UserWordProgressRepository.UnitStatus> = emptyList(),
     )
 
     private val _state = MutableStateFlow(HomeUiState())
@@ -47,11 +53,14 @@ class HomeViewModel @Inject constructor(
                 val dashboard = activityRepository.getDashboardData(userId)
                 val newCount = progressRepository.countNewWordsForUser(userId)
                 val attention = progressRepository.getWeakProductionWords(userId, 3)
+                val persistedUnit = dataStore?.data?.firstOrNull()?.get(PreferencesKeys.OPEN_UNIT)
+                val units = progressRepository.getUnitsStatusForUser(userId, persistedUnit)
                 _state.value = HomeUiState(
                     isLoading = false,
                     dashboard = dashboard,
                     newWordsCount = newCount,
                     attentionWords = attention,
+                    units = units,
                 )
             } catch (e: CancellationException) {
                 throw e
@@ -64,3 +73,4 @@ class HomeViewModel @Inject constructor(
     /** Rough planning estimate; the session itself is bounded by the deck, not this. */
     fun estimatedMinutes(due: Int, new: Int): Int = ((due * 0.5) + (new * 0.75)).toInt().coerceAtLeast(1)
 }
+

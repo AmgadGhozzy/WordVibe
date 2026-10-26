@@ -137,6 +137,82 @@ class UserWordProgressRepository @Inject constructor(
         openUnit to true
     }
 
+    data class UnitStatus(
+        val topic: String,
+        val isOpen: Boolean,
+        val knownCount: Int,
+        val usableCount: Int,
+        val lockReason: UnitGate.LockReason?
+    )
+
+    /**
+     * Returns the ten canonical units in [UnitGate.EDITORIAL_CHAIN] order with
+     * open/locked status and [UnitGate.LockReason] for locked units.
+     * Unit T+1 is gated by the usable/known counts of its predecessor unit T;
+     * if an earlier unit is still locked, any subsequent locked unit reports
+     * the active blocking gate (or its immediate predecessor's requirement when
+     * non-zero) so `lockReason` is always non-null and non-negative when locked.
+     */
+    suspend fun getUnitsStatusForUser(
+        userId: String,
+        persistedUnit: String?
+    ): List<UnitStatus> = withContext(Dispatchers.IO) {
+        val allWords = wordMasterDao.getAllWords().first()
+        val progressByWordId = progressDao.getAllProgressSnapshot(userId)
+            .associateBy { it.wordId }
+
+        val countsByTopic: Map<String, Pair<Int, Int>> = UnitGate.EDITORIAL_CHAIN.associateWith { topic ->
+            val usable = allWords.filter { w ->
+                w.ieltsTopic.equals(topic, ignoreCase = true) &&
+                    !w.definitionEn.isNullOrBlank() &&
+                    !w.arabicAr.isNullOrBlank()
+            }
+            val known = usable.count { w ->
+                val state = progressByWordId[w.id]?.knownState
+                state == KnownState.KNOWN.name || state == KnownState.MASTERED.name
+            }
+            known to usable.size
+        }
+
+        val hasTopicWords = countsByTopic.values.any { it.second > 0 }
+        val openUnit = if (hasTopicWords) {
+            UnitGate.resolveOpenUnit(persistedUnit) { topic ->
+                countsByTopic[topic] ?: (0 to 0)
+            }
+        } else {
+            persistedUnit
+                ?.takeIf { u -> UnitGate.EDITORIAL_CHAIN.any { it.equals(u, ignoreCase = true) } }
+                ?: UnitGate.EDITORIAL_CHAIN.first()
+        }
+
+        val openIdx = UnitGate.EDITORIAL_CHAIN
+            .indexOfFirst { it.equals(openUnit, ignoreCase = true) }
+            .coerceAtLeast(0)
+
+        val openUnitCounts = countsByTopic[UnitGate.EDITORIAL_CHAIN[openIdx]] ?: (0 to 0)
+        val activeGateReason = UnitGate.lockReasonFor(openUnitCounts.first, openUnitCounts.second)
+            ?: UnitGate.LockReason(requiredKnownCount = 1, knownCount = 0)
+
+        UnitGate.EDITORIAL_CHAIN.mapIndexed { idx, topic ->
+            val (known, usable) = countsByTopic[topic] ?: (0 to 0)
+            val isOpen = idx <= openIdx
+            val reason = if (isOpen) {
+                null
+            } else {
+                val prevTopic = UnitGate.EDITORIAL_CHAIN[idx - 1]
+                val (prevKnown, prevUsable) = countsByTopic[prevTopic] ?: (0 to 0)
+                UnitGate.lockReasonFor(prevKnown, prevUsable) ?: activeGateReason
+            }
+            UnitStatus(
+                topic = topic,
+                isOpen = isOpen,
+                knownCount = known,
+                usableCount = usable,
+                lockReason = reason
+            )
+        }
+    }
+
     /** Count of the frozen new-word definition (LEFT JOIN no-progress-row). */
     suspend fun countNewWordsForUser(userId: String): Int =
         withContext(Dispatchers.IO) { wordMasterDao.countNewWordsForUser(userId) }

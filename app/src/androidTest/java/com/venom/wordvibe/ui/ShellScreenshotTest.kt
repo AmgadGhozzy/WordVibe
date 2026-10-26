@@ -12,7 +12,9 @@ import com.venom.domain.model.CefrLevel
 import com.venom.domain.model.DashboardData
 import com.venom.domain.model.RelatedWords
 import com.venom.domain.model.WordFamily
+import com.venom.data.repo.UserWordProgressRepository
 import com.venom.domain.model.WordMaster
+import com.venom.stackcard.session.UnitGate
 import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.wordvibe.ui.screen.HomeContent
 import com.venom.wordvibe.ui.screen.ProgressContent
@@ -152,6 +154,41 @@ class ShellScreenshotTest {
 
     @Test fun progressDark() = shoot("progress-dark.png", true) {
         ProgressContent(isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard)
+    }
+
+    private val sampleUnits = listOf(
+        UserWordProgressRepository.UnitStatus(
+            topic = "Education",
+            isOpen = true,
+            knownCount = 6,
+            usableCount = 10,
+            lockReason = null,
+        ),
+        UserWordProgressRepository.UnitStatus(
+            topic = "Work",
+            isOpen = false,
+            knownCount = 2,
+            usableCount = 10,
+            lockReason = UnitGate.LockReason(requiredKnownCount = 6, knownCount = 2),
+        ),
+    )
+
+    @Test fun homeUnitsLight() = shoot("home-units-light.png", false) {
+        HomeContent(
+            isLoading = false, dashboard = dashboard, newWordsCount = 12,
+            attentionWords = listOf(word(7, "obtain")), estimatedMinutes = 9,
+            units = sampleUnits,
+            onStartSession = {}, onPractice = {},
+        )
+    }
+
+    @Test fun homeUnitsDark() = shoot("home-units-dark.png", true) {
+        HomeContent(
+            isLoading = false, dashboard = dashboard, newWordsCount = 12,
+            attentionWords = listOf(word(7, "obtain")), estimatedMinutes = 9,
+            units = sampleUnits,
+            onStartSession = {}, onPractice = {},
+        )
     }
 
     @Test fun writeQueueLight() = shoot("write-queue-light.png", false) {
