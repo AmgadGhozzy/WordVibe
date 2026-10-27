@@ -1,6 +1,8 @@
 package com.venom.wordvibe.ui.screen
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AcUnit
@@ -25,14 +30,18 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,6 +53,11 @@ import com.venom.domain.model.DashboardData
 import com.venom.domain.model.RelatedWords
 import com.venom.domain.model.WordFamily
 import com.venom.domain.model.WordMaster
+import com.venom.ui.components.other.CircularProgressRing
+import com.venom.ui.components.other.GlassCard
+import com.venom.ui.components.other.GlassThickness
+import com.venom.ui.components.other.GlassTint
+import com.venom.ui.components.other.GradientGlassCard
 import com.venom.wordvibe.R
 import com.venom.wordvibe.ui.designsystem.LocalWordStateColors
 import com.venom.wordvibe.ui.designsystem.MinTouchTarget
@@ -106,84 +120,200 @@ fun HomeContent(
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         item {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Text(
                     text = stringResource(R.string.home_greeting),
                     style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
                 )
                 dashboard?.let { data ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                    val animatedGoalProgress by animateIntAsState(
+                        targetValue = data.dailyGoalProgress,
+                        label = "dailyGoalProgressAnim"
+                    )
+                    val goalFraction = (data.dailyGoalProgress.toFloat() / data.dailyGoalTarget.coerceAtLeast(1))
+                        .coerceIn(0f, 1f)
+
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        thickness = GlassThickness.Regular,
+                        tint = GlassTint.Primary,
+                        showBorder = true,
+                        contentPadding = Spacing.md,
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Filled.LocalFireDepartment,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Text(
-                                text = pluralStringResource(R.plurals.home_streak_value, data.currentStreak, data.currentStreak),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.tertiary,
-                            )
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Filled.AcUnit,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Text(
-                                text = stringResource(R.string.home_freeze_balance, data.streakFreezes),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = Spacing.sm),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Filled.LocalFireDepartment,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.tertiary,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                        Text(
+                                            text = pluralStringResource(
+                                                R.plurals.home_streak_value,
+                                                data.currentStreak,
+                                                data.currentStreak
+                                            ),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.tertiary,
+                                        )
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Filled.AcUnit,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp),
+                                        )
+                                        Text(
+                                            text = stringResource(
+                                                R.string.home_freeze_balance,
+                                                data.streakFreezes
+                                            ),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = stringResource(
+                                        R.string.format_label_value,
+                                        stringResource(R.string.stat_daily_goal),
+                                        stringResource(
+                                            R.string.stat_xp_progress,
+                                            animatedGoalProgress,
+                                            data.dailyGoalTarget
+                                        )
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+
+                                Text(
+                                    text = stringResource(R.string.home_freeze_hint),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+
+                            CircularProgressRing(
+                                progress = goalFraction,
+                                modifier = Modifier.size(56.dp),
+                                strokeWidthDp = 6.dp,
+                                glowEnabled = false,
+                                progressColor = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
-                    Text(
-                        text = stringResource(R.string.home_freeze_hint),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
             }
         }
 
         dashboard?.let { data ->
             item {
-                Card(
-                    shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                GradientGlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    gradientColors = listOf(
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.tertiary
                     ),
+                    gradientAlpha = 0.16f,
+                    showOrbet = true,
+                    orbetColor = MaterialTheme.colorScheme.primary,
+                    showBorder = true,
+                    contentPadding = Spacing.lg,
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(Spacing.lg),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                     ) {
-                        Text(
-                            text = stringResource(R.string.home_today_session),
-                            style = MaterialTheme.typography.titleLarge,
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_today_session),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(50),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.home_estimated_time, estimatedMinutes),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        ) {
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                            ) {
+                                Text(
+                                    text = pluralStringResource(
+                                        R.plurals.home_due_label,
+                                        data.totalWordsNeedsReview,
+                                        data.totalWordsNeedsReview
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(Spacing.sm),
+                                )
+                            }
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                            ) {
+                                Text(
+                                    text = pluralStringResource(
+                                        R.plurals.home_new_label,
+                                        newWordsCount,
+                                        newWordsCount
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.padding(Spacing.sm),
+                                )
+                            }
+                        }
+
+                        val dailyGoalRatio = (data.dailyGoalProgress.toFloat() / data.dailyGoalTarget.coerceAtLeast(1))
+                            .coerceIn(0f, 1f)
+                        LinearProgressIndicator(
+                            progress = { dailyGoalRatio },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
                         )
-                        Text(
-                            text = pluralStringResource(R.plurals.home_due_label, data.totalWordsNeedsReview, data.totalWordsNeedsReview),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Text(
-                            text = pluralStringResource(R.plurals.home_new_label, newWordsCount, newWordsCount),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Text(
-                            text = stringResource(R.string.home_estimated_time, estimatedMinutes),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                        )
+
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         PrimaryButton(
                             text = stringResource(R.string.home_start_button),
@@ -200,19 +330,6 @@ fun HomeContent(
                 text = stringResource(R.string.home_practice_button),
                 onClick = onPractice,
             )
-        }
-
-        if (units.isNotEmpty()) {
-            item {
-                Text(
-                    text = stringResource(R.string.home_units_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            items(units, key = { it.topic }) { unit ->
-                UnitRow(unit = unit)
-            }
         }
 
         if (attentionWords.isNotEmpty()) {
@@ -237,6 +354,19 @@ fun HomeContent(
                 )
             }
         }
+
+        if (units.isNotEmpty()) {
+            item {
+                Text(
+                    text = stringResource(R.string.home_units_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            itemsIndexed(units, key = { _, unit -> unit.topic }) { index, unit ->
+                UnitRow(index = index, unit = unit)
+            }
+        }
     }
 }
 
@@ -256,7 +386,7 @@ fun unitTopicTitleRes(topic: String): Int = when (topic.lowercase()) {
 }
 
 @Composable
-private fun UnitRow(unit: UserWordProgressRepository.UnitStatus) {
+private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
     val topicTitle = stringResource(unitTopicTitleRes(unit.topic))
     Card(
         shape = MaterialTheme.shapes.medium,
@@ -277,17 +407,73 @@ private fun UnitRow(unit: UserWordProgressRepository.UnitStatus) {
                 .padding(horizontal = Spacing.md, vertical = Spacing.sm)
                 .heightIn(min = MinTouchTarget),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (unit.isOpen) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceVariant
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (unit.isOpen) {
+                    Text(
+                        text = "${index + 1}",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(end = Spacing.sm),
+                    .padding(end = Spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             ) {
                 Text(
                     text = topicTitle,
                     style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
                 )
-                if (!unit.isOpen && unit.lockReason != null) {
+                if (unit.isOpen) {
+                    if (unit.usableCount > 0) {
+                        val progressFraction = (unit.knownCount.toFloat() / unit.usableCount).coerceIn(0f, 1f)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            LinearProgressIndicator(
+                                progress = { progressFraction },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                            )
+                            Text(
+                                text = stringResource(
+                                    R.string.score_correct_of_total,
+                                    unit.knownCount,
+                                    unit.usableCount
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                } else if (unit.lockReason != null) {
                     Text(
                         text = stringResource(
                             R.string.unit_lock_reason,
@@ -299,27 +485,17 @@ private fun UnitRow(unit: UserWordProgressRepository.UnitStatus) {
                     )
                 }
             }
+
             if (unit.isOpen) {
                 WordStateChip(
                     style = WordStateChipStyle.KNOWN,
                     label = stringResource(R.string.unit_status_open),
                 )
             } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Lock,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    WordStateChip(
-                        style = WordStateChipStyle.LEARNING,
-                        label = stringResource(R.string.unit_status_locked),
-                    )
-                }
+                WordStateChip(
+                    style = WordStateChipStyle.LEARNING,
+                    label = stringResource(R.string.unit_status_locked),
+                )
             }
         }
     }
