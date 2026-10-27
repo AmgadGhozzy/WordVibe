@@ -1,6 +1,9 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.venom.wordvibe.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,20 +13,38 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.venom.domain.model.CefrLevel
@@ -126,6 +147,18 @@ fun SpellingQueueContent(
 
 @Composable
 private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit) {
+    var isExpanded by rememberSaveable(item.word.id) { mutableStateOf(false) }
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "expandArrowRotation"
+    )
+
+    val sideBarColor = if (item.productionWeak) {
+        LocalWordStateColors.current.isDue
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
     Card(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
@@ -135,27 +168,151 @@ private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
             }
         ),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(horizontal = Spacing.md, vertical = Spacing.sm)
-                .height(MinTouchTarget),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = item.word.wordEn, style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = item.word.arabicAr,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = MinTouchTarget),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                // Colored sidebar
+                Box(
+                    modifier = Modifier
+                        .size(width = 4.dp, height = 36.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(sideBarColor),
                 )
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                    ) {
+                        Text(
+                            text = item.word.wordEn,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        posLabelRes(item.word.pos)?.let { posRes ->
+                            Text(
+                                text = stringResource(posRes),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontStyle = FontStyle.Italic,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                        ) {
+                            Text(
+                                text = item.word.cefrLevel.displayName,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                    Text(
+                        text = item.word.arabicAr,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                ) {
+                    WordStateChip(
+                        style = if (item.isDue) WordStateChipStyle.DUE else WordStateChipStyle.LEARNING,
+                        label = stringResource(if (item.isDue) R.string.state_due else R.string.state_learning),
+                    )
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ExpandMore,
+                            contentDescription = stringResource(if (isExpanded) R.string.cd_collapse else R.string.cd_expand),
+                            modifier = Modifier
+                                .size(24.dp)
+                                .rotate(arrowRotation),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             }
-            WordStateChip(
-                style = if (item.isDue) WordStateChipStyle.DUE else WordStateChipStyle.LEARNING,
-                label = stringResource(if (item.isDue) R.string.state_due else R.string.state_learning),
-            )
+
+            AnimatedVisibility(visible = isExpanded) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.xs, bottom = Spacing.xs),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    )
+
+                    val phoneticText = buildString {
+                        if (item.word.phoneticUs.isNotBlank()) append("/${item.word.phoneticUs}/")
+                        if (item.word.phoneticUs.isNotBlank() && item.word.phoneticAr.isNotBlank()) append("  •  ")
+                        if (item.word.phoneticAr.isNotBlank()) append(item.word.phoneticAr)
+                    }
+                    if (phoneticText.isNotBlank()) {
+                        Text(
+                            text = phoneticText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    if (item.word.definitionEn.isNotBlank()) {
+                        Text(
+                            text = item.word.definitionEn,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    item.word.definitionAr?.takeIf { it.isNotBlank() }?.let { defAr ->
+                        Text(
+                            text = defAr,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    item.word.examples.values.firstOrNull()?.takeIf { it.isNotBlank() }?.let { exampleSentence ->
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = "“$exampleSentence”",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontStyle = FontStyle.Italic,
+                                modifier = Modifier.padding(Spacing.sm),
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
