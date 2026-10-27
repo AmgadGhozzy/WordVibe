@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -36,6 +39,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,11 +53,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.venom.data.repo.UserWordProgressRepository
@@ -161,42 +170,63 @@ fun HomeContent(
                                     .padding(end = Spacing.sm),
                                 verticalArrangement = Arrangement.spacedBy(Spacing.xs),
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Filled.LocalFireDepartment,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.tertiary,
-                                            modifier = Modifier.size(20.dp),
-                                        )
-                                        Text(
-                                            text = pluralStringResource(
-                                                R.plurals.home_streak_value,
-                                                data.currentStreak,
-                                                data.currentStreak
+                                Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(
+                                                horizontal = Spacing.sm,
+                                                vertical = Spacing.xs,
                                             ),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.tertiary,
-                                        )
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.LocalFireDepartment,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.tertiary,
+                                                modifier = Modifier.size(16.dp),
+                                            )
+                                            Text(
+                                                text = pluralStringResource(
+                                                    R.plurals.home_streak_value,
+                                                    data.currentStreak,
+                                                    data.currentStreak
+                                                ),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                maxLines = 1,
+                                                color = MaterialTheme.colorScheme.tertiary,
+                                            )
+                                        }
                                     }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Filled.AcUnit,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp),
-                                        )
-                                        Text(
-                                            text = stringResource(
-                                                R.string.home_freeze_balance,
-                                                data.streakFreezes
+                                    Surface(
+                                        shape = RoundedCornerShape(50),
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(
+                                                horizontal = Spacing.sm,
+                                                vertical = Spacing.xs,
                                             ),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.primary,
-                                        )
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.AcUnit,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(16.dp),
+                                            )
+                                            Text(
+                                                text = stringResource(
+                                                    R.string.home_freeze_balance,
+                                                    data.streakFreezes
+                                                ),
+                                                style = MaterialTheme.typography.labelLarge,
+                                                maxLines = 1,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            )
+                                        }
                                     }
                                 }
 
@@ -276,11 +306,15 @@ fun HomeContent(
                         }
 
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min),
                             horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                         ) {
                             Surface(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
                             ) {
@@ -296,7 +330,9 @@ fun HomeContent(
                                 )
                             }
                             Surface(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight(),
                                 shape = RoundedCornerShape(12.dp),
                                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
                             ) {
@@ -321,12 +357,15 @@ fun HomeContent(
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
+                            gapSize = 0.dp,
+                            drawStopIndicator = {},
                         )
 
                         Spacer(modifier = Modifier.height(Spacing.xs))
                         PrimaryButton(
                             text = stringResource(R.string.home_start_button),
                             onClick = onStartSession,
+                            modifier = Modifier.fillMaxWidth(),
                             leadingIcon = Icons.AutoMirrored.Filled.ArrowForward,
                         )
                     }
@@ -335,10 +374,18 @@ fun HomeContent(
         }
 
         item {
-            PrimaryButton(
-                text = stringResource(R.string.home_practice_button),
+            OutlinedButton(
                 onClick = onPractice,
-            )
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = MinTouchTarget),
+                shape = MaterialTheme.shapes.medium,
+            ) {
+                Text(
+                    text = stringResource(R.string.home_practice_button),
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
         }
 
         if (attentionWords.isNotEmpty()) {
@@ -386,6 +433,32 @@ fun posLabelRes(pos: String): Int? = when (pos.lowercase()) {
     "adj", "adjective" -> R.string.pos_adj
     "adv", "adverb" -> R.string.pos_adv
     else -> null
+}
+
+/** Highlights every case-insensitive occurrence of [wordEn] in [sentence]. */
+internal fun highlightWordInSentence(
+    builder: AnnotatedString.Builder,
+    sentence: String,
+    wordEn: String,
+    highlightStyle: SpanStyle,
+) {
+    if (wordEn.isBlank()) {
+        builder.append(sentence)
+        return
+    }
+    var index = 0
+    while (true) {
+        val found = sentence.indexOf(wordEn, index, ignoreCase = true)
+        if (found < 0) {
+            builder.append(sentence.substring(index))
+            break
+        }
+        builder.append(sentence.substring(index, found))
+        builder.pushStyle(highlightStyle)
+        builder.append(sentence.substring(found, found + wordEn.length))
+        builder.pop()
+        index = found + wordEn.length
+    }
 }
 
 @StringRes
@@ -479,6 +552,8 @@ private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
                                     .weight(1f)
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
+                                gapSize = 0.dp,
+                                drawStopIndicator = {},
                             )
                             Text(
                                 text = stringResource(
@@ -570,7 +645,10 @@ private fun AttentionRow(
                     ) {
                         Text(
                             text = word.wordEn,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Serif,
+                                fontSize = 18.sp,
+                            ),
                             fontWeight = FontWeight.Bold,
                         )
                         posLabelRes(word.pos)?.let { posRes ->
@@ -664,13 +742,34 @@ private fun AttentionRow(
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(
-                                text = "“$exampleSentence”",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontStyle = FontStyle.Italic,
-                                modifier = Modifier.padding(Spacing.sm),
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                            Row {
+                                Box(
+                                    modifier = Modifier
+                                        .width(3.dp)
+                                        .height(32.dp)
+                                        .clip(RoundedCornerShape(1.dp))
+                                        .background(MaterialTheme.colorScheme.primary),
+                                )
+                                Text(
+                                    text = buildAnnotatedString {
+                                        append("“")
+                                        highlightWordInSentence(
+                                            this,
+                                            exampleSentence,
+                                            word.wordEn,
+                                            SpanStyle(
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            ),
+                                        )
+                                        append("”")
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontStyle = FontStyle.Italic,
+                                    modifier = Modifier.padding(Spacing.sm),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }

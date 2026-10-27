@@ -149,11 +149,17 @@ class ShellScreenshotTest {
     }
 
     @Test fun progressLight() = shoot("progress-light.png", false) {
-        ProgressContent(isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard)
+        ProgressContent(
+            isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard,
+            reviewForecast = listOf(7, 4, 9, 5, 8, 3, 6), scheduledToday = 7,
+        )
     }
 
     @Test fun progressDark() = shoot("progress-dark.png", true) {
-        ProgressContent(isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard)
+        ProgressContent(
+            isLoading = false, newWordsCount = 74, knownWordsCount = 11, dashboard = dashboard,
+            reviewForecast = listOf(7, 4, 9, 5, 8, 3, 6), scheduledToday = 7,
+        )
     }
 
     private val sampleUnits = listOf(

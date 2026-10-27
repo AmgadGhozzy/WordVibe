@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,10 +42,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.venom.domain.model.CefrLevel
@@ -203,7 +209,10 @@ private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit
                     ) {
                         Text(
                             text = item.word.wordEn,
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontFamily = FontFamily.Serif,
+                                fontSize = 18.sp,
+                            ),
                             fontWeight = FontWeight.Bold,
                         )
                         posLabelRes(item.word.pos)?.let { posRes ->
@@ -302,13 +311,34 @@ private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit
                             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            Text(
-                                text = "“$exampleSentence”",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontStyle = FontStyle.Italic,
-                                modifier = Modifier.padding(Spacing.sm),
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                            Row {
+                                Box(
+                                    modifier = Modifier
+                                        .width(3.dp)
+                                        .height(32.dp)
+                                        .clip(RoundedCornerShape(1.dp))
+                                        .background(MaterialTheme.colorScheme.primary),
+                                )
+                                Text(
+                                    text = buildAnnotatedString {
+                                        append("“")
+                                        highlightWordInSentence(
+                                            this,
+                                            exampleSentence,
+                                            item.word.wordEn,
+                                            SpanStyle(
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.primary,
+                                            ),
+                                        )
+                                        append("”")
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontStyle = FontStyle.Italic,
+                                    modifier = Modifier.padding(Spacing.sm),
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }

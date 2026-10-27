@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -223,24 +225,6 @@ fun ProgressContent(
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
                                 )
-                                Spacer(modifier = Modifier.height(Spacing.xs))
-                                Text(
-                                    text = pluralStringResource(
-                                        R.plurals.home_streak_value,
-                                        dashboard.currentStreak,
-                                        dashboard.currentStreak,
-                                    ),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                Text(
-                                    text = stringResource(
-                                        R.string.format_label_value,
-                                        stringResource(R.string.stat_best),
-                                        dashboard.bestStreak,
-                                    ),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
-                                )
                             }
                             IconButton(
                                 onClick = { showSettingsDialog = true },
@@ -252,6 +236,53 @@ fun ProgressContent(
                                 Icon(
                                     imageVector = Icons.Rounded.Settings,
                                     contentDescription = stringResource(R.string.settings_title),
+                                )
+                            }
+                        }
+
+                        /* Streak capsules — full card width below the level row */
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                        ) {
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                            ) {
+                                Text(
+                                    text = pluralStringResource(
+                                        R.plurals.home_streak_value,
+                                        dashboard.currentStreak,
+                                        dashboard.currentStreak,
+                                    ),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(
+                                        horizontal = Spacing.sm,
+                                        vertical = Spacing.xs,
+                                    ),
+                                )
+                            }
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                            ) {
+                                Text(
+                                    text = stringResource(
+                                        R.string.format_label_value,
+                                        stringResource(R.string.stat_best),
+                                        dashboard.bestStreak,
+                                    ),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    modifier = Modifier.padding(
+                                        horizontal = Spacing.sm,
+                                        vertical = Spacing.xs,
+                                    ),
                                 )
                             }
                         }
@@ -284,6 +315,8 @@ fun ProgressContent(
                             color = MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
                             strokeCap = StrokeCap.Round,
+                            gapSize = 0.dp,
+                            drawStopIndicator = {},
                         )
                     }
                 }
@@ -309,6 +342,47 @@ fun ProgressContent(
             Triple(WordStateChipStyle.KNOWN, R.string.state_known, knownWordsCount),
             Triple(WordStateChipStyle.MASTERED, R.string.state_mastered, dashboard.totalWordsMastered),
         )
+
+        /* ── Distribution bar (NEW → LEARNING → KNOWN → MASTERED) ── */
+        item(span = { GridItemSpan(2) }) {
+            val stateColors = LocalWordStateColors.current
+            val totals = listOf(
+                newWordsCount,
+                dashboard.totalWordsLearning - knownWordsCount,
+                knownWordsCount,
+                dashboard.totalWordsMastered,
+            )
+            val totalWords = totals.sum()
+            val barColors = listOf(
+                stateColors.isNew,
+                stateColors.isLearning,
+                stateColors.isKnown,
+                stateColors.isMastered,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+            ) {
+                totals.zip(barColors).forEach { (count, color) ->
+                    val weight = when {
+                        count > 0 -> count.toFloat()
+                        totalWords == 0 -> 1f
+                        else -> 0f
+                    }
+                    if (weight > 0f) {
+                        Box(
+                            modifier = Modifier
+                                .weight(weight)
+                                .fillMaxHeight()
+                                .background(color),
+                        )
+                    }
+                }
+            }
+        }
+
         items(stateCards) { (style, labelRes, value) ->
             val stateColors = LocalWordStateColors.current
             val stripeColor = when (style) {
@@ -329,6 +403,7 @@ fun ProgressContent(
                         .fillMaxWidth()
                         .padding(Spacing.md),
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Box(
                         modifier = Modifier
@@ -337,19 +412,15 @@ fun ProgressContent(
                             .clip(RoundedCornerShape(2.dp))
                             .background(stripeColor),
                     )
-                    Spacer(modifier = Modifier.width(Spacing.sm))
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-                    ) {
-                        Text(
-                            text = "$value",
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
-                        WordStateChip(
-                            style = style,
-                            label = stringResource(labelRes),
-                        )
-                    }
+                    Text(
+                        text = "$value",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    WordStateChip(
+                        style = style,
+                        label = stringResource(labelRes),
+                    )
                 }
             }
         }
@@ -359,7 +430,7 @@ fun ProgressContent(
             Card(
                 shape = MaterialTheme.shapes.medium,
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    containerColor = LocalWordStateColors.current.isDueContainer.copy(alpha = 0.35f),
                 ),
             ) {
                 Row(
@@ -368,6 +439,14 @@ fun ProgressContent(
                         .padding(Spacing.md),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    Box(
+                        modifier = Modifier
+                            .width(4.dp)
+                            .height(28.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(LocalWordStateColors.current.isDue),
+                    )
+                    Spacer(modifier = Modifier.width(Spacing.sm))
                     Text(
                         text = stringResource(R.string.state_due),
                         style = MaterialTheme.typography.titleSmall,
@@ -706,6 +785,21 @@ private fun ReviewSparkline(
                 path.cubicTo(cpX, py, cpX, y, x, y)
             }
         }
+
+        // Gradient fill under the curve
+        val fillPath = Path().apply {
+            addPath(path)
+            lineTo(xAt(dataPoints.lastIndex), size.height)
+            lineTo(xAt(0), size.height)
+            close()
+        }
+        drawPath(
+            fillPath,
+            Brush.verticalGradient(
+                colors = listOf(lineColor.copy(alpha = 0.2f), Color.Transparent),
+            ),
+        )
+
         drawPath(
             path,
             lineColor,
@@ -714,6 +808,7 @@ private fun ReviewSparkline(
 
         dataPoints.forEachIndexed { i, v ->
             drawCircle(lineColor, dotRadius.toPx(), Offset(xAt(i), yAt(v)))
+            drawCircle(Color.White, dotRadius.toPx() * 0.45f, Offset(xAt(i), yAt(v)))
         }
     }
 }
