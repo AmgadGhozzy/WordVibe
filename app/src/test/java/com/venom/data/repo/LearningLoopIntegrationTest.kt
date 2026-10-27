@@ -78,6 +78,10 @@ class LearningLoopIntegrationTest {
             rows.values.count {
                 it.userId == userId && it.nextReview != null && it.nextReview <= now
             }
+        override suspend fun getScheduledReviewTimes(userId: String, fromTime: Long): List<Long> =
+            rows.values.filter {
+                it.userId == userId && it.nextReview != null && it.nextReview >= fromTime
+            }.map { it.nextReview!! }
         override suspend fun incrementRecallSuccess(userId: String, wordId: Int) {}
         override suspend fun incrementProductionSuccess(userId: String, wordId: Int) {}
         override suspend fun incrementTotalAttempts(userId: String, wordId: Int) {}

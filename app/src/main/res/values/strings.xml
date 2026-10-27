@@ -160,6 +160,12 @@
     <string name="write_queue_empty_body">Finish a flashcard session first, and the words that need spelling reinforcement will show up here.</string>
     <string name="write_count_label">Words: %1$d</string>
     <string name="progress_words_by_state">Your words by state</string>
+    <string name="progress_forecast_title">Review forecast</string>
+    <string name="progress_forecast_subtitle">Upcoming workload (7 days)</string>
+    <string name="progress_forecast_due_today">due today</string>
+    <string name="progress_forecast_day_today">Today</string>
+    <string name="progress_forecast_day_offset">+%1$d</string>
+    <string name="progress_forecast_empty">No reviews scheduled</string>
     <string name="spelling_translate_hint">Translate to English</string>
     <string name="spelling_perfect">Excellent!</string>
     <string name="spelling_reveal_answer">Show answer</string>

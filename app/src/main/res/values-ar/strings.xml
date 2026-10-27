@@ -160,6 +160,12 @@
     <string name="write_queue_empty_body">أنهِ جلسة بطاقات أولًا، وستجد هنا الكلمات التي تحتاج ترسيخ الإملاء.</string>
     <string name="write_count_label">%1$d كلمة</string>
     <string name="progress_words_by_state">كلماتك حسب الحالة</string>
+    <string name="progress_forecast_title">توقّع المراجعة</string>
+    <string name="progress_forecast_subtitle">الحجم المرتقب (7 أيام)</string>
+    <string name="progress_forecast_due_today">مستحق اليوم</string>
+    <string name="progress_forecast_day_today">اليوم</string>
+    <string name="progress_forecast_day_offset">+%1$d</string>
+    <string name="progress_forecast_empty">لا مراجعات مجدولة</string>
     <string name="spelling_translate_hint">ترجم إلى الإنجليزية</string>
     <string name="spelling_perfect">ممتاز!</string>
     <string name="spelling_reveal_answer">أظهر الإجابة</string>

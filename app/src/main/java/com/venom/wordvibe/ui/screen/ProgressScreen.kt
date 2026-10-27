@@ -1,6 +1,7 @@
 package com.venom.wordvibe.ui.screen
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,12 +47,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -67,6 +74,7 @@ import com.venom.wordvibe.ui.designsystem.StatCard
 import com.venom.wordvibe.ui.designsystem.WordStateChip
 import com.venom.wordvibe.ui.designsystem.WordStateChipStyle
 import com.venom.wordvibe.ui.designsystem.WordVibeTheme
+import com.venom.ui.components.other.GlassCard
 import com.venom.wordvibe.ui.viewmodel.ProgressViewModel
 
 /* ───── Level name → existing string resource ───── */
@@ -102,6 +110,8 @@ fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
         dashboard = state.dashboard,
         newWordsCount = state.newWordsCount,
         knownWordsCount = state.knownWordsCount,
+        reviewForecast = state.reviewForecast,
+        scheduledToday = state.scheduledToday,
         appTheme = state.appTheme,
         autoPronounce = state.autoPronounce,
         onUpdateDailyGoal = viewModel::updateDailyGoal,
@@ -110,7 +120,7 @@ fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
     )
 }
 
-/* ───── Content (unchanged signature) ───── */
+/* ───── Content (existing params, two optional additions) ───── */
 
 @Composable
 fun ProgressContent(
@@ -119,6 +129,8 @@ fun ProgressContent(
     newWordsCount: Int,
     knownWordsCount: Int,
     modifier: Modifier = Modifier,
+    reviewForecast: List<Int> = emptyList(),
+    scheduledToday: Int = 0,
     appTheme: AppTheme = AppTheme.SYSTEM,
     autoPronounce: Boolean = true,
     onUpdateDailyGoal: (Int) -> Unit = {},
@@ -370,6 +382,14 @@ fun ProgressContent(
             }
         }
 
+        /* ── Review forecast (7-day sparkline) ── */
+        item(span = { GridItemSpan(2) }) {
+            ReviewForecastCard(
+                forecast = reviewForecast,
+                dueTodayCount = scheduledToday,
+            )
+        }
+
         /* ── Activity totals — plain labels, no chips ── */
         item {
             StatCard(
@@ -553,6 +573,148 @@ fun ProgressContent(
                 }
             },
         )
+    }
+}
+
+/* ───── Review forecast card (GlassCard + sparkline) ───── */
+
+@Composable
+private fun ReviewForecastCard(
+    forecast: List<Int>,
+    dueTodayCount: Int,
+    modifier: Modifier = Modifier,
+) {
+    GlassCard(
+        modifier = modifier.fillMaxWidth(),
+        showBorder = false,
+        contentPadding = Spacing.md,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top,
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.progress_forecast_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(R.string.progress_forecast_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "$dueTodayCount",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(R.string.progress_forecast_due_today),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(Spacing.sm))
+        if (forecast.all { it == 0 }) {
+            Text(
+                text = stringResource(R.string.progress_forecast_empty),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Spacing.md),
+            )
+        } else {
+            ReviewSparkline(
+                dataPoints = forecast.map { it.toFloat() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
+            )
+            Spacer(modifier = Modifier.height(Spacing.xs))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                forecast.indices.forEach { i ->
+                    Text(
+                        text = if (i == 0) {
+                            stringResource(R.string.progress_forecast_day_today)
+                        } else {
+                            stringResource(R.string.progress_forecast_day_offset, i)
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewSparkline(
+    dataPoints: List<Float>,
+    modifier: Modifier = Modifier,
+) {
+    val lineColor = MaterialTheme.colorScheme.primary
+    val gridLineColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+    val strokeWidth = 2.dp
+    val dotRadius = 3.dp
+
+    Canvas(modifier = modifier) {
+        if (dataPoints.size < 2) return@Canvas
+
+        val maxVal = dataPoints.max()
+        val minVal = dataPoints.min()
+        val range = (maxVal - minVal).takeIf { it > 0f } ?: 1f
+        val stepX = size.width / (dataPoints.size - 1)
+        val topPad = size.height * 0.08f
+        val drawHeight = size.height - topPad * 2f
+
+        fun xAt(i: Int) = i * stepX
+        fun yAt(v: Float) = topPad + drawHeight - ((v - minVal) / range) * drawHeight
+
+        dataPoints.indices.forEach { i ->
+            drawLine(
+                color = gridLineColor,
+                start = Offset(xAt(i), 0f),
+                end = Offset(xAt(i), size.height),
+                strokeWidth = 1.dp.toPx(),
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f)),
+            )
+        }
+
+        val path = Path()
+        dataPoints.forEachIndexed { i, v ->
+            val x = xAt(i)
+            val y = yAt(v)
+            if (i == 0) {
+                path.moveTo(x, y)
+            } else {
+                val px = xAt(i - 1)
+                val py = yAt(dataPoints[i - 1])
+                val cpX = (px + x) / 2f
+                path.cubicTo(cpX, py, cpX, y, x, y)
+            }
+        }
+        drawPath(
+            path,
+            lineColor,
+            style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
+        )
+
+        dataPoints.forEachIndexed { i, v ->
+            drawCircle(lineColor, dotRadius.toPx(), Offset(xAt(i), yAt(v)))
+        }
     }
 }
 

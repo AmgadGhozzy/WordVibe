@@ -110,6 +110,7 @@ class GhostProgressContractTest {
         override suspend fun getMasteredCount(userId: String): Int = 0
         override suspend fun getLearningCount(userId: String): Int = 0
         override suspend fun getNeedsReviewCount(userId: String, now: Long): Int = 0
+        override suspend fun getScheduledReviewTimes(userId: String, fromTime: Long): List<Long> = emptyList()
         override suspend fun incrementRecallSuccess(userId: String, wordId: Int) {}
         override suspend fun getKnownCount(userId: String): Int = 0
         override suspend fun incrementProductionSuccess(userId: String, wordId: Int) {}

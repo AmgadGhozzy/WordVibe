@@ -47,6 +47,7 @@ class StringsParityTest {
         "stat_total_xp_value",
         "stat_xp_to_next",
         "stat_total_xp",
+        "progress_forecast_day_offset",
     )
 
     private fun resourceFile(relative: String): File {

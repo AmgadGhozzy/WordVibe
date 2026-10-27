@@ -228,6 +228,10 @@ class UserWordProgressRepository @Inject constructor(
     suspend fun countKnownWordsForUser(userId: String): Int =
         withContext(Dispatchers.IO) { progressDao.getKnownCount(userId) }
 
+    /** Raw scheduled review timestamps from the given time onward (read-only). */
+    suspend fun getScheduledReviewTimes(userId: String, fromTime: Long): List<Long> =
+        withContext(Dispatchers.IO) { progressDao.getScheduledReviewTimes(userId, fromTime) }
+
     /**
      * Weak-production candidates: the highest-lapse, non-mastered words (read-only
      * projection over the existing high-lapse query). Feeds the spelling queue and
