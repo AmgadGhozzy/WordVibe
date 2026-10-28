@@ -109,17 +109,19 @@ fun CardFront(
     )
 
     GradientGlassCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.adp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(32.adp)),
         thickness = GlassThickness.UltraThick,
         gradientColors = listOf(
             MaterialTheme.colorScheme.primary,
-            difficultyTheme.background
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
         ),
-        gradientAlpha = 0.12f,
-        showBorder = true,
-        showShadow = true,
+        gradientAlpha = 0.05f,
+        showBorder = false,
+        showShadow = false,
         orbetColor = difficultyTheme.background,
-        showOrbet = true,
+        showOrbet = false,
         shape = RoundedCornerShape(32.adp),
         contentPadding = 20.adp
     ) {
@@ -260,10 +262,10 @@ private fun PhoneticButton(
         Row(
             modifier = modifier
                 .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(0.3f))
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                 .border(
-                    0.5.adp,
-                    MaterialTheme.colorScheme.outline.copy(0.2f),
+                    1.adp,
+                    MaterialTheme.colorScheme.outlineVariant,
                     RoundedCornerShape(50)
                 )
                 .padding(start = 20.adp, end = 8.adp, top = 8.adp, bottom = 8.adp),

@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -156,16 +157,19 @@ fun AdaptiveQuizCard(
 
     if (useCardFrontStyle) {
         GradientGlassCard(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .border(1.adp, MaterialTheme.colorScheme.outlineVariant, cardShape),
             thickness = GlassThickness.UltraThick,
             gradientColors = listOf(
                 MaterialTheme.colorScheme.primary,
-                difficultyTheme.background
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
             ),
             gradientAlpha = 0.05f,
-            showBorder = true,
-            showShadow = true,
+            showBorder = false,
+            showShadow = false,
             borderColor = difficultyTheme.border,
+            showOrbet = false,
             shape = cardShape,
             contentPadding = 20.adp
         ) {
@@ -267,11 +271,7 @@ private fun PlacementHeader(state: QuizUiState, onBack: () -> Unit) {
                     .fillMaxWidth(state.progress.coerceIn(0f, 1f))
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(3.adp))
-                    .background(
-                        Brush.horizontalGradient(
-                            listOf(colorScheme.primary, colorScheme.tertiary)
-                        )
-                    )
+                    .background(colorScheme.primary)
             )
         }
     }
@@ -341,11 +341,7 @@ private fun FullHeader(state: QuizUiState, onBack: () -> Unit) {
                         .fillMaxWidth(state.progress)
                         .fillMaxHeight()
                         .clip(RoundedCornerShape(3.adp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(colorScheme.primary, colorScheme.tertiary)
-                            )
-                        )
+                        .background(colorScheme.primary)
                 )
             }
         }
@@ -359,8 +355,8 @@ private fun QuestionSection(prompt: String, isMini: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.adp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        tonalElevation = 1.adp
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        tonalElevation = 0.adp
     ) {
         Text(
             text = prompt,

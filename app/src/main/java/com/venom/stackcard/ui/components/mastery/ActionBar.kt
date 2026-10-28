@@ -124,15 +124,9 @@ private fun CircularButton(
         modifier = modifier
             .size(56.adp)
             .scale(scale)
-            .shadow(
-                elevation = 10.adp,
-                shape = CircleShape,
-                ambientColor = Color.Black.copy(alpha = 0.20f),
-                spotColor = Color.Black.copy(alpha = 0.30f)
-            )
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.80f))
-            .border(1.adp, Color.White.copy(0.12f), CircleShape),
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(1.adp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
         interactionSource = interactionSource
     ) {
         val finalTint = tint ?: MaterialTheme.colorScheme.onSurfaceVariant

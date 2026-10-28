@@ -49,28 +49,28 @@ fun OptionItem(
     val isIncorrectSelected = isAnswered && isSelected && !isCorrect
 
     val backgroundColor = when {
-        isCorrectOption -> colorScheme.tertiaryContainer.copy(0.4f)
+        isCorrectOption -> colorScheme.secondary.copy(alpha = 0.14f)
         isIncorrectSelected -> colorScheme.errorContainer.copy(0.4f)
         isSelected -> colorScheme.primaryContainer.copy(0.4f)
         else -> colorScheme.surface
     }
 
     val borderColor = when {
-        isCorrectOption -> colorScheme.tertiary
+        isCorrectOption -> colorScheme.secondary
         isIncorrectSelected -> colorScheme.error
         isSelected -> colorScheme.primary
         else -> colorScheme.outlineVariant
     }
 
     val labelBackgroundColor = when {
-        isCorrectOption -> colorScheme.tertiary
+        isCorrectOption -> colorScheme.secondary
         isIncorrectSelected -> colorScheme.error
         isSelected -> colorScheme.primary
         else -> colorScheme.surfaceContainerHighest
     }
 
     val labelTextColor = when {
-        isCorrectOption -> colorScheme.onTertiary
+        isCorrectOption -> colorScheme.onSecondary
         isIncorrectSelected -> colorScheme.onError
         isSelected -> colorScheme.onPrimary
         else -> colorScheme.onSurfaceVariant

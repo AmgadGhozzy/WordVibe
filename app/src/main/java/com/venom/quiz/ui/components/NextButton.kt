@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -35,8 +35,8 @@ fun NextButton(
         enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.adp),
-        shape = RoundedCornerShape(14.adp),
+            .height(56.adp),
+        shape = RoundedCornerShape(28.adp),
         colors = ButtonDefaults.buttonColors(
             containerColor = colorScheme.primary,
             contentColor = colorScheme.onPrimary
@@ -52,7 +52,7 @@ fun NextButton(
                 fontSize = 16.asp
             )
             Icon(
-                imageVector = Icons.Rounded.ArrowForward,
+                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                 contentDescription = text,
                 modifier = Modifier.size(18.adp)
             )
