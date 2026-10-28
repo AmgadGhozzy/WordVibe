@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,7 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.School
-import androidx.compose.material.icons.rounded.TrendingUp
+import androidx.compose.material.icons.automirrored.rounded.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -147,7 +148,8 @@ private fun PlacementResultScreen(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.adp),
-            color = colorScheme.primaryContainer
+            color = colorScheme.primaryContainer,
+            border = BorderStroke(1.adp, colorScheme.outlineVariant)
         ) {
             Column(
                 modifier = Modifier.padding(24.adp),
@@ -190,7 +192,7 @@ private fun PlacementResultScreen(
                 modifier = Modifier.weight(1f)
             )
             StatCard(
-                icon = Icons.Rounded.TrendingUp,
+                icon = Icons.AutoMirrored.Rounded.TrendingUp,
                 label = stringResource(R.string.placement_result_duration_label),
                 value = stringResource(R.string.duration_seconds, result.durationMs / 1000),
                 modifier = Modifier.weight(1f)
@@ -203,8 +205,8 @@ private fun PlacementResultScreen(
             onClick = onStart,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.adp),
-            shape = RoundedCornerShape(14.adp),
+                .height(56.adp),
+            shape = RoundedCornerShape(28.adp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = colorScheme.primary,
                 contentColor = colorScheme.onPrimary
@@ -231,7 +233,8 @@ private fun StatCard(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(16.adp),
-        color = colorScheme.surfaceContainerHigh
+        color = colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.adp, colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier.padding(16.adp),

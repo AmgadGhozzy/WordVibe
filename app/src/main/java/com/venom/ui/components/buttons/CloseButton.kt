@@ -1,7 +1,7 @@
 package com.venom.ui.components.buttons
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -17,18 +17,18 @@ import com.venom.ui.components.common.adp
  * @param onClick Callback invoked when button is clicked
  * @param modifier Modifier for the button
  * @param contentDescription Accessibility description (defaults to "Close")
- * @param size Size of the button (defaults to 44.adp)
+ * @param size Size of the button (defaults to 48.adp)
  */
 @Composable
 fun CloseButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentDescription: String = stringResource(R.string.action_close),
-    size: Dp = 44.adp,
+    size: Dp = 48.adp,
     iconSize: Dp = 20.adp,
 ) {
     CustomFilledIconButton(
-        icon = Icons.Rounded.ArrowForwardIos,
+        icon = Icons.AutoMirrored.Rounded.ArrowForwardIos,
         modifier = modifier,
         onClick = onClick,
         contentDescription = contentDescription,

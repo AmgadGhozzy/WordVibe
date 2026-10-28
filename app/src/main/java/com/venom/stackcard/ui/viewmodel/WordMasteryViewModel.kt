@@ -459,7 +459,7 @@ class WordMasteryViewModel @Inject constructor(
 
     private fun handleSwipeCard(word: WordMaster, isRemembered: Boolean) {
         if (isRemembered) {
-            analyticsManager.logFlashcardSwipe(wordId = word.wordEn, direction = "right", screenName = "FlashcardScreen")
+            analyticsManager.logFlashcardSwipe(wordId = word.id.toString(), direction = "right", screenName = "FlashcardScreen")
             crashlyticsManager.logBreadcrumb("Swiped remember: ${word.wordEn}")
 
             val decision = sessionEngine!!.swipeRemembered(word, nowMs = System.currentTimeMillis())
@@ -511,7 +511,7 @@ class WordMasteryViewModel @Inject constructor(
 
             prepareNextWordProgress(decision.currentWord, decision.visibleCards)
         } else {
-            analyticsManager.logFlashcardSwipe(wordId = word.wordEn, direction = "left", screenName = "FlashcardScreen")
+            analyticsManager.logFlashcardSwipe(wordId = word.id.toString(), direction = "left", screenName = "FlashcardScreen")
             crashlyticsManager.logBreadcrumb("Swiped forgot: ${word.wordEn}")
             
             val decision = sessionEngine!!.swipeForgot(word, nowMs = System.currentTimeMillis())

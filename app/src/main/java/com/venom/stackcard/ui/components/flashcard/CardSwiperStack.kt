@@ -136,7 +136,7 @@ fun CardSwiperStack(
         contentAlignment = Alignment.Center
     ) {
         limitedCards.reversed().forEachIndexed { renderIndex, word ->
-            key(word.wordEn) {
+            key(word.id) {
                 val isTopCard = renderIndex == limitedCards.lastIndex
                 val position = stackPositions.getOrNull(renderIndex)
 
