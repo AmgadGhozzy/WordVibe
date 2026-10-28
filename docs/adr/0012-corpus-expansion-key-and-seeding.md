@@ -162,7 +162,7 @@ is stamped into `reviewer`/`reviewedAt`/`checklist` at sign-off (`checklist`
 gains a `review-mode` attestation entry); it does not alter the frozen 28-rule
 contract, which stays exactly as written.
 
-### 9. Source attribution and ownership (blocking placeholder)
+### 9. Source attribution and ownership (resolved by owner attestation, 2026-10-29)
 
 The source is, per the file's own audit tables, an **internal lexical-migration
 pipeline, LLM-assisted on Vertex AI** (`migration_audit_2026_001/002`, eval ids
@@ -183,6 +183,15 @@ expansion words (flag 0) will simply never show that badge. The audit's
 broader statement that the source DB file itself is never imported nor rendered
 by the app remains true (`Application.onCreate` reads `words_pilot.json` only;
 `Room.databaseBuilder` has no `createFromAsset`).
+
+**Resolution (2026-10-29): owner attestation.** Amgad Ghozzy recorded his
+ownership ruling verbatim: «هنفذ كلهم وهنخاطر عادي — الكلمات دي أنا اللي
+جمعتها وعملها.» — the 7,300-word base and the review batches were compiled and
+curated by him personally, and he accepts the residual licensing risk as the
+data owner. The distribution gate recorded in commit `fa14291` ("must not be
+distributed beyond the developer's device until AWL/Oxford licensing is
+resolved") is thereby lifted; that commit's text stands unchanged in history
+(never amended). Normal distribution is cleared as of 2026-10-29.
 
 ## Consequences
 
@@ -224,4 +233,20 @@ by the app remains true (`Application.onCreate` reads `words_pilot.json` only;
 4. **Environment isolation**: Only the primary session writes to the main workspace directory. All corpus expansion preparation occurs in a dedicated external branch and worktree.
 5. **Human sign-off requirement**: Every commit and merge requires explicit written approval from Amgad. Strict engineering invariants remain in force (TDD, no git reset/amend, no unvetted changes, raw diagnostic outputs).
 6. **Source provenance**: Recorded in §9 — the original list is the Academic Word List plus Oxford 3000/5000, with no license documented (open licensing risk before commercial launch). This resolves the former placeholder.
+
+## Addendum 2 — ownership attestation and open-question closures (2026-10-29)
+
+1. **Ownership attestation (closes open question 1 / Decision 9):** Amgad
+   Ghozzy's ruling, verbatim: «هنفذ كلهم وهنخاطر عادي — الكلمات دي أنا اللي
+   جمعتها وعملها.» The word list is his own compilation; the licensing risk
+   documented in §9 and in the `fa14291` commit is accepted by the owner, and
+   the distribution gate is lifted. History is never amended.
+2. **POS normalization (closes open question 2):** pass-through for `adv` and
+   every remaining POS value; `adj → adjective` stays the only mapping.
+3. **Digits inside Arabic text (closes open question 3):** left as-is
+   (69 ASCII + 8 Arabic-Indic occurrences) — zero normalization work.
+4. **`unitId` (closes open question 4):** stays dropped for expansion words
+   until ADR-0011 topic-units define the mapping.
+5. **`corpusVersion` (closes open question 5):** diagnostics-only (DataStore);
+   no user-visible content-version surface.
 
