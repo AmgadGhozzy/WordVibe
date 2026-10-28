@@ -4,7 +4,9 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -153,7 +155,9 @@ fun HomeContent(
                         .coerceIn(0f, 1f)
 
                     GlassCard(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp)),
                         thickness = GlassThickness.Regular,
                         tint = null,
                         showBorder = false,
@@ -268,15 +272,17 @@ fun HomeContent(
         dashboard?.let { data ->
             item {
                 GradientGlassCard(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp)),
                     gradientColors = listOf(
                         MaterialTheme.colorScheme.primary,
-                        MaterialTheme.colorScheme.tertiary
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
                     ),
-                    gradientAlpha = 0.10f,
-                    showOrbet = true,
+                    gradientAlpha = 0.06f,
+                    showOrbet = false,
                     orbetColor = MaterialTheme.colorScheme.primary,
-                    showBorder = true,
+                    showBorder = false,
                     showShadow = false,
                     contentPadding = Spacing.lg,
                 ) {
@@ -296,7 +302,7 @@ fun HomeContent(
                             )
                             Surface(
                                 shape = RoundedCornerShape(50),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
                             ) {
                                 Text(
                                     text = stringResource(R.string.home_estimated_time, estimatedMinutes),
@@ -318,7 +324,7 @@ fun HomeContent(
                                     .weight(1f)
                                     .fillMaxHeight(),
                                 shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
                             ) {
                                 Text(
                                     text = pluralStringResource(
@@ -336,7 +342,7 @@ fun HomeContent(
                                     .weight(1f)
                                     .fillMaxHeight(),
                                 shape = RoundedCornerShape(12.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.55f),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
                             ) {
                                 Text(
                                     text = pluralStringResource(
@@ -359,6 +365,8 @@ fun HomeContent(
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(3.dp)),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             gapSize = 0.dp,
                             drawStopIndicator = {},
                         )
@@ -483,6 +491,7 @@ private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
     val topicTitle = stringResource(unitTopicTitleRes(unit.topic))
     Card(
         shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(
             containerColor = if (unit.isOpen) {
                 MaterialTheme.colorScheme.surfaceContainerHigh
@@ -554,6 +563,8 @@ private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
                                     .weight(1f)
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                 gapSize = 0.dp,
                                 drawStopIndicator = {},
                             )
@@ -609,6 +620,7 @@ private fun AttentionRow(
 
     Card(
         shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(
             containerColor = if (isExpanded) {
                 MaterialTheme.colorScheme.surfaceContainerHighest

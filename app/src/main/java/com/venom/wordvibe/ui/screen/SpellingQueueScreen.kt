@@ -3,6 +3,7 @@ package com.venom.wordvibe.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -167,6 +168,7 @@ private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit
 
     Card(
         shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         colors = CardDefaults.cardColors(
             containerColor = if (isExpanded) {
                 MaterialTheme.colorScheme.surfaceContainerHighest

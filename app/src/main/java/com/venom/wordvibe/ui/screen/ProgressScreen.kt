@@ -1,8 +1,10 @@
 package com.venom.wordvibe.ui.screen
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -159,20 +161,21 @@ fun ProgressContent(
         /* ── Hero card ── */
         item(span = { GridItemSpan(2) }) {
             Card(
-                shape = MaterialTheme.shapes.large,
+                shape = RoundedCornerShape(24.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
-                            brush = Brush.linearGradient(
+                            brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-                                    MaterialTheme.colorScheme.tertiary.copy(alpha = 0.16f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.07f),
+                                    Color.Transparent,
                                 ),
                             ),
                         ),
@@ -223,7 +226,7 @@ fun ProgressContent(
                                         UserLevel.levelNumber(dashboard.totalXp),
                                     ),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                             IconButton(
@@ -248,7 +251,7 @@ fun ProgressContent(
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
                             ) {
                                 Text(
                                     text = pluralStringResource(
@@ -268,7 +271,7 @@ fun ProgressContent(
                             Surface(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.35f),
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
                             ) {
                                 Text(
                                     text = stringResource(
@@ -300,7 +303,7 @@ fun ProgressContent(
                                 ),
                             ),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         LinearProgressIndicator(
@@ -313,7 +316,7 @@ fun ProgressContent(
                                 .height(5.dp)
                                 .clip(RoundedCornerShape(3.dp)),
                             color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.12f),
+                            trackColor = MaterialTheme.colorScheme.surfaceVariant,
                             strokeCap = StrokeCap.Round,
                             gapSize = 0.dp,
                             drawStopIndicator = {},
@@ -394,6 +397,7 @@ fun ProgressContent(
             }
             Card(
                 shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
@@ -429,8 +433,9 @@ fun ProgressContent(
         item(span = { GridItemSpan(2) }) {
             Card(
                 shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 colors = CardDefaults.cardColors(
-                    containerColor = LocalWordStateColors.current.isDueContainer.copy(alpha = 0.35f),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
             ) {
                 Row(
@@ -664,7 +669,9 @@ private fun ReviewForecastCard(
     modifier: Modifier = Modifier,
 ) {
     GlassCard(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp)),
         tint = null,
         showBorder = false,
         showShadow = false,
