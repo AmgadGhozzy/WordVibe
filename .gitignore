@@ -28,6 +28,10 @@ local.properties
 # Local agent working files (tracker, specs, domain notes) — never committed,
 # except docs/adr/ which is tracked per PM ruling (B's docs clearance on record)
 /.scratch/
+/.opencode/
+/.specify/
+/.zcodeignore
+/tools/
 /docs/*
 !/docs/adr/
 CONTEXT.md
