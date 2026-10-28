@@ -155,8 +155,9 @@ fun HomeContent(
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
                         thickness = GlassThickness.Regular,
-                        tint = GlassTint.Primary,
-                        showBorder = true,
+                        tint = null,
+                        showBorder = false,
+                        showShadow = false,
                         contentPadding = Spacing.md,
                     ) {
                         Row(
@@ -272,10 +273,11 @@ fun HomeContent(
                         MaterialTheme.colorScheme.primary,
                         MaterialTheme.colorScheme.tertiary
                     ),
-                    gradientAlpha = 0.16f,
+                    gradientAlpha = 0.10f,
                     showOrbet = true,
                     orbetColor = MaterialTheme.colorScheme.primary,
                     showBorder = true,
+                    showShadow = false,
                     contentPadding = Spacing.lg,
                 ) {
                     Column(
@@ -379,7 +381,7 @@ fun HomeContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = MinTouchTarget),
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(24.dp),
             ) {
                 Text(
                     text = stringResource(R.string.home_practice_button),
@@ -480,12 +482,12 @@ fun unitTopicTitleRes(topic: String): Int = when (topic.lowercase()) {
 private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
     val topicTitle = stringResource(unitTopicTitleRes(unit.topic))
     Card(
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (unit.isOpen) {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                MaterialTheme.colorScheme.surfaceContainerHigh
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f)
             },
         ),
         modifier = Modifier
@@ -606,9 +608,13 @@ private fun AttentionRow(
     )
 
     Card(
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = LocalWordStateColors.current.isDueContainer.copy(alpha = 0.5f),
+            containerColor = if (isExpanded) {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
         ),
         modifier = Modifier
             .fillMaxWidth()

@@ -393,9 +393,9 @@ fun ProgressContent(
                 WordStateChipStyle.DUE -> stateColors.isDue
             }
             Card(
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ),
             ) {
                 Row(
@@ -428,7 +428,7 @@ fun ProgressContent(
         /* ── Due card (scheduling, not a word state) ── */
         item(span = { GridItemSpan(2) }) {
             Card(
-                shape = MaterialTheme.shapes.medium,
+                shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = LocalWordStateColors.current.isDueContainer.copy(alpha = 0.35f),
                 ),
@@ -665,7 +665,9 @@ private fun ReviewForecastCard(
 ) {
     GlassCard(
         modifier = modifier.fillMaxWidth(),
+        tint = null,
         showBorder = false,
+        showShadow = false,
         contentPadding = Spacing.md,
     ) {
         Row(

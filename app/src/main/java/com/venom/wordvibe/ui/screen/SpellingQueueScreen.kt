@@ -166,12 +166,12 @@ private fun QueueRow(item: SpellingQueueViewModel.QueueItem, onClick: () -> Unit
     }
 
     Card(
-        shape = MaterialTheme.shapes.medium,
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (item.productionWeak) {
-                LocalWordStateColors.current.isDueContainer.copy(alpha = 0.5f)
+            containerColor = if (isExpanded) {
+                MaterialTheme.colorScheme.surfaceContainerHighest
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                MaterialTheme.colorScheme.surfaceContainerHigh
             }
         ),
         modifier = Modifier
