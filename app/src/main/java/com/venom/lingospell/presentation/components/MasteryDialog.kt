@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -131,7 +131,7 @@ fun MasteryDialog(
                     containerColor = MaterialTheme.synapse.semantic.gold,
                     contentColor = Color.White
                 ),
-                shape = RoundedCornerShape(16.adp)
+                shape = RoundedCornerShape(28.adp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.adp),
@@ -142,7 +142,7 @@ fun MasteryDialog(
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                     )
                     Icon(
-                        imageVector = Icons.Rounded.ArrowForwardIos,
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
                         contentDescription = null,
                         modifier = Modifier.size(20.adp)
                     )

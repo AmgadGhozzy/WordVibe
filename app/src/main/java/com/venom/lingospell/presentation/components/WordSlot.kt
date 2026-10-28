@@ -222,7 +222,7 @@ private fun getSlotStyle(
 
         SlotVisualState.FILLED -> SlotStyle(
             backgroundColor = colorScheme.surfaceContainerHigh,
-            borderColor = colorScheme.outline.copy(0.5f),
+            borderColor = colorScheme.outlineVariant,
             textColor = colorScheme.onSurfaceVariant,
             shadowColor = colorScheme.primary.copy(0.35f),
             elevation = 2.adp,
@@ -231,8 +231,8 @@ private fun getSlotStyle(
         )
 
         SlotVisualState.EMPTY -> SlotStyle(
-            backgroundColor = colorScheme.surfaceContainerLow.copy(0.6f),
-            borderColor = colorScheme.outlineVariant.copy(0.3f),
+            backgroundColor = colorScheme.surfaceContainerLow,
+            borderColor = colorScheme.outlineVariant,
             textColor = Color.Transparent,
             shadowColor = Color.Transparent,
             elevation = 1.adp,

@@ -20,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,12 +50,11 @@ fun HintButton(
     ) {
         Row(
             modifier = Modifier
-                .shadow(4.adp, RoundedCornerShape(24.adp))
                 .clip(RoundedCornerShape(24.adp))
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .border(
-                    width = 0.5.adp,
-                    color = MaterialTheme.colorScheme.primary.copy(0.2f),
+                    width = 1.adp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                     shape = RoundedCornerShape(24.adp)
                 )
                 .padding(horizontal = 16.adp, vertical = 8.adp),

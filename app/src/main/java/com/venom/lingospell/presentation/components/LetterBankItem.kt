@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -60,8 +61,6 @@ fun LetterBankItem(
     modifier: Modifier = Modifier
 ) {
     val haptics = LocalHapticFeedback.current
-
-    val shadowColor = MaterialTheme.colorScheme.primary
 
     Box(
         modifier = modifier.aspectRatio(1f / 1.1f),
@@ -98,14 +97,14 @@ fun LetterBankItem(
                     .shadow(
                         elevation = elevation,
                         shape = RoundedCornerShape(16.adp),
-                        ambientColor = shadowColor.copy(0.5f),
-                        spotColor = shadowColor
+                        ambientColor = Color.Black.copy(alpha = 0.2f),
+                        spotColor = Color.Black.copy(alpha = 0.3f)
                     )
                     .clip(RoundedCornerShape(16.adp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .border(
                         width = 1.adp,
-                        color = MaterialTheme.colorScheme.outline.copy(0.5f),
+                        color = MaterialTheme.colorScheme.outlineVariant,
                         shape = RoundedCornerShape(16.adp)
                     )
                     .combinedClickable(

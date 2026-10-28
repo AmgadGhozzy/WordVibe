@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.venom.domain.model.AppTheme
@@ -60,13 +62,13 @@ fun LetterBank(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 68.adp,
+                elevation = 16.adp,
                 shape = RoundedCornerShape(
                     topStart = 40.adp,
                     topEnd = 40.adp
                 ),
-                ambientColor = MaterialTheme.colorScheme.primary,
-                spotColor = MaterialTheme.colorScheme.primary
+                ambientColor = Color.Black.copy(alpha = 0.15f),
+                spotColor = Color.Black.copy(alpha = 0.20f)
             )
             .clip(
                 RoundedCornerShape(
@@ -93,6 +95,7 @@ fun LetterBank(
 
             Row(
                 modifier = Modifier
+                    .heightIn(min = 48.adp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
