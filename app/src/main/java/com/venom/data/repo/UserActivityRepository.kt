@@ -3,6 +3,7 @@ package com.venom.data.repo
 import com.venom.analytics.CrashlyticsManager
 import com.venom.data.local.DateProvider
 import com.venom.data.local.SystemDateProvider
+import com.venom.data.local.dao.DayCount
 import com.venom.data.local.dao.UserActivityDao
 import com.venom.data.local.dao.UserProfileDao
 import com.venom.data.local.dao.UserWordProgressDao
@@ -278,6 +279,10 @@ class UserActivityRepository @Inject constructor(
     suspend fun getPlacementCefr(userId: String): String? = withContext(Dispatchers.IO) {
         profileDao.getProfile(userId)?.placementCefr
     }
+
+    /** Read-only daily production successes since fromDateKey (analytics time series, app02 §02). */
+    suspend fun getProductionCountsByDate(userId: String, fromDateKey: String): List<DayCount> =
+        withContext(Dispatchers.IO) { activityDao.getProductionCountsByDate(userId, fromDateKey) }
 
     suspend fun getDashboardData(userId: String): DashboardData = withContext(Dispatchers.IO) {
         val profile = getOrCreateProfile(userId)

@@ -206,6 +206,7 @@ class FakeWordDao(
 }
 
 class FakeQuizAttemptDao : QuizAttemptDao {
+    override suspend fun getAttemptCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
     val events = java.util.concurrent.CopyOnWriteArrayList<QuizAttemptEntity>()
     // Diagnostic counters (round-8 item 2): call counts for the durable-tap persist path.
     val insertCalls = java.util.concurrent.atomic.AtomicInteger()
@@ -259,6 +260,7 @@ class FakeQuizAttemptDao : QuizAttemptDao {
 }
 
 class FakeActivityDao : UserActivityDao {
+    override suspend fun getProductionCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
     val rows = java.util.concurrent.ConcurrentHashMap<Pair<String, String>, UserActivityEntity>()
 
     // Diagnostic counters + exception ledger (PM round-10, ticket-11 forensics):

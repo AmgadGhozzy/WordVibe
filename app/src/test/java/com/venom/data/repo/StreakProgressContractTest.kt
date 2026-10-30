@@ -33,6 +33,7 @@ class StreakProgressContractTest {
         LocalDate.now().plusDays(offsetDays).format(fmt)
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun getProductionCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
         override suspend fun insertOrIgnore(entity: UserActivityEntity): Long {
             val key = entity.userId to entity.dateKey
             return if (rows.containsKey(key)) -1L else { rows[key] = entity; 1L }

@@ -39,6 +39,17 @@ interface UserActivityDao {
     @Query("SELECT SUM(totalXpEarned) FROM userActivity WHERE userId = :userId")
     suspend fun getTotalXp(userId: String): Int?
 
+    /** Read-only daily production successes since fromDateKey (yyyy-MM-dd). PK
+     *  (userId, dateKey) serves the range; aggregation stays in SQL. Same DayCount
+     *  projection as QuizAttemptDao (package-local). */
+    @Query("""
+        SELECT dateKey AS day, SUM(productionSuccess) AS count
+        FROM userActivity
+        WHERE userId = :userId AND dateKey >= :fromDateKey
+        GROUP BY dateKey
+    """)
+    suspend fun getProductionCountsByDate(userId: String, fromDateKey: String): List<DayCount>
+
     @Query("SELECT COALESCE(SUM(wordsViewed), 0) FROM userActivity WHERE userId = :userId")
     suspend fun getTotalWordsViewed(userId: String): Int
 

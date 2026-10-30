@@ -129,6 +129,7 @@ class GhostProgressContractTest {
     }
 
     private class FakeQuizAttemptDao : QuizAttemptDao {
+        override suspend fun getAttemptCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
         val inserts = mutableListOf<QuizAttemptEntity>()
         override suspend fun insert(attempt: QuizAttemptEntity) {
             // Mirrors the DB-enforced UNIQUE(idempotencyKey): duplicates explode here too.
@@ -170,6 +171,7 @@ class GhostProgressContractTest {
     }
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun getProductionCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
         override suspend fun insertOrIgnore(entity: UserActivityEntity): Long = -1L
         private val store = mutableMapOf<Pair<String, String>, UserActivityEntity>()
         override suspend fun upsert(entity: UserActivityEntity) {

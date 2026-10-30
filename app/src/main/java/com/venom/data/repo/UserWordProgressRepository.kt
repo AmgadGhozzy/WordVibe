@@ -5,6 +5,7 @@ import com.venom.analytics.CrashlyticsManager
 import com.venom.data.local.DateProvider
 import com.venom.data.local.SystemDateProvider
 import com.venom.data.local.TransactionRunner
+import com.venom.data.local.dao.DayCount
 import com.venom.data.local.dao.QuizAttemptDao
 import com.venom.data.local.dao.UserWordProgressDao
 import com.venom.data.local.dao.WordMasterDao
@@ -231,6 +232,10 @@ class UserWordProgressRepository @Inject constructor(
     /** Raw scheduled review timestamps from the given time onward (read-only). */
     suspend fun getScheduledReviewTimes(userId: String, fromTime: Long): List<Long> =
         withContext(Dispatchers.IO) { progressDao.getScheduledReviewTimes(userId, fromTime) }
+
+    /** Read-only daily attempt counts since fromDateKey (analytics time series, app02 §02). */
+    suspend fun getAttemptCountsByDate(userId: String, fromDateKey: String): List<DayCount> =
+        withContext(Dispatchers.IO) { quizAttemptDao.getAttemptCountsByDate(userId, fromDateKey) }
 
     /**
      * Weak-production candidates: the highest-lapse, non-mastered words (read-only

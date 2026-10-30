@@ -167,6 +167,13 @@
     <string name="progress_forecast_day_today">Today</string>
     <string name="progress_forecast_day_offset">+%1$d</string>
     <string name="progress_forecast_empty">No reviews scheduled</string>
+    <string name="progress_analytics_title">Progress over time</string>
+    <string name="progress_analytics_subtitle">Review activity and production successes</string>
+    <string name="progress_analytics_series_review">Reviews</string>
+    <string name="progress_analytics_series_production">Production successes</string>
+    <string name="progress_analytics_window_7">7 days</string>
+    <string name="progress_analytics_window_30">30 days</string>
+    <string name="progress_analytics_empty">No activity yet in this window</string>
     <string name="spelling_translate_hint">Translate to English</string>
     <string name="spelling_perfect">Excellent!</string>
     <string name="spelling_reveal_answer">Show answer</string>

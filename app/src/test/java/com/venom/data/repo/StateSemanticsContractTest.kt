@@ -131,6 +131,7 @@ class StateSemanticsContractTest {
     }
 
     private class FakeQuizDao : QuizAttemptDao {
+        override suspend fun getAttemptCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
         override suspend fun insert(attempt: QuizAttemptEntity) {}
         override suspend fun insertAll(attempts: List<QuizAttemptEntity>) {}
         override suspend fun getProductionAttemptCounts(
@@ -153,6 +154,7 @@ class StateSemanticsContractTest {
     }
 
     private class FakeActivityDao : UserActivityDao {
+        override suspend fun getProductionCountsByDate(userId: String, fromDateKey: String): List<com.venom.data.local.dao.DayCount> = emptyList()
         override suspend fun insertOrIgnore(entity: UserActivityEntity): Long = -1L
         override suspend fun upsert(entity: UserActivityEntity) {}
         override suspend fun getActivityForDate(

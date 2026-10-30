@@ -79,6 +79,7 @@ import com.venom.wordvibe.ui.designsystem.WordStateChip
 import com.venom.wordvibe.ui.designsystem.WordStateChipStyle
 import com.venom.wordvibe.ui.designsystem.WordVibeTheme
 import com.venom.ui.components.other.GlassCard
+import com.venom.wordvibe.ui.viewmodel.ProgressAnalyticsViewModel
 import com.venom.wordvibe.ui.viewmodel.ProgressViewModel
 
 /* ───── Level name → existing string resource ───── */
@@ -109,6 +110,8 @@ private fun userLevelTitleRes(level: UserLevel): Int = when (level) {
 @Composable
 fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val analyticsViewModel: ProgressAnalyticsViewModel = hiltViewModel()
+    val analyticsState by analyticsViewModel.state.collectAsStateWithLifecycle()
     ProgressContent(
         isLoading = state.isLoading,
         dashboard = state.dashboard,
@@ -121,6 +124,10 @@ fun ProgressRoute(viewModel: ProgressViewModel = hiltViewModel()) {
         onUpdateDailyGoal = viewModel::updateDailyGoal,
         onUpdateAppTheme = viewModel::updateAppTheme,
         onUpdateAutoPronounce = viewModel::updateAutoPronounce,
+        analyticsWindowDays = analyticsState.windowDays,
+        reviewSeries = analyticsState.reviewSeries,
+        productionSeries = analyticsState.productionSeries,
+        onLoadAnalyticsWindow = analyticsViewModel::load,
     )
 }
 
@@ -140,6 +147,10 @@ fun ProgressContent(
     onUpdateDailyGoal: (Int) -> Unit = {},
     onUpdateAppTheme: (AppTheme) -> Unit = {},
     onUpdateAutoPronounce: (Boolean) -> Unit = {},
+    analyticsWindowDays: Int = 7,
+    reviewSeries: List<Int> = emptyList(),
+    productionSeries: List<Int> = emptyList(),
+    onLoadAnalyticsWindow: (Int) -> Unit = {},
 ) {
     if (isLoading || dashboard == null) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -474,6 +485,16 @@ fun ProgressContent(
             )
         }
 
+        /* ── Analytics time series (app02 §02) ── */
+        item(span = { GridItemSpan(2) }) {
+            ProgressAnalyticsCard(
+                windowDays = analyticsWindowDays,
+                reviewSeries = reviewSeries,
+                productionSeries = productionSeries,
+                onWindowSelected = onLoadAnalyticsWindow,
+            )
+        }
+
         /* ── Activity totals — plain labels, no chips ── */
         item {
             StatCard(
@@ -660,8 +681,126 @@ fun ProgressContent(
     }
 }
 
-/* ───── Review forecast card (GlassCard + sparkline) ───── */
+/* ───── Analytics time series card (GlassCard + reuse sparkline) ───── */
 
+@Composable
+private fun ProgressAnalyticsCard(
+    windowDays: Int,
+    reviewSeries: List<Int>,
+    productionSeries: List<Int>,
+    onWindowSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    GlassCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp)),
+        tint = null,
+        showBorder = false,
+        showShadow = false,
+        contentPadding = Spacing.md,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.progress_analytics_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = stringResource(R.string.progress_analytics_subtitle),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            // ≥48dp touch targets through transparent expansion; direction-aware Row.
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                listOf(7, 30).forEach { days ->
+                    val selected = windowDays == days
+                    Text(
+                        text = stringResource(
+                            if (days == 7) R.string.progress_analytics_window_7
+                            else R.string.progress_analytics_window_30
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier
+                            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                            .clip(RoundedCornerShape(20.dp))
+                            .border(
+                                1.dp,
+                                if (selected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                },
+                                RoundedCornerShape(20.dp),
+                            )
+                            .toggleable(
+                                value = selected,
+                                role = Role.RadioButton,
+                            ) { onWindowSelected(days) }
+                            .padding(horizontal = Spacing.md),
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Spacing.sm))
+
+        if (reviewSeries.all { it == 0 } && productionSeries.all { it == 0 }) {
+            Text(
+                text = stringResource(R.string.progress_analytics_empty),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = Spacing.md),
+            )
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.progress_analytics_series_review),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(96.dp),
+                )
+                ReviewSparkline(
+                    dataPoints = reviewSeries.map { it.toFloat() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                )
+            }
+            Spacer(modifier = Modifier.height(Spacing.xs))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.progress_analytics_series_production),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.width(96.dp),
+                )
+                ReviewSparkline(
+                    dataPoints = productionSeries.map { it.toFloat() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                )
+            }
+        }
+    }
+}
+
+/* ───── Review forecast card (GlassCard + sparkline) ───── */
 @Composable
 private fun ReviewForecastCard(
     forecast: List<Int>,

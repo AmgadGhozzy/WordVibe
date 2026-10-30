@@ -9,6 +9,9 @@ import com.venom.data.local.entity.QuizAttemptEntity
 /** Projection row for the production-attempt aggregate. */
 data class ProductionAttemptCount(val wordId: Int, val attempts: Int)
 
+/** Projection row for per-day aggregates shared by the analytics series queries. */
+data class DayCount(val day: String, val count: Int)
+
 @Dao
 interface QuizAttemptDao {
 
@@ -43,6 +46,16 @@ interface QuizAttemptDao {
         GROUP BY wordId
     """)
     suspend fun getProductionAttemptCounts(userId: String): List<ProductionAttemptCount>
+
+    /** Read-only daily attempt counts since fromDateKey (yyyy-MM-dd). Hits the
+     *  (userId, dateKey) index; aggregation stays in SQL. */
+    @Query("""
+        SELECT dateKey AS day, COUNT(*) AS count
+        FROM quiz_attempts
+        WHERE userId = :userId AND dateKey >= :fromDateKey
+        GROUP BY dateKey
+    """)
+    suspend fun getAttemptCountsByDate(userId: String, fromDateKey: String): List<DayCount>
 
     /** Durable events whose projection was never applied (crash recovery). */
     @Query("""

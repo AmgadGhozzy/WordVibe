@@ -167,6 +167,13 @@
     <string name="progress_forecast_day_today">اليوم</string>
     <string name="progress_forecast_day_offset">+%1$d</string>
     <string name="progress_forecast_empty">لا مراجعات مجدولة</string>
+    <string name="progress_analytics_title">التقدم عبر الزمن</string>
+    <string name="progress_analytics_subtitle">نشاط المراجعة ونجاحات الإنتاج</string>
+    <string name="progress_analytics_series_review">المراجعات</string>
+    <string name="progress_analytics_series_production">نجاحات الإنتاج</string>
+    <string name="progress_analytics_window_7">7 أيام</string>
+    <string name="progress_analytics_window_30">30 يومًا</string>
+    <string name="progress_analytics_empty">لا نشاط في هذه النافذة بعد</string>
     <string name="spelling_translate_hint">ترجم إلى الإنجليزية</string>
     <string name="spelling_perfect">ممتاز!</string>
     <string name="spelling_reveal_answer">أظهر الإجابة</string>
