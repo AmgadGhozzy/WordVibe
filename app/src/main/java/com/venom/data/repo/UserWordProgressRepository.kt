@@ -237,6 +237,10 @@ class UserWordProgressRepository @Inject constructor(
     suspend fun getAttemptCountsByDate(userId: String, fromDateKey: String): List<DayCount> =
         withContext(Dispatchers.IO) { quizAttemptDao.getAttemptCountsByDate(userId, fromDateKey) }
 
+    /** All ranked words, domain projection (read-only unit-lesson source, app03 §02). */
+    suspend fun getAllWordsForLesson(): List<com.venom.domain.model.WordMaster> =
+        withContext(Dispatchers.IO) { wordMasterDao.getAllWords().first().map(WordMasterEntityMapper::toDomain) }
+
     /**
      * Weak-production candidates: the highest-lapse, non-mastered words (read-only
      * projection over the existing high-lapse query). Feeds the spelling queue and

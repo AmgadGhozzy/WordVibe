@@ -331,4 +331,10 @@
     <string name="unit_topic_society">المجتمع</string>
     <string name="unit_topic_economy">الاقتصاد</string>
     <string name="unit_topic_science">العلوم</string>
+    <string name="units_lesson_read_only">درس معاينة — لا يُسجَّل شيء هنا</string>
+    <string name="units_lesson_empty">لا كلمات في هذه الوحدة بعد</string>
+    <string name="units_lesson_production">الإنتاج</string>
+    <string name="units_lesson_recall_title">أكمل الجملة</string>
+    <string name="units_lesson_blank_hint">تبدأ بـ %1$s…</string>
+    <string name="units_lesson_synonym_title">اختر المرادف</string>
 </resources>

@@ -331,4 +331,10 @@
     <string name="unit_topic_society">Society</string>
     <string name="unit_topic_economy">Economy</string>
     <string name="unit_topic_science">Science</string>
+    <string name="units_lesson_read_only">Preview lesson — nothing is tracked here</string>
+    <string name="units_lesson_empty">No words in this unit yet</string>
+    <string name="units_lesson_production">Production</string>
+    <string name="units_lesson_recall_title">Complete the sentence</string>
+    <string name="units_lesson_blank_hint">Starts with %1$s…</string>
+    <string name="units_lesson_synonym_title">Pick the synonym</string>
 </resources>

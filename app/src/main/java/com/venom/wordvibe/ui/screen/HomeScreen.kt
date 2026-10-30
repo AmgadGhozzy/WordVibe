@@ -97,6 +97,7 @@ import com.venom.wordvibe.ui.viewmodel.HomeViewModel
 fun HomeRoute(
     onStartSession: () -> Unit,
     onPractice: () -> Unit,
+    onUnitLesson: (String) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -112,6 +113,7 @@ fun HomeRoute(
         ),
         onStartSession = onStartSession,
         onPractice = onPractice,
+        onUnitLesson = onUnitLesson,
     )
 }
 
@@ -124,6 +126,7 @@ fun HomeContent(
     estimatedMinutes: Int,
     onStartSession: () -> Unit,
     onPractice: () -> Unit,
+    onUnitLesson: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     units: List<UserWordProgressRepository.UnitStatus> = emptyList(),
 ) {
@@ -430,7 +433,7 @@ fun HomeContent(
                 )
             }
             itemsIndexed(units, key = { _, unit -> unit.topic }) { index, unit ->
-                UnitRow(index = index, unit = unit)
+                UnitRow(index = index, unit = unit, onOpen = onUnitLesson)
             }
         }
     }
@@ -487,7 +490,7 @@ fun unitTopicTitleRes(topic: String): Int = when (topic.lowercase()) {
 }
 
 @Composable
-private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
+private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus, onOpen: (String) -> Unit) {
     val topicTitle = stringResource(unitTopicTitleRes(unit.topic))
     Card(
         shape = RoundedCornerShape(20.dp),
@@ -501,7 +504,7 @@ private fun UnitRow(index: Int, unit: UserWordProgressRepository.UnitStatus) {
         ),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Safe tap */ },
+            .clickable { if (unit.isOpen) onOpen(unit.topic) },
     ) {
         Row(
             modifier = Modifier
