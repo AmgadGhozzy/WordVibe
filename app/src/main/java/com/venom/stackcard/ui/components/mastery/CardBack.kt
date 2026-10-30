@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -264,7 +266,10 @@ private fun TransliterationRow(
     InteractiveText(
         transliteration,
         onTtsToggle = ttsToggle,
-        onTtsSpeakSlow = ttsSpeakSlow
+        onTtsSpeakSlow = ttsSpeakSlow,
+        // transparent touch expansion: speaker circle visual unchanged, tap area >= 48dp tall
+        modifier = modifier
+            .heightIn(min = 48.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

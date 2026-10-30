@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,8 +38,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.venom.data.mock.MockWordData
 import com.venom.domain.model.AppTheme
 import com.venom.domain.model.WordMaster
@@ -96,6 +100,8 @@ fun CardFront(
     val ttsSpeakSlow: (String, String?) -> Unit = remember(ttsViewModel) {
         { text: String, lang: String? -> ttsViewModel.speakSlow(text, lang) }
     }
+    // Active-state for the example-sentence speaker: speaking THIS sentence only
+    val ttsState by ttsViewModel.state.collectAsStateWithLifecycle()
 
     // Animated values
     val blurAmount by animateFloatAsState(
@@ -204,33 +210,52 @@ fun CardFront(
                     .fillMaxWidth()
             ) {
                 if (hintExample != null) {
-                    Box(
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(0.8f),
-                        contentAlignment = Alignment.Center
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.adp)
                     ) {
-                        InteractiveText(
-                            text = hintExample.toString(),
-                            onTtsToggle = ttsToggle,
-                            onTtsSpeakSlow = ttsSpeakSlow,
-                            onClick = onRevealHint,
-                            modifier = Modifier
-                                .blur(blurAmount.adp)
-                                .alpha(hintAlpha)
+                        Box(
+                            modifier = Modifier.weight(1f),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "\"$hintExample\"",
-                                style = MaterialTheme.typography.bodyLarge.copy(
-                                    fontStyle = FontStyle.Italic,
-                                    lineHeight = 26.asp,
-                                    fontWeight = FontWeight.Medium
-                                ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                maxLines = 4
-                            )
+                            InteractiveText(
+                                text = hintExample.toString(),
+                                onTtsToggle = ttsToggle,
+                                onTtsSpeakSlow = ttsSpeakSlow,
+                                onClick = onRevealHint,
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .blur(blurAmount.adp)
+                                    .alpha(hintAlpha)
+                            ) {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "\"$hintExample\"",
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            fontStyle = FontStyle.Italic,
+                                            lineHeight = 26.asp,
+                                            fontWeight = FontWeight.Medium
+                                        ),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 4
+                                    )
+                                }
+                            }
                         }
+                        // Dedicated sentence-audio control (toggles this sentence only)
+                        ExampleSpeakButton(
+                            sentence = hintExample.toString(),
+                            isSpeaking = ttsState.isSpeaking && ttsState.currentText == hintExample.toString(),
+                            ttsToggle = ttsToggle,
+                            ttsSpeakSlow = ttsSpeakSlow
+                        )
                     }
                 } else {
                     Box(modifier = Modifier.weight(0.8f))
@@ -257,7 +282,9 @@ private fun PhoneticButton(
     InteractiveText(
         wordEn,
         onTtsToggle = ttsToggle,
-        onTtsSpeakSlow = ttsSpeakSlow
+        onTtsSpeakSlow = ttsSpeakSlow,
+        // transparent touch expansion: pill visual unchanged, tap area >= 48dp tall
+        modifier = Modifier.heightIn(min = 48.dp)
     ) {
         Row(
             modifier = modifier
@@ -299,6 +326,61 @@ private fun PhoneticButton(
                     contentDescription = stringResource(R.string.mastery_speak),
                     modifier = Modifier.size(20.adp),
                     tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Dedicated speaker control for the example sentence on the card front.
+ *
+ * Touch target is enforced at >= 48dp via a transparent expansion around the
+ * compact visual circle. Long-press plays the sentence slowly (same contract as
+ * every other voice target on the card). Active state (speaking this exact
+ * sentence) tints the circle with the primary color.
+ */
+@Composable
+private fun ExampleSpeakButton(
+    sentence: String,
+    isSpeaking: Boolean,
+    ttsToggle: (String, String?) -> Unit,
+    ttsSpeakSlow: (String, String?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    InteractiveText(
+        sentence,
+        onTtsToggle = ttsToggle,
+        onTtsSpeakSlow = ttsSpeakSlow,
+        modifier = modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.adp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isSpeaking) {
+                            MaterialTheme.colorScheme.primary.copy(0.2f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        }
+                    )
+                    .border(1.adp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_speaker),
+                    contentDescription = stringResource(R.string.mastery_speak_example),
+                    modifier = Modifier.size(20.adp),
+                    tint = if (isSpeaking) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
             }
         }
